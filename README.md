@@ -23,7 +23,7 @@ You will need the next tools to work on this project:
 # Will compile, test and run the application
 activator run
 ```
-[navigate to](http:localhost)
+[Navigate to](http://localhost:9000/v1/repositories)
 
 ##### Running in development mode
 ```sh
