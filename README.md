@@ -2,6 +2,7 @@
 
 ##### Todo's
 - [ ] Swagger Integration
+- [ ] Job Scheduler Integration
 - [ ] Unit test examples
 - [x] Webservice that returns simple json object
   
