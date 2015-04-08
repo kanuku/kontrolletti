@@ -24,20 +24,17 @@ sbt activator
 ```
 
 
-#### Running the application
+#### Running/Compiling this project
 ```sh
 # Will compile, test and run the application
 activator run
 ```
 [Navigate to](http://localhost:9000/v1/repositories)
 
-#### Running in development mode
 ```sh
 # Will run the application a and automatically 
 activator ~run
 ```
-
-#### Create docker image in local registry
 
 ```sh
 activator docker:publishLocal
@@ -45,8 +42,6 @@ activator docker:publishLocal
 # After running this command, check for the image with
 docker images
 ```
- 
-#### Run the docker image  
 
 ```sh
 # The image needs to be published in your local/remote registry.
