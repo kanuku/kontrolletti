@@ -25,25 +25,25 @@ sbt eclipse
 ---
 
 #### Running/Compiling this project
-> ```sh
+```sh
 # Will compile, test and run the application
 activator run
 ```
  [Navigate to](http://localhost:9000/v1/repositories)
 
-> ```sh
+```sh
 # Will run the application a and automatically 
 activator ~run
 ```
 
-> ```sh
+```sh
 activator docker:publishLocal
 
 After running this command, check for the image with
 docker images
 ```
-
-> ```sh
+  
+```sh
 # The image needs to be published in your local/remote registry.
 docker run -d -p 8008:9000
 ```  
