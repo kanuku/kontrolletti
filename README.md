@@ -20,7 +20,7 @@ Then you need to install:
 ###### How to import this project with scala-ide (eclipse) ?
 ```sh
 # Will generate eclipse project files for this project
-sbt activator
+sbt eclipse
 ```
 
 
