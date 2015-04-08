@@ -1,6 +1,7 @@
 ### Kontrolletti Job
 
-#### Todo's
+__Todo's__  
+
 - [ ] Swagger Integration
 - [x] Job Scheduler Integration
 - [ ] Unit test examples
@@ -10,21 +11,21 @@
 
 
 
-#### Working on this project?
+__Working on this project?__  
 Then you need to install:  
 1. scala 2.11
 2. sbt >= 0.13
 1. activator  
 1. IDE [scala-ide](http://scala-ide.org/) [IntelliJ](https://www.jetbrains.com/idea/features/scala.html)  
 
-*How to import this project with scala-ide (eclipse) ?*
+**How to import this project with scala-ide (eclipse) ?**
 ```sh
 # Will generate eclipse project files for this project
 sbt eclipse
 ```
 
 
-#### Running/Compiling this project
+__Running/Compiling this project__
 ```sh
 # Will compile, test and run the application
 activator run
