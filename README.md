@@ -11,12 +11,17 @@
 
 
 ##### Working on this project?
-You will need the next tools to work on this project:  
-1. Install scala 2.11  
-1. Install activator  
-1. Install an IDE [scala-ide](http://scala-ide.org/) [IntelliJ](https://www.jetbrains.com/idea/features/scala.html)  
+Then you need to install:  
+1. scala 2.11
+2. sbt >= 0.13
+1. activator  
+1. IDE [scala-ide](http://scala-ide.org/) [IntelliJ](https://www.jetbrains.com/idea/features/scala.html)  
 
-
+###### How to import this project with scala-ide (eclipse) ?
+```sh
+# Will generate eclipse project files for this project
+sbt activator
+```
 
 
 ##### Running the application
