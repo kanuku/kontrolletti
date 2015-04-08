@@ -11,21 +11,22 @@
 
 ---
 
-*Working on this project?*  
+#### Working on this project?  
 Then you need to install:  
 1. scala 2.11  
 2. sbt >= 0.13  
 3. activator  
 4. IDE [scala-ide](http://scala-ide.org/) [IntelliJ](https://www.jetbrains.com/idea/features/scala.html)  
 
-**How to import this project with scala-ide (eclipse) ?**
+How to import this project with scala-ide (eclipse) ?
 ```sh
 # Will generate eclipse project files for this project
 sbt eclipse
 ```
 
+---
 
-**Running/Compiling this project**
+#### Running/Compiling this project
 ```sh
 # Will compile, test and run the application
 activator run
@@ -51,7 +52,7 @@ docker run -d -p 8008:9000
 [Navigate to](http://localhost:9000/v1/repositories)
 
 
-
+---
 
 
 
