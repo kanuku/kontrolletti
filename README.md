@@ -9,9 +9,9 @@
   
 [Swagger integration](https://github.com/swagger-api/swagger-core/tree/develop_scala-2.11/modules/swagger-play2)  
 
+---
 
-
-#### Working on this project?  
+*Working on this project?*  
 Then you need to install:  
 1. scala 2.11  
 2. sbt >= 0.13  
