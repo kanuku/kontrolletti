@@ -1,23 +1,32 @@
 
 
-import play.Application
-import play.GlobalSettings
-import play.libs.Akka
-import scala.concurrent.duration.FiniteDuration
-import java.lang.reflect.Method
-import java.util.Date
-import java.util.HashMap
-import java.util.List
-import java.util.concurrent.TimeUnit;
-import play.Logger
+import scala.concurrent.duration.DurationInt
+
+import job.SimpleJob
+import play.api.Application
+import play.api.GlobalSettings
+import play.api.Logger
+import play.api.Play.current
+import play.api.libs.concurrent.Akka
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
+
 
 object Global extends GlobalSettings {
   override def onStart(app: Application) {
     Logger.info("Application has started")
+    startJob
   }
 
   override def onStop(app: Application) {
     Logger.info("Application shutdown...")
+  }
+
+  def startJob = {
+    Akka.system.scheduler.schedule(0 seconds, 60 seconds) {
+      Logger.info("Running the job")
+      SimpleJob.execute
+    }
   }
 
 }
