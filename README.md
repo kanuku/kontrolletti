@@ -1,6 +1,6 @@
 ### Kontrolletti API
 
-#### Todo's  
+#### Todo:
 
 - [ ] Swagger Integration
 - [x] Job Scheduler Integration
