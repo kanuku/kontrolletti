@@ -1,6 +1,6 @@
 ### Kontrolletti Job
 
-##### Todo's
+#### Todo's
 - [ ] Swagger Integration
 - [x] Job Scheduler Integration
 - [ ] Unit test examples
@@ -10,7 +10,7 @@
 
 
 
-##### Working on this project?
+#### Working on this project?
 Then you need to install:  
 1. scala 2.11
 2. sbt >= 0.13
@@ -24,20 +24,20 @@ sbt activator
 ```
 
 
-##### Running the application
+#### Running the application
 ```sh
 # Will compile, test and run the application
 activator run
 ```
 [Navigate to](http://localhost:9000/v1/repositories)
 
-##### Running in development mode
+#### Running in development mode
 ```sh
 # Will run the application a and automatically 
 activator ~run
 ```
 
-##### Create docker image in local registry
+#### Create docker image in local registry
 
 ```sh
 activator docker:publishLocal
@@ -46,7 +46,7 @@ activator docker:publishLocal
 docker images
 ```
  
-##### Run the docker image  
+#### Run the docker image  
 
 ```sh
 # The image needs to be published in your local/remote registry.
