@@ -1,6 +1,6 @@
-### Kontrolletti Job
+### Kontrolletti API
 
-__Todo's__  
+#### Todo's  
 
 - [ ] Swagger Integration
 - [x] Job Scheduler Integration
@@ -11,7 +11,7 @@ __Todo's__
 
 
 
-__Working on this project?__  
+#### Working on this project?  
 Then you need to install:  
 1. scala 2.11
 2. sbt >= 0.13
@@ -25,7 +25,7 @@ sbt eclipse
 ```
 
 
-__Running/Compiling this project__
+**Running/Compiling this project**
 ```sh
 # Will compile, test and run the application
 activator run
