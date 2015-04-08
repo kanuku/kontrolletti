@@ -17,9 +17,7 @@ Then you need to install:
 2. sbt >= 0.13  
 3. activator  
 4. IDE [scala-ide](http://scala-ide.org/) [IntelliJ](https://www.jetbrains.com/idea/features/scala.html)  
-
-How to import this project with scala-ide (eclipse) ?
-```sh
+> ```sh
 # Will generate eclipse project files for this project
 sbt eclipse
 ```
