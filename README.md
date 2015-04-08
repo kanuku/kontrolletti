@@ -13,7 +13,7 @@
 
 #### Working on this project?  
 Then you need to install:  
-1. scala 2.11 
+1. scala 2.11  
 2. sbt >= 0.13  
 3. activator  
 4. IDE [scala-ide](http://scala-ide.org/) [IntelliJ](https://www.jetbrains.com/idea/features/scala.html)  
