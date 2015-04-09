@@ -1,4 +1,4 @@
-name := """kontrolleti-job"""
+name := """kontrolleti"""
 
 version := "1.0-SNAPSHOT"
 
