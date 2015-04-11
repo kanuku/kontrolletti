@@ -4,10 +4,11 @@
 
 
 
-
-
-GET   /v1/repositories               controllers.Repository.list
+GET   /api-docs               		controllers.ApiHelpController.getResources
+GET   /api-docs/repositories       controllers.ApiHelpController.getResource(path="/repositories")
+GET   /swagger                          controllers.Application.swagger
+GET   /repositories                  controllers.Repository.list
 
 # Map static resources from the /public folder to the /assets URL path
-GET   /v1/assets/*file   controllers.Assets.at(path="/public", file)
+GET   /assets/*file   controllers.Assets.at(path="/public", file)
  
