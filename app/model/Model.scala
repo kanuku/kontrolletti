@@ -1,4 +1,4 @@
-package elasticsearch.model
+package model
 
 /**
  * The model
@@ -6,8 +6,8 @@ package elasticsearch.model
  */
 
 case class Repository(url: String, commits: List[Commit])
-case class Commit(id: String, message: String, author: Author)
-case class Author(name: String, email: String)
+case class Commit(id: String, message: String, committer: Committer)
+case class Committer(name: String, email: String)
 
 /**
  * JsonModel trait provides an easy way of getting the implicit json-convertors for the model objects.
@@ -17,25 +17,25 @@ trait JsonModel {
   import play.api.libs.functional.syntax._
   import play.api.libs.json._
 
-  //Author
-  implicit val authorWrites: Writes[Author] = (
+  //Committer
+  implicit val committerWrites: Writes[Committer] = (
     (JsPath \ "name").write[String] and
-    (JsPath \ "email").write[String])(unlift(Author.unapply))
+    (JsPath \ "email").write[String])(unlift(Committer.unapply))
 
-  implicit val authorReads: Reads[Author] = (
+  implicit val committerReads: Reads[Committer] = (
     (JsPath \ "name").read[String] and
-    (JsPath \ "email").read[String])(Author.apply _)
+    (JsPath \ "email").read[String])(Committer.apply _)
 
   //Commit
   implicit val commitWrites: Writes[Commit] = (
     (JsPath \ "id").write[String] and
     (JsPath \ "message").write[String] and
-    (JsPath \ "author").write[Author])(unlift(Commit.unapply))
+    (JsPath \ "committer").write[Committer])(unlift(Commit.unapply))
 
   implicit val commitReads: Reads[Commit] = (
     (JsPath \ "id").read[String] and
     (JsPath \ "message").read[String] and
-    (JsPath \ "author").read[Author])(Commit.apply _)
+    (JsPath \ "committer").read[Committer])(Commit.apply _)
 
   //Repository
   implicit val repositoryWrites: Writes[Repository] = (

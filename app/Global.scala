@@ -23,7 +23,7 @@ object Global extends GlobalSettings {
   }
 
   def startJob = {
-    Akka.system.scheduler.schedule(0 seconds, 60 seconds) {
+    Akka.system.scheduler.schedule(0 minutes, 5 minutes) {
       Logger.info("Running the job")
       SimpleJob.execute
     }

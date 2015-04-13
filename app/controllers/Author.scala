@@ -10,17 +10,18 @@ import com.wordnik.swagger.annotations.ApiResponse
 import model._
 import client._
 
-@Api(value = "/repositories", description = "Access to repositories")
-object Repository extends Controller with JsonModel {
-  import model.Repository
+@Api(value = "/committers", description = "Endpoint regarding author information")
+object Committer extends Controller with JsonModel {
+  import model.Committer
+
   @ApiOperation(
-    nickname = "Repositories",
-    value = "Returns all repositories",
-    notes = "A repository contains committing information of a repo",
+    nickname = "Authors",
+    value = "Returns a list of known authors",
+    notes = "The author is the entity who originally wrote the code.",
     httpMethod = "GET",
-    response = classOf[List[Repository]])
+    response = classOf[List[Committer]])
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Operation succeeded!")))
   def list = Action {
-    Ok(Json.prettyPrint(Json.toJson(Client.repositories))).as("application/json")
+    Ok(Json.prettyPrint(Json.toJson(Client.committers))).as("application/json")
   }
-} 
+}

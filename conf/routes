@@ -3,12 +3,27 @@
 # ~~~~
 
 
+# Swagger
+GET   /swagger                    controllers.Application.swagger
+GET   /api-docs                   controllers.ApiHelpController.getResources
 
-GET   /api-docs               		controllers.ApiHelpController.getResources
-GET   /api-docs/repositories       controllers.ApiHelpController.getResource(path="/repositories")
-GET   /swagger                          controllers.Application.swagger
-GET   /repositories                  controllers.Repos.list
+GET   /api-docs/repositories   controllers.ApiHelpController.getResource(path="/repositories")
+GET   /api-docs/commits        controllers.ApiHelpController.getResource(path="/commits")
+GET   /api-docs/committers     controllers.ApiHelpController.getResource(path="/committers")
 
 # Map static resources from the /public folder to the /assets URL path
-GET   /assets/*file   controllers.Assets.at(path="/public", file)
+GET   /assets/*file               controllers.Assets.at(path="/public", file)
+GET   /status                     controllers.Application.status
+
+
+#################### V1
+# Repos
+GET   /repositories            controllers.Repository.list
+
+#Commits
+GET   /commits                 controllers.Commit.list
+
+#Committers
+GET   /committers              controllers.Committer.list
+ 
  

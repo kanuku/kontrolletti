@@ -13,5 +13,8 @@ object Application extends Controller {
   def swagger =  Action {
       Ok(views.html.swagger())
   }
+  def status =  Action { 
+      Ok
+  } 
 
 }
