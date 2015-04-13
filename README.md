@@ -52,6 +52,20 @@ docker run -d -p 8008:9000
 
 ---
 
+#### Status of swagger integration
+
+# The endpoint
+- [x] http://localhost:9000/repositories
+
+# Swagger related
+- [x] http://localhost:9000/api-docs
+- [x] http://localhost:9000/api-docs/repositories
+- [ ] http://localhost:9000//swagger 
+
+
+
+
+
 
 
 
