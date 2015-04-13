@@ -29,7 +29,7 @@ sbt eclipse
 # Will compile, test and run the application
 activator run
 ```
- [Navigate to](http://localhost:9000/v1/repositories)
+ [Navigate to](http://localhost:9000/repositories)
 
 ```sh
 # Will run the application a and automatically 
@@ -47,7 +47,7 @@ docker images
 # The image needs to be published in your local/remote registry.
 docker run -d -p 8008:9000
 ```  
- [Navigate to](http://localhost:9000/v1/repositories)
+ [Navigate to](http://localhost:9000/repositories)
 
 
 ---
