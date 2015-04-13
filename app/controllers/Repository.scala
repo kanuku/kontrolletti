@@ -9,22 +9,19 @@ import com.wordnik.swagger.annotations.Api
 import com.wordnik.swagger.annotations.ApiResponses
 import com.wordnik.swagger.annotations.ApiOperation
 import com.wordnik.swagger.annotations.ApiResponse
-import elasticsearch.model.Author
-
+import elasticsearch.model.Repository
 
 @Api(value = "/repositories", description = "Operations concerning repositories")
-object Repository extends Controller with JsonModel {
-
-  
+object Repos extends Controller with JsonModel {
   @ApiOperation(
     nickname = "list",
     value = "Returns all repositories",
     notes = "A repository contains committing information of a repo",
     httpMethod = "GET",
-    response = classOf[List[Author]])
+    response = classOf[List[Repository]])
   @ApiResponses(Array(new ApiResponse(code = 200, message = "This is the list of all repositories")))
   def list = Action {
-     Ok( Json.prettyPrint(Json.toJson(Client.repositories)))
+    println("Test")
+    Ok(Json.prettyPrint(Json.toJson(Client.repositories)))
   }
-
 }
