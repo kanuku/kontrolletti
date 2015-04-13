@@ -2,10 +2,13 @@
 
 #### Todo:
 
-- [ ] Swagger Integration
+- [X] Swagger Integration
 - [x] Job Scheduler Integration
 - [ ] Unit test examples
 - [x] Webservice that returns simple json object
+- [ ] Client for stash
+- [ ] Client for github
+- [ ] Client for github
   
 [Swagger integration](https://github.com/swagger-api/swagger-core/tree/develop_scala-2.11/modules/swagger-play2)  
 
@@ -51,18 +54,7 @@ docker run -d -p 8008:9000
 
 
 ---
-
-#### Status of swagger integration
-
-# The endpoint
-- [x] http://localhost:9000/repositories
-
-# Swagger related
-- [x] http://localhost:9000/api-docs
-- [x] http://localhost:9000/api-docs/repositories
-- [ ] http://localhost:9000//swagger 
-
-
+ 
 
 
 
