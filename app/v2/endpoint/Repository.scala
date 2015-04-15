@@ -1,4 +1,4 @@
-package controllers
+package v2.endpoint
 
 import play.api.mvc.Action
 import play.api.mvc.Controller
@@ -7,12 +7,12 @@ import com.wordnik.swagger.annotations.Api
 import com.wordnik.swagger.annotations.ApiOperation
 import com.wordnik.swagger.annotations.ApiResponses
 import com.wordnik.swagger.annotations.ApiResponse
-import model._
-import client._
+import v1.client._
+import v1.model.JsonModel
 
-@Api(value = "/repositories", description = "Access to repositories")
+@Api(value = "/2.0/repositories", description = "Access to repositories")
 object Repository extends Controller with JsonModel {
-  import model.Repository
+  import v1.model.Repository
   @ApiOperation(
     nickname = "Repositories",
     value = "Returns all repositories",

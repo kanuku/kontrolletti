@@ -1,4 +1,4 @@
-package job
+package v1.job
 
 import akka.actor.Actor
 import akka.actor.Cancellable

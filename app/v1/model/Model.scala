@@ -1,14 +1,15 @@
-package model
+package v1.model
 
 /**
  * The model
  *
  */
 
-case class Repository(url: String, commits: List[Commit])
+case class Repository(name: String, resource: Resource, url: String, commits: List[Commit])
 case class Commit(id: String, message: String, committer: Committer)
 case class Committer(name: String, email: String)
-
+case class Resource(name: String, url: String)
+case class User(name: String, email: String)
 /**
  * JsonModel trait provides an easy way of getting the implicit json-convertors for the model objects.
  * By inheriting from this trait, you get the json-convertors by default in scope.
@@ -40,11 +41,24 @@ trait JsonModel {
   //Repository
   implicit val repositoryWrites: Writes[Repository] = (
     (JsPath \ "url").write[String] and
+    (JsPath \ "resource").write[Resource] and
+    (JsPath \ "name").write[String] and
     (JsPath \ "commits").write[List[Commit]])(unlift(Repository.unapply))
 
   implicit val repositoryReads: Reads[Repository] = (
+    (JsPath \ "name").read[String] and
+    (JsPath \ "resource").read[Resource] and
     (JsPath \ "url").read[String] and
     (JsPath \ "commits").read[List[Commit]])(Repository.apply _)
+
+  // Resource
+  implicit val resourceWrites: Writes[Resource] = (
+    (JsPath \ "name").write[String] and
+    (JsPath \ "url").write[String])(unlift(Resource.unapply))
+
+  implicit val resourceReads: Reads[Resource] = (
+    (JsPath \ "name").read[String] and
+    (JsPath \ "url").read[String])(Resource.apply _)
 
 }
 

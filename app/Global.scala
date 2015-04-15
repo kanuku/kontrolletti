@@ -2,7 +2,7 @@
 
 import scala.concurrent.duration.DurationInt
 
-import job.SimpleJob
+import v1.job.SimpleJob
 import play.api.Application
 import play.api.GlobalSettings
 import play.api.Logger
