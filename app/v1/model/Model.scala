@@ -6,10 +6,10 @@ package v1.model
  */
 
 case class Repository(name: String, resource: Resource, url: String, commits: List[Commit])
-case class Commit(id: String, message: String, committer: Committer)
-case class Committer(name: String, email: String)
+case class Commit(id: String, message: String, committer: User)
 case class Resource(name: String, url: String)
 case class User(name: String, email: String)
+
 /**
  * JsonModel trait provides an easy way of getting the implicit json-convertors for the model objects.
  * By inheriting from this trait, you get the json-convertors by default in scope.
@@ -19,24 +19,24 @@ trait JsonModel {
   import play.api.libs.json._
 
   //Committer
-  implicit val committerWrites: Writes[Committer] = (
+  implicit val committerWrites: Writes[User] = (
     (JsPath \ "name").write[String] and
-    (JsPath \ "email").write[String])(unlift(Committer.unapply))
+    (JsPath \ "email").write[String])(unlift(User.unapply))
 
-  implicit val committerReads: Reads[Committer] = (
+  implicit val committerReads: Reads[User] = (
     (JsPath \ "name").read[String] and
-    (JsPath \ "email").read[String])(Committer.apply _)
+    (JsPath \ "email").read[String])(User.apply _)
 
   //Commit
   implicit val commitWrites: Writes[Commit] = (
     (JsPath \ "id").write[String] and
     (JsPath \ "message").write[String] and
-    (JsPath \ "committer").write[Committer])(unlift(Commit.unapply))
+    (JsPath \ "committer").write[User])(unlift(Commit.unapply))
 
   implicit val commitReads: Reads[Commit] = (
     (JsPath \ "id").read[String] and
     (JsPath \ "message").read[String] and
-    (JsPath \ "committer").read[Committer])(Commit.apply _)
+    (JsPath \ "committer").read[User])(Commit.apply _)
 
   //Repository
   implicit val repositoryWrites: Writes[Repository] = (
@@ -51,7 +51,7 @@ trait JsonModel {
     (JsPath \ "url").read[String] and
     (JsPath \ "commits").read[List[Commit]])(Repository.apply _)
 
-  // Resource
+  // resource
   implicit val resourceWrites: Writes[Resource] = (
     (JsPath \ "name").write[String] and
     (JsPath \ "url").write[String])(unlift(Resource.unapply))

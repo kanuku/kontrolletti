@@ -21,6 +21,6 @@ object Repository extends Controller with JsonModel {
     response = classOf[List[Repository]])
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Operation succeeded!")))
   def list = Action {
-    Ok(Json.prettyPrint(Json.toJson(Client.repositories))).as("application/json")
+    Ok(Json.prettyPrint(Json.toJson(Clients.repositories))).as("application/json")
   }
 } 

@@ -12,18 +12,18 @@ import v1.client._
 import com.wordnik.swagger.annotations.ApiParam
 import javax.ws.rs.PathParam
 
-@Api(value = "/1.0/scm", description = "Central store where users can push changes to.")
+@Api(value = "/v1/scm", description = "Central store for repositories")
 object Resource extends Controller with JsonModel {
 
   @ApiOperation(
-    nickname = "resources",
-    value = "Returns a list of the known resources",
+    nickname = "scm",
+    value = "Returns a list of all SCM's",
     //notes = "A resource is the target from where the information is pulled",
     httpMethod = "GET",
     response = classOf[List[String]])
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Operation succeeded!")))
   def list = Action {
-    Ok(Json.prettyPrint(Json.toJson(Client.resources))).as("application/json")
+    Ok(Json.prettyPrint(Json.toJson(Clients.resources))).as("application/json")
   }
 
   @ApiOperation(
@@ -35,27 +35,9 @@ object Resource extends Controller with JsonModel {
   @ApiResponses(Array(
     new ApiResponse(code = 200, message = "Operation succeeded!"),
     new ApiResponse(code = 404, message = "Did not find any resources!")))
-  def getByGroup(
-    @ApiParam(value = "Resource name")@PathParam("resource") resource: String,
-    @ApiParam(value = "Group name")@PathParam("group") group: String) = Action {
-    Client.resource(resource) match {
-      case null   => NotFound
-      case result => Ok(Json.prettyPrint(Json.toJson(result))).as("application/json")
-    }
-  }
-  @ApiOperation(
-    nickname = "get",
-    value = "Returns the resource identified by the given name",
-    notes = "A resource represents a central store where the information is stored.",
-    httpMethod = "GET",
-    response = classOf[List[Commit]])
-  @ApiResponses(Array(
-    new ApiResponse(code = 200, message = "Operation succeeded!"),
-    new ApiResponse(code = 404, message = "Did not find any resources!")))
-  def getByUser(
-    @ApiParam(value = "Resource name")@PathParam("resource") resource: String,
-    @ApiParam(value = "User name")@PathParam("user") user: String) = Action {
-    Client.resource(resource) match {
+  def scm(
+    @ApiParam(value = "SCM name")@PathParam("scm") scm: String) = Action {
+    Clients.resource(scm) match {
       case null   => NotFound
       case result => Ok(Json.prettyPrint(Json.toJson(result))).as("application/json")
     }

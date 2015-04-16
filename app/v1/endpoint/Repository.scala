@@ -12,7 +12,7 @@ import v1.client._
 import com.wordnik.swagger.annotations.ApiParam
 import javax.ws.rs.PathParam
 
-@Api(value = "/1.0/repos", description = "Endpoint for requesting imformation about repositories")
+@Api(value = "/v1/repos", description = "Endpoint for requesting imformation about repositories")
 object Repository extends Controller with JsonModel {
   import v1.model.Repository
   @ApiOperation(
@@ -22,7 +22,7 @@ object Repository extends Controller with JsonModel {
     response = classOf[List[Repository]])
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Operation succeeded!")))
   def list = Action {
-    Ok(Json.prettyPrint(Json.toJson(Client.repositories))).as("application/json")
+    Ok(Json.prettyPrint(Json.toJson(Clients.repositories))).as("application/json")
   }
 
   @ApiOperation(
@@ -38,8 +38,8 @@ object Repository extends Controller with JsonModel {
           @ApiParam(value = "Resource name")@PathParam("resource") resource: String,
            @ApiParam(value = "Group name")@PathParam("group") group: String) = Action {
     println("Request" + repo + " - " + resource)
-    Client.repository(repo, resource) match {
-      case Nil    => NotFound
+    Clients.repository(repo, resource) match {
+      case null    => NotFound
       case result => Ok(Json.prettyPrint(Json.toJson(result))).as("application/json")
 
     }

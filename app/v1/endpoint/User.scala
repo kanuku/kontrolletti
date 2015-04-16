@@ -12,21 +12,21 @@ import v1.client._
 import com.wordnik.swagger.annotations.ApiParam
 import javax.ws.rs.PathParam
 
-@Api(value = "/1.0/users", description = "User information")
+@Api(value = "/v1/users", description = "User information")
 object User extends Controller with JsonModel {
-  import v1.model.Committer
+  import v1.model.User
 
   @ApiOperation(
     nickname = "users",
     value = "Returns a list of known uers",
     notes = "The user is the main entity responsible for making the changes in the different resources.",
     httpMethod = "GET",
-    response = classOf[List[Committer]])
+    response = classOf[List[User]])
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Operation succeeded!")))
   def list = Action {
-    Ok(Json.prettyPrint(Json.toJson(Client.committers))).as("application/json")
+    Ok(Json.prettyPrint(Json.toJson(Clients.users))).as("application/json")
   }
-Resource
+
   @ApiOperation(
     nickname = "get",
     value = "Returns the user identified by the given name in the given resource",
@@ -37,8 +37,8 @@ Resource
     new ApiResponse(code = 200, message = "Operation succeeded!"),
     new ApiResponse(code = 404, message = "Did not find any resources!")))
   def get(@ApiParam(value = "Name of the user")@PathParam("resource") name: String,
-    @ApiParam(value = "Name of the resource")@PathParam("resource") resource: String) = Action {
-    Client.committer(name, resource) match {
+    @ApiParam(value = "Name of the scm")@PathParam("scm") scm: String) = Action {
+    Clients.committer(name, scm) match {
       case null   => NotFound
       case result => Ok(Json.prettyPrint(Json.toJson(result))).as("application/json")
     }

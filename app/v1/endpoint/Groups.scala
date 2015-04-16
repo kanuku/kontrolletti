@@ -12,7 +12,7 @@ import v1.client._
 import com.wordnik.swagger.annotations.ApiParam
 import javax.ws.rs.PathParam
 
-@Api(value = "/1.0/groups", description = "A defined set of repositories")
+@Api(value = "/v1/groups", description = "A group of repositories")
 object Group extends Controller with JsonModel {
 
   @ApiOperation(
@@ -23,21 +23,21 @@ object Group extends Controller with JsonModel {
     response = classOf[List[String]])
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Operation succeeded!")))
   def list = Action {
-    Ok(Json.prettyPrint(Json.toJson(Client.resources))).as("application/json")
+    Ok(Json.prettyPrint(Json.toJson(Clients.resources))).as("application/json")
   }
 
   @ApiOperation(
     nickname = "get",
-    value = "Returns the group identified by the given name in the given resource",
-    notes = "A resource represents a central store where the information is stored.",
+    value = "Returns the group identified by the given name in the given scm",
+    notes = "SCM represents a central store where the information is stored.",
     httpMethod = "GET",
     response = classOf[List[Commit]])
   @ApiResponses(Array(
     new ApiResponse(code = 200, message = "Operation succeeded!"),
     new ApiResponse(code = 404, message = "Did not find any resources!")))
   def get(@ApiParam(value = "Group name")@PathParam("group") name: String,
-          @ApiParam(value = "Resource name")@PathParam("resource") resource: String) = Action {
-    Client.resource(resource) match {
+          @ApiParam(value = "Resource name")@PathParam("scm") scm: String) = Action {
+    Clients.resource(scm) match {
       case null   => NotFound
       case result => Ok(Json.prettyPrint(Json.toJson(result))).as("application/json")
     }

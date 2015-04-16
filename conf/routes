@@ -2,57 +2,42 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-
 #################### SWAGGER ####################
-GET   /swagger                                                        controllers.Application.swagger
-GET   /api-docs                                                       controllers.ApiHelpController.getResources
-
+GET   /swagger                                             controllers.Application.swagger
+GET   /api-docs                                            controllers.ApiHelpController.getResources
 
 #################### Mapping to endpoint V1 ####################
-GET   /api-docs/1.0/scm                                         controllers.ApiHelpController.getResource(path="/1.0/scm")
-GET   /api-docs/1.0/repos                                             controllers.ApiHelpController.getResource(path="/1.0/repos")
-GET   /api-docs/1.0/commits                                           controllers.ApiHelpController.getResource(path="/1.0/commits")
-GET   /api-docs/1.0/users                                             controllers.ApiHelpController.getResource(path="/1.0/users")
-GET   /api-docs/1.0/groups                                            controllers.ApiHelpController.getResource(path="/1.0/groups")
+GET   /api-docs/v1/scm                                    controllers.ApiHelpController.getResource(path="/v1/scm")
+GET   /api-docs/v1/repos                                  controllers.ApiHelpController.getResource(path="/v1/repos")
+GET   /api-docs/v1/commits                                controllers.ApiHelpController.getResource(path="/v1/commits")
+GET   /api-docs/v1/users                                  controllers.ApiHelpController.getResource(path="/v1/users")
+GET   /api-docs/v1/groups                                 controllers.ApiHelpController.getResource(path="/v1/groups")
 
 # Mapping to endpoint V2
 #GET   /api-docs/2.0/repositories   controllers.ApiHelpController.getResource(path="/2.0/repositories")
 
-# Map static resources from the /public folder to the /assets URL path
-GET   /assets/*file                                                   controllers.Assets.at(path="/public", file)
-GET   /status                                                         controllers.Application.status
-
-
-
-
+# Map static scm from the /public folder to the /assets URL path
+GET   /assets/*file                                        controllers.Assets.at(path="/public", file)
+GET   /status                                              controllers.Application.status
 
 #################### V1 ####################
  
-#Resources
-GET   /1.0/scm                                                  v1.endpoint.Resource.list
-GET   /1.0/scm/:resource/groups/:group                          v1.endpoint.Resource.getByGroup(resource:String, group:String)
-GET   /1.0/scm/:resource/users/:user                            v1.endpoint.Resource.getByUser(resource:String, user:String)
+GET   /v1/scm                                             v1.endpoint.Resource.list
+GET   /v1/scm/:scm                                        v1.endpoint.Resource.scm(scm:String)
 
-# Groups
-GET   /1.0/groups                                                     v1.endpoint.Group.list
-GET   /1.0/groups/:group/resources/:resource                          v1.endpoint.Group.get(group:String, resource:String)
+GET   /v1/groups                                          v1.endpoint.Group.list
+GET   /v1/groups/:group/scm/:scm                          v1.endpoint.Group.get(group:String, scm:String)
 
-# Repos
-GET   /1.0/repos                                                      v1.endpoint.Repository.list
-GET   /1.0/repos/:repo/resources/:resource/groups/:group              v1.endpoint.Repository.get(repo:String, resource:String, group:String)
+GET   /v1/repos                                           v1.endpoint.Repository.list
+GET   /v1/repos/:repo/scm/:scm/groups/:group              v1.endpoint.Repository.get(repo:String, scm:String, group:String)
 
-# Commits
-GET   /1.0/commits                                                    v1.endpoint.Commit.list
-GET   /1.0/commits/:id/resources/:resource/groups/:group/repo/:repo   v1.endpoint.Commit.get(id:String, resource:String, group:String, repo:String)
+GET   /v1/commits                                         v1.endpoint.Commit.list
+GET   /v1/commits/:id/scm/:scm/groups/:group/repo/:repo   v1.endpoint.Commit.get(id:String, scm:String, group:String, repo:String)
 
-# Committers
-GET   /1.0/users                                                      v1.endpoint.User.list
-GET   /1.0/user/:user/resources/:resource                             v1.endpoint.User.get(user:String, resource:String)
-
+GET   /v1/users                                           v1.endpoint.User.list
+GET   /v1/users/:user/scm/:scm                            v1.endpoint.User.get(user:String, scm:String)
 
 #################### V2 ####################
 #GET   /2.0/repositories            v2.endpoint.Repository.list
-
-
 
  
