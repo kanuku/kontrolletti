@@ -16,7 +16,7 @@
 ---
 
 #### Working on this project?  
-**Please: Do not push to master, but use a pull request!**
+#### # **Do not push to master, but use a pull request!**  
 Then you need to install:  
 1. scala 2.11  
 2. sbt >= 0.13  
