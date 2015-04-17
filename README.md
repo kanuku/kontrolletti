@@ -5,6 +5,7 @@
 - [X] Swagger Integration
 - [x] Job Scheduler Integration
 - [ ] Unit test examples
+  - [ ] Include code coversage [scoverage](https://github.com/scoverage)
 - [x] Webservice that returns simple json object
 - [ ] Client for stash
 - [ ] Client for github
