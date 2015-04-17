@@ -40,9 +40,9 @@ trait JsonModel {
 
   //Repository
   implicit val repositoryWrites: Writes[Repository] = (
-    (JsPath \ "url").write[String] and
-    (JsPath \ "resource").write[Resource] and
     (JsPath \ "name").write[String] and
+    (JsPath \ "resource").write[Resource] and 
+    (JsPath \ "url").write[String] and
     (JsPath \ "commits").write[List[Commit]])(unlift(Repository.unapply))
 
   implicit val repositoryReads: Reads[Repository] = (

@@ -22,7 +22,11 @@ object Repository extends Controller with JsonModel {
     response = classOf[List[Repository]])
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Operation succeeded!")))
   def list = Action {
-    Ok(Json.prettyPrint(Json.toJson(Clients.repositories))).as("application/json")
+    println(Clients.repositories)
+    Clients.repositories match {
+      case Nil    => NotFound
+      case result => Ok(Json.prettyPrint(Json.toJson(result))).as("application/json")
+    }   
   }
 
   @ApiOperation(

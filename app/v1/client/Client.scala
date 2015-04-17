@@ -8,7 +8,6 @@ import v1.model.User
 trait Client {
 
   def name: String
-
   def resources: List[Resource]
   def resource(name: String): Resource
 

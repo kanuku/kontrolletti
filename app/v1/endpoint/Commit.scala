@@ -12,7 +12,7 @@ import v1.client._
 import com.wordnik.swagger.annotations.ApiParam
 import javax.ws.rs.PathParam
 
-@Api(value = "/v1/commits", description = "Contains information regarding the changes in a repository.")
+@Api(value = "/v1/commits", description = "Information regarding the changes in a repository.")
 object Commit extends Controller with JsonModel {
 
   import v1.model._
@@ -25,7 +25,11 @@ object Commit extends Controller with JsonModel {
     response = classOf[List[Commit]])
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Operation succeeded!")))
   def list = Action {
-    Ok(Json.prettyPrint(Json.toJson(Clients.commits))).as("application/json")
+    //Ok(Json.prettyPrint(Json.toJson(Clients.commits))).as("application/json")
+     Clients.commits match {
+      case Nil    => NotFound
+      case result => Ok(Json.prettyPrint(Json.toJson(result))).as("application/json")
+    }   
   } 
 
   @ApiOperation(
