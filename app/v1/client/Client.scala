@@ -5,7 +5,27 @@ import v1.model.Commit
 import v1.model.Resource
 import v1.model.User
 
-trait Client {
+trait SCMClient {
+
+  def name: String
+
+  //  def resources: String
+  //  def resource(name: String): String
+  //
+  //  def users: String
+  //  def users(name: String): String
+  //  def user(name: String, resource: String): String
+  //
+  //  def commits: String
+  //  def commits(id: String): String
+  //  def commit(id: String, resource: String): String
+  //
+  //  def repositories: String
+  //  def repositories(name: String): String
+  //  def repository(name: String, resource: String): String
+
+}
+trait SearchClient {
 
   def name: String
   def resources: List[Resource]
@@ -25,10 +45,17 @@ trait Client {
 
 }
 
+//class ClientWrapper extends SCMClient {
+//  val start = ("https://", "http://", "git@")
+////  def map=(url: String)=> (SCMClient, String, String) = {
+////    (null, null, null)
+////  }
+//}
+
 /**
  * This client provides some dummy data
  */
-object Clients extends Client {
+class FakeClient extends SearchClient {
 
   private val resourcesList: List[Resource] = List(
     Resource("stash", "https://stash.zalando.net"),
@@ -58,15 +85,15 @@ object Clients extends Client {
   def name = "dummyClient"
   // List functions
   def user(name: String, resource: String): User = {
-    	//One-liner: 
-    	repositoriesList.filter(x => x.resource.name == resource) // Find resource by name
-    	.flatMap { x => x.commits } // Then get commits from repos
-    	.map { x => x.committer } // Then get users from commits
-    	.find { x => x.name == name } // Filter users by name
-    	.getOrElse(null)
-    }
+    //One-liner: 
+    repositoriesList.filter(x => x.resource.name == resource) // Find resource by name
+      .flatMap { x => x.commits } // Then get commits from repos
+      .map { x => x.committer } // Then get users from commits
+      .find { x => x.name == name } // Filter users by name
+      .getOrElse(null)
+  }
   def users = usersList
-  def users(name: String): List[User] = usersList.filter { x => x.name==name }
+  def users(name: String): List[User] = usersList.filter { x => x.name == name }
 
   def commit(id: String, resource: String): Commit = {
     def commits = commitsList
