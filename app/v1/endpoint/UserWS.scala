@@ -11,33 +11,42 @@ import v1.model._
 import v1.client._
 import com.wordnik.swagger.annotations.ApiParam
 import javax.ws.rs.PathParam
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
-@Api(value = "/v1/scm", description = "Central store for repositories")
-object Resource extends Controller with JsonModel {
+import v1.service.SearchService
+import javax.inject._
+
+@Api(value = "/v1/users", description = "User information")
+@Singleton
+class UserWS @Inject() (searchService: SearchService) extends Controller with JsonModel {
+  import v1.model.User
 
   @ApiOperation(
-    nickname = "scm",
-    value = "Returns a list of all SCM's",
-    //notes = "A resource is the target from where the information is pulled",
+    nickname = "users",
+    value = "Returns a list of known uers",
+    notes = "The user is the main entity responsible for making the changes in the different resources.",
     httpMethod = "GET",
-    response = classOf[List[String]])
+    response = classOf[List[User]])
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Operation succeeded!")))
   def list = Action {
-    Ok(Json.prettyPrint(Json.toJson(Clients.resources))).as("application/json")
+    //    GithubClientUsers.members("zalando").map { response =>
+    //      println(response.body)
+    //      Ok(response.body).as("application/json")
+    NotFound
   }
 
   @ApiOperation(
     nickname = "get",
-    value = "Returns the resource identified by the given name",
+    value = "Returns the user identified by the given name in the given resource",
     notes = "A resource represents a central store where the information is stored.",
     httpMethod = "GET",
     response = classOf[List[Commit]])
   @ApiResponses(Array(
     new ApiResponse(code = 200, message = "Operation succeeded!"),
     new ApiResponse(code = 404, message = "Did not find any resources!")))
-  def scm(
-    @ApiParam(value = "SCM name")@PathParam("scm") scm: String) = Action {
-    Clients.resource(scm) match {
+  def get(@ApiParam(value = "Name of the user")@PathParam("resource") name: String,
+          @ApiParam(value = "Name of the scm")@PathParam("scm") scm: String) = Action {
+    searchService.user(name) match {
       case null   => NotFound
       case result => Ok(Json.prettyPrint(Json.toJson(result))).as("application/json")
     }

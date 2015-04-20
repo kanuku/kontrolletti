@@ -11,9 +11,11 @@ import v1.model._
 import v1.client._
 import com.wordnik.swagger.annotations.ApiParam
 import javax.ws.rs.PathParam
-
+import v1.service.SearchService
+import javax.inject._
 @Api(value = "/v1/repos", description = "Endpoint for requesting imformation about repositories")
-object Repository extends Controller with JsonModel {
+@Singleton
+class RepositoryWS @Inject() (searchService: SearchService) extends Controller with JsonModel {
   import v1.model.Repository
   @ApiOperation(
     nickname = "repositories",
@@ -22,11 +24,11 @@ object Repository extends Controller with JsonModel {
     response = classOf[List[Repository]])
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Operation succeeded!")))
   def list = Action {
-    println(Clients.repositories)
-    Clients.repositories match {
+    println(searchService.repos)
+    searchService.repos match {
       case Nil    => NotFound
       case result => Ok(Json.prettyPrint(Json.toJson(result))).as("application/json")
-    }   
+    }
   }
 
   @ApiOperation(
@@ -40,10 +42,10 @@ object Repository extends Controller with JsonModel {
     new ApiResponse(code = 404, message = "Repository with the given id was not found!")))
   def get(@ApiParam(value = "Repository name")@PathParam("repo") repo: String,
           @ApiParam(value = "Resource name")@PathParam("resource") resource: String,
-           @ApiParam(value = "Group name")@PathParam("group") group: String) = Action {
+          @ApiParam(value = "Group name")@PathParam("group") group: String) = Action {
     println("Request" + repo + " - " + resource)
-    Clients.repository(repo, resource) match {
-      case null    => NotFound
+    searchService.repos(repo) match {
+      case null   => NotFound
       case result => Ok(Json.prettyPrint(Json.toJson(result))).as("application/json")
 
     }

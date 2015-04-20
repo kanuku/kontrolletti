@@ -11,9 +11,12 @@ import v1.model.JsonModel
 import v1.client._
 import com.wordnik.swagger.annotations.ApiParam
 import javax.ws.rs.PathParam
+import v1.service.SearchService
+import javax.inject._
 
 @Api(value = "/v1/commits", description = "Information regarding the changes in a repository.")
-object Commit extends Controller with JsonModel {
+@Singleton
+class CommitWS @Inject()(searchService: SearchService) extends Controller with JsonModel {
 
   import v1.model._
 
@@ -26,7 +29,7 @@ object Commit extends Controller with JsonModel {
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Operation succeeded!")))
   def list = Action {
     //Ok(Json.prettyPrint(Json.toJson(Clients.commits))).as("application/json")
-     Clients.commits match {
+     searchService.commits match {
       case Nil    => NotFound
       case result => Ok(Json.prettyPrint(Json.toJson(result))).as("application/json")
     }   
@@ -45,7 +48,7 @@ object Commit extends Controller with JsonModel {
           @ApiParam(value = "Scm name")@PathParam("scm") scm: String,
           @ApiParam(value = "Group name")@PathParam("group") group: String,
           @ApiParam(value = "Repository name")@PathParam("repo") repo: String) = Action {
-    Clients.commit(id, scm) match {
+    searchService.commit(id) match {
       case null   => NotFound
       case result => Ok(Json.prettyPrint(Json.toJson(result))).as("application/json")
     }

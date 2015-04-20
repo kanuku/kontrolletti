@@ -13,14 +13,14 @@ import v1.model.JsonModel
 @Api(value = "/2.0/repositories", description = "Access to repositories")
 object Repository extends Controller with JsonModel {
   import v1.model.Repository
-  @ApiOperation(
-    nickname = "Repositories",
-    value = "Returns all repositories",
-    notes = "A repository contains committing information of a repo",
-    httpMethod = "GET",
-    response = classOf[List[Repository]])
-  @ApiResponses(Array(new ApiResponse(code = 200, message = "Operation succeeded!")))
-  def list = Action {
-    Ok(Json.prettyPrint(Json.toJson(Clients.repositories))).as("application/json")
-  }
+//  @ApiOperation(
+//    nickname = "Repositories",
+//    value = "Returns all repositories",
+//    notes = "A repository contains committing information of a repo",
+//    httpMethod = "GET",
+//    response = classOf[List[Repository]])
+//  @ApiResponses(Array(new ApiResponse(code = 200, message = "Operation succeeded!")))
+//  def list = Action {
+//    Ok(Json.prettyPrint(Json.toJson(Clients.repositories))).as("application/json")
+//  }
 } 
