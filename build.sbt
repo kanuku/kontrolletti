@@ -12,7 +12,7 @@ libraryDependencies ++= Seq(
   "com.google.inject"  % "guice"                 % "3.0",
   "javax.inject" % "javax.inject" % "1",
   "org.scalatest"       %   "scalatest_2.11"  % "2.2.4"  % "test",
-  "org.specs2"          %%  "specs2-core"     % "2.3.11" % "test",
+    "org.specs2"          %%  "specs2-core"     % "2.3.11" % "test",
   "org.mockito" % "mockito-core" % "1.9.5" % "test"
 )
 

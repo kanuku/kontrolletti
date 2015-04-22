@@ -3,38 +3,23 @@
 # ~~~~
 
 #################### SWAGGER ####################
-GET   /swagger                                             controllers.Application.swagger
-GET   /api-docs                                            controllers.ApiHelpController.getResources
+GET   /swagger               controllers.Application.swagger
+GET   /api-docs              controllers.ApiHelpController.getResources
 
 #################### Mapping to endpoint V1 ####################
-# GET   /api-docs/v1/scm                                    controllers.ApiHelpController.getResource(path="/v1/scm")
-# GET   /api-docs/v1/repos                                  controllers.ApiHelpController.getResource(path="/v1/repos")
-GET   /api-docs/v1/commits                                controllers.ApiHelpController.getResource(path="/v1/commits")
-GET   /api-docs/v1/users                                  controllers.ApiHelpController.getResource(path="/v1/users")
-# GET   /api-docs/v1/groups                                 controllers.ApiHelpController.getResource(path="/v1/groups")
-
+GET   /api-docs/v1/commits   controllers.ApiHelpController.getResource(path="/v1/commits")
+GET   /api-docs/v1/users     controllers.ApiHelpController.getResource(path="/v1/users")
+ 
 # Mapping to endpoint V2
 #GET   /api-docs/2.0/repositories   controllers.ApiHelpController.getResource(path="/2.0/repositories")
 
 # Map static scm from the /public folder to the /assets URL path
-GET   /assets/*file                                        controllers.Assets.at(path="/public", file)
-GET   /status                                              controllers.Application.status
+GET   /assets/*file          controllers.Assets.at(path="/public", file)
+GET   /status                controllers.Application.status
 
 #################### V1 ####################
- 
-# GET   /v1/scm                                             @v1.endpoint.ResourceWS.list
-# GET   /v1/scm/:scm                                        @v1.endpoint.ResourceWS.scm(scm:String)
 
-# GET   /v1/groups                                          @v1.endpoint.GroupWS.list
-# GET   /v1/groups/:group/scm/:scm                          @v1.endpoint.GroupWS.get(group:String, scm:String)
+GET   /v1/commits            @v1.endpoint.CommitWS.get(repo:String ?= "") 
 
-# GET   /v1/repos                                           @v1.endpoint.RepositoryWS.list
-# GET   /v1/repos/:repo/scm/:scm/groups/:group              @v1.endpoint.RepositoryWS.get(repo:String, scm:String, group:String)
-
-GET   /v1/commits                                         @v1.endpoint.CommitWS.list
-GET   /v1/commits/:id/scm/:scm/groups/:group/repo/:repo   @v1.endpoint.CommitWS.get(id:String, scm:String, group:String, repo:String)
-
-GET   /v1/users                                           @v1.endpoint.UserWS.list
-GET   /v1/users/:user/scm/:scm                            @v1.endpoint.UserWS.get(user:String, scm:String)
-
+GET   /v1/users              @v1.endpoint.UserWS.get(repo:String ?= "")
  

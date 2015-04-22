@@ -7,11 +7,10 @@ import com.wordnik.swagger.annotations.Api
 import com.wordnik.swagger.annotations.ApiOperation
 import com.wordnik.swagger.annotations.ApiResponses
 import com.wordnik.swagger.annotations.ApiResponse
-import v1.client._
-import v1.model.JsonModel
+import v1.client._ 
 
 @Api(value = "/2.0/repositories", description = "Access to repositories")
-object Repository extends Controller with JsonModel {
+object Repository extends Controller {
   import v1.model.Repository
 //  @ApiOperation(
 //    nickname = "Repositories",
