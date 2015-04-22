@@ -27,26 +27,49 @@ class GithubUrlParserTest extends FunSuite with GithubUrlParser {
     GithubProject("test7", "git@git-hub.com:22/zalando-bus/kontrolletti.git"),
     GithubProject("test8", "ssh://git@git-hub.com:22/zalando-bus/kontrolletti.git"))
 
-  test(ghUrls(0).name + " -> " + ghUrls(0).url) {
-    test(ghUrls(0).url, ghUrls(0).name)
+  test(getName("test0")) {
+    val project=getProject("test0")
+    test(project.url, project.name)
   }
-  test(ghUrls(1).name + " -> " + ghUrls(1).url) {
-    test(ghUrls(1).url, ghUrls(1).name)
+  test(getName("test1")) {
+    val project=getProject("test1")
+    test(project.url, project.name)
   }
-  test(ghUrls(2).name + " -> " + ghUrls(2).url) {
-    test(ghUrls(2).url, ghUrls(2).name)
+  test(getName("test2")) {
+    val project=getProject("test2")
+    test(project.url, project.name)
   }
-  test(ghUrls(3).name + " -> " + ghUrls(3).url) {
-    test(ghUrls(3).url, ghUrls(3).name)
+  test(getName("test3")) {
+    val project=getProject("test3")
+    test(project.url, project.name)
   }
-  test(ghUrls(4).name + " -> " + ghUrls(4).url) {
-    test(ghUrls(4).url, ghUrls(4).name)
+  test(getName("test4")) {
+    val project=getProject("test4")
+    test(project.url, project.name)
   }
-  test(ghUrls(5).name + " -> " + ghUrls(5).url) {
-    test(ghUrls(5).url, ghUrls(5).name)
+  test(getName("test5")) {
+    val project=getProject("test5")
+    test(project.url, project.name)
   }
-  test(ghUrls(6).name + " -> " + ghUrls(6).url) {
-    test(ghUrls(6).url, ghUrls(6).name)
+  test(getName("test6")) {
+    val project=getProject("test6")
+    test(project.url, project.name)
+  }
+  test(getName("test7")) {
+	  val project=getProject("test7")
+			  test(project.url, project.name)
+  }
+  test(getName("test8")) {
+	  val project=getProject("test8")
+			  test(project.url, project.name)
+  }
+
+  def getName(name: String): String = {
+    val res = getProject(name)
+    res.name + " -> " + res.url
+  }
+  def getProject(name: String): GithubProject = {
+    ghUrls.find { x => x.name == name }.get
   }
 
   def test(url: String, name: String) = {

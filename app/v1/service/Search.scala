@@ -26,9 +26,6 @@ trait Search {
 @Singleton
 class SearchImpl @Inject() (githubClient: SCM) extends Search with GithubUrlParser with JsonParserGithub {
 
-  //            println(Json.parse(test).validate[List[User]])
-  //            println(new User("test", 1345))
-
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
   import scala.concurrent._
 
