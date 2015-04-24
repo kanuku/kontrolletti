@@ -33,4 +33,7 @@ dist
 /.settings
 /bin
 
+#misc
+aws_host.txt
+
 
