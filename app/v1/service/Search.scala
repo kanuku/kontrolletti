@@ -35,21 +35,16 @@ class SearchImpl @Inject() (githubClient: SCM) extends Search with GithubUrlPars
       case ("", "", "") =>
         Future(Nil)
       case (host, group, repo) =>
-        val res = githubClient.contributorsByRepo(group, repo)
+        val res = githubClient.committersFrom(group, repo)
         res onComplete {
           case Success(posts) =>
-            println(posts.json.validate[List[User]].get)
+            Logger.debug("received"+posts.json.validate[List[User]].get) 
           case Failure(t) =>
             Logger.error("An error as occured: " + t.getMessage())
         }
-
         res.map(posts => {
           posts.json.validate[List[User]].get
         })
     }
   }
-}
-
-class FakeSearchServiceImpl extends Search {
-  def users(url: String): Future[List[User]] = ???
 }

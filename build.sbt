@@ -6,13 +6,18 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.11.1"
 
+ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 55
+	
+ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := true
+
+ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages:= "<empty>;views.*;ReverseAssets.*;ReverseApplication.*;ReverseApiHelpController.*;Routes*;.*routes;Logger.*"
+
 libraryDependencies ++= Seq(
   ws,
   "com.wordnik" %% "swagger-play2" % "1.3.12",
   "com.google.inject"  % "guice"                 % "3.0",
   "javax.inject" % "javax.inject" % "1",
   "org.scalatest"       %   "scalatest_2.11"  % "2.2.4"  % "test",
-    "org.specs2"          %%  "specs2-core"     % "2.3.11" % "test",
   "org.mockito" % "mockito-core" % "1.9.5" % "test"
 )
 

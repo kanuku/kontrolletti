@@ -15,7 +15,7 @@ trait GithubUrlParser {
   private val regex02 = """(\w+)://(\w+[\-.]*\w+[\-.]*\w+):(\d+)/(\w+[\-_]*\w+)/(\w+[\-._]*\w+)""".r
 
   //catches=>ssh://git@git-hub.com:22/zalando-bus/kontrolletti.git
-  private val regex03 = """(\w+)://(\w+[\@]*)(\w+[\-.]*\w+[\-.]*\w+):(\d+)/(\w+[\-_]*\w+)/(\w+[\-._]*\w+)""".r
+  private val regex03 = """(\w+)://(\w+[\@]*)(\w+[\-.]*\w+[\-.]*\w+):(\d+)/(\w+[\-_]*\w+)/(\w+[\-_]*\w+).git""".r
 
   //catches=>git@git-hub.com:22/zalando-bus/kontrolletti.git
   private val regex04 = """(\w+[\@]*)(\w+[\-.]*\w+[\-.]*\w+):(\d+)/(\w+[\-_]*\w+)/(\w+[\-._]*\w+).git""".r
@@ -46,31 +46,31 @@ trait GithubUrlParser {
   def parse(url: String): (String, String, String) = {
     url match {
       case regex01(protocol, host, port, group, repo) =>
-        Logger.debug(s"$protocol - $host - $port - $group - $repo")
+        Logger.debug(s"regex01 $protocol - $host - $port - $group - $repo")
         (host, group, repo)
       case regex02(protocol, host, port, group, repo) =>
-        Logger.debug(s"$protocol - $host - $port - $group - $repo")
+        Logger.debug(s"regex02 $protocol - $host - $port - $group - $repo")
         (host, group, repo)
       case regex03(protocol, user, host, port, group, repo) =>
-        Logger.debug(s"$protocol - $user - $host - $port - $group - $repo")
+        Logger.debug(s"regex03 $protocol - $user - $host - $port - $group - $repo")
         (host, group, repo)
       case regex04(user, host, port, group, repo) =>
-        Logger.debug(s"$user - $host - $port - $group - $repo")
+        Logger.debug(s"regex04 $user - $host - $port - $group - $repo")
         (host, group, repo)
       case regex05(user, host, group, repo) =>
-        Logger.debug(s"$user - $host - $group - $repo")
+        Logger.debug(s"regex05 $user - $host - $group - $repo")
         (host, group, repo)
       case regex06(protocol, host, group, repo) =>
-        Logger.debug(s"$protocol - $host - $group - $repo")
+        Logger.debug(s"regex06 $protocol - $host - $group - $repo")
         (host, group, repo)
       case regex07(protocol, host, group, repo) =>
-        Logger.debug(s"$protocol - $host - $group - $repo")
+        Logger.debug(s"regex07 $protocol - $host - $group - $repo")
         (host, group, repo)
       case regex08(host, group, repo) =>
-        Logger.debug(s"$host - $group - $repo")
+        Logger.debug(s"regex08 $host - $group - $repo")
         (host, group, repo)
       case regex09(host, group, repo) =>
-        Logger.debug(s"$host - $group - $repo  ")
+        Logger.debug(s"regex09 $host - $group - $repo  ")
         (host, group, repo)
       case _ =>
         Logger.debug(s"Could not parse the $url")
