@@ -1,0 +1,5 @@
+web:
+  image: pierone.stups.zalan.do/bus-team/kontrolleti:1.0-SNAPSHOT
+  ports:
+    - "80:9000"
+

@@ -1,65 +1,50 @@
 package v1.service
 
+import akka.dispatch.OnComplete
+import akka.dispatch.OnFailure
 import javax.inject._
-import v1.client.SCMClient
-import v1.model.Commit
-import v1.model.Repository
+import play.api.Logger
+import play.api.libs.json._
+import play.api.libs.json._
+import play.api.libs.json.Reads._
+import v1.client.SCM
+import v1.model.JsonParserGithub
 import v1.model.User
+import v1.util.GithubUrlParser
+import scala.concurrent.Future
+import scala.util.{ Success, Failure }
+trait Search {
 
-trait SearchService {
+  /**
+   *
+   */
 
-  def split(url: String): (String, String, String)
-  def users: List[User]
-  def user(url: String): User
-  def users(url: String): List[User]
-
-  def repos: List[Repository]
-  def repo(url: String): Repository
-  def repos(url: String): List[Repository]
-
-  def commits: List[Commit]
-  def commit(url: String): Commit
-  def commits(url: String): List[Commit]
-  def commitsSince(url: String): List[Commit]
-  def commitsUtil(url: String): List[Commit]
+  def users(url: String): Future[List[User]]
 
 }
 
 @Singleton
-class SearchServiceImpl @Inject() (scmClient: SCMClient) extends SearchService {
-  def split(url: String): (String, String, String) = ???
+class SearchImpl @Inject() (githubClient: SCM) extends Search with GithubUrlParser with JsonParserGithub {
 
-  def users: List[User] = ???
-  def user(url: String): User = ???
-  def users(url: String): List[User] = ???
+  import play.api.libs.concurrent.Execution.Implicits.defaultContext
+  import scala.concurrent._
 
-  def repos: List[Repository] = ???
-  def repo(url: String): Repository = ???
-  def repos(url: String): List[Repository] = ???
-
-  def commits: List[Commit] = ???
-  def commit(url: String): Commit = ???
-  def commits(url: String): List[Commit] = ???
-  def commitsSince(url: String): List[Commit] = ???
-  def commitsUtil(url: String): List[Commit] = ???
-
-}
-
-class FakeSearchServiceImpl extends SearchService {
-  def split(url: String): (String, String, String) = ???
-  def user(url: String): User = ???
-  def users: List[User] = ???
-  def users(url: String): List[User] = ???
-
-  def repo(url: String): Repository = ???
-  def repos: List[Repository] = ???
-  def repos(url: String): List[Repository] = ???
-
-  
-  def commits: List[Commit] = ???
-  def commit(url: String): Commit = ???
-  def commits(url: String): List[Commit] = ???
-  def commitsSince(url: String): List[Commit] = ???
-  def commitsUtil(url: String): List[Commit] = ???
-
+  def users(url: String): Future[List[User]] = {
+    Logger.info(s"Searching for $url");
+    parse(url) match {
+      case ("", "", "") =>
+        Future(Nil)
+      case (host, group, repo) =>
+        val res = githubClient.committersFrom(group, repo)
+        res onComplete {
+          case Success(posts) =>
+            Logger.debug("received"+posts.json.validate[List[User]].get) 
+          case Failure(t) =>
+            Logger.error("An error as occured: " + t.getMessage())
+        }
+        res.map(posts => {
+          posts.json.validate[List[User]].get
+        })
+    }
+  }
 }

@@ -10,16 +10,16 @@ import play.api.libs.concurrent.Akka
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import com.google.inject.Guice
 import play.api.Play
-import v1.module.ProductionModule
-import v1.module.DevelopModule
+import v1.module.Production
+import v1.module.Develop
 
 object Global extends GlobalSettings {
 
   /** bind types for Guice (Dependency Injection)**/
   private lazy val injector = {
     Play.isProd match {
-      case true  => Guice.createInjector(new ProductionModule)
-      case false => Guice.createInjector(new DevelopModule)
+      case true  => Guice.createInjector(new Production)
+      case false => Guice.createInjector(new Develop)
     }
   }
 
@@ -38,7 +38,7 @@ object Global extends GlobalSettings {
 
   def startJob = {
     Akka.system.scheduler.schedule(0 minutes, 5 minutes) {
-      Logger.info("Running the job")
+      Logger.info("Started the job")
       SimpleJob.execute
     }
   }
