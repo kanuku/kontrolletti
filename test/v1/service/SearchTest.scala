@@ -32,7 +32,7 @@ class SearchTest extends FlatSpec with MockitoSugar with BeforeAndAfter {
   "Search" should
     "call the client with parsed values from url" in {
 
-      val clientResult = mockFutureWsResponse(users, success = true)
+      val clientResult = mockFutureWSResponse(users, success = true)
 
       when(client.committersFrom(anyString, anyString)).thenReturn(clientResult)
 
@@ -55,7 +55,7 @@ class SearchTest extends FlatSpec with MockitoSugar with BeforeAndAfter {
   "Search" should
     "handle failed Futures returned by the client" in {
 
-      val clientResult = mockFutureWsResponse(users, success = false)
+      val clientResult = mockFutureWSResponse(users, success = false)
 
       when(client.committersFrom(anyString, anyString)).thenReturn(clientResult)
 
@@ -72,7 +72,7 @@ class SearchTest extends FlatSpec with MockitoSugar with BeforeAndAfter {
         assert(rep == users)
       }
     }
-  
+
   "Search" should
     "never call the client when the url is not parsable" in {
       //Start testing

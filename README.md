@@ -1,4 +1,12 @@
-### Kontrolletti API
+#### Kontrolletti API
+
+The goal of this project is to retrieve and unify information from different SCM tools (Source Control Management) and provide an interface where this information can be requested.
+
+Kontrolletti provides an REST API where projects for different
+
+
+
+
 
 #### Todo:
 
