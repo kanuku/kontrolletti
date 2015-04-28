@@ -16,8 +16,8 @@ class GithubTest extends FlatSpec with MockitoSugar {
   val group = "kanuku"
   val repo = "misc"
 
-  "method committersFrom " should
-    "uses the parameters in the url " in {
+  "Github -> committersFrom" should
+    "uses the parameters in the url" in {
       withFakeApplication {
 
         val method = mock[(String) => WSRequestHolder]
