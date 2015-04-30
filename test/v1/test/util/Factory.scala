@@ -46,7 +46,7 @@ object MockitoUtils extends MockitoSugar {
    *
    */
   def github(requestParam: ((String) => WSRequestHolder)) = new Github {
-    override def request =  requestParam 
+    override def requestHolder =  requestParam 
   }
 
   def withFakeApplication(block: => Unit): Unit = {

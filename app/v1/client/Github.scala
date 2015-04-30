@@ -5,12 +5,13 @@ import play.api.Play.current
 import play.api.Logger
 
 object Githubs {
-  def accessTokenKey="access_token"
+  def accessTokenKey = "access_token"
   def name: String = ("github.com")
   def api_host: String = ("https://api.github.com")
   def organization: String = (api_host + "/orgs/")
   def contributors(owner: String, repo: String) = s"$api_host/repos/$owner/$repo/contributors"
-  val accessTokenValue = "4231409123784109287wd239847aefsg"
+  def users(user: String) = s"$api_host/users/$user"
+  val accessTokenValue = "897674c1118fa83e8819dbab7fa501ddec3dfb24"
 }
 
 class Github extends SCM {
@@ -19,13 +20,25 @@ class Github extends SCM {
 
   def name = "github.com"
 
-  def committersFrom(group: String, repo: String): Future[WSResponse] = {
+  def committers(group: String, repo: String): Future[WSResponse] = {
     val url: String = contributors(group, repo)
-    Logger.debug(s"Requesting users with $name from $url");
-    request(url).withHeaders( accessTokenKey-> accessTokenValue).get()
+    Logger.debug(s"Requesting contributors from $url");
+    request(url)
   }
 
-  def request: (String) => WSRequestHolder = {
+  def user(user: String): Future[WSResponse] = {
+    val url: String = users(user)
+    Logger.debug(s"Requesting user with $name from $url");
+    request(url)
+  }
+  def request: (String) => Future[WSResponse] = {
+    (url) =>
+      requestHolder(url).
+        withHeaders(accessTokenKey -> accessTokenValue).get()
+  }
+
+  def requestHolder: (String) => WSRequestHolder = {
     (url) => WS.url(url)
   }
+
 }

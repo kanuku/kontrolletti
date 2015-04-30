@@ -34,15 +34,15 @@ class SearchTest extends FlatSpec with MockitoSugar with BeforeAndAfter {
 
       val clientResult = mockFutureWSResponse(users, success = true)
 
-      when(client.committersFrom(anyString, anyString)).thenReturn(clientResult)
+      when(client.committers(anyString, anyString)).thenReturn(clientResult)
 
       //Start testing
-      val result = search.users(url)
+      val result = search.committers(url)
       val groupCap = ArgumentCaptor.forClass(classOf[String])
       val repoCap = ArgumentCaptor.forClass(classOf[String])
 
       // Verify the
-      verify(client).committersFrom(groupCap.capture(), repoCap.capture());
+      verify(client).committers(groupCap.capture(), repoCap.capture());
 
       assert(groupCap.getValue == group)
       assert(repoCap.getValue == repo)
@@ -57,15 +57,15 @@ class SearchTest extends FlatSpec with MockitoSugar with BeforeAndAfter {
 
       val clientResult = mockFutureWSResponse(users, success = false)
 
-      when(client.committersFrom(anyString, anyString)).thenReturn(clientResult)
+      when(client.committers(anyString, anyString)).thenReturn(clientResult)
 
       //Start testing
-      val result = search.users(url)
+      val result = search.committers(url)
       val groupCap = ArgumentCaptor.forClass(classOf[String])
       val repoCap = ArgumentCaptor.forClass(classOf[String])
 
       // Verify the
-      verify(client).committersFrom(groupCap.capture(), repoCap.capture());
+      verify(client).committers(groupCap.capture(), repoCap.capture());
       assert(groupCap.getValue == group)
       assert(repoCap.getValue == repo)
       result.map { rep =>
@@ -76,9 +76,9 @@ class SearchTest extends FlatSpec with MockitoSugar with BeforeAndAfter {
   "Search" should
     "never call the client when the url is not parsable" in {
       //Start testing
-      val result = search.users("")
+      val result = search.committers("")
       // Verify the method is never called when
-      verify(client, times(0)).committersFrom(anyObject(), anyObject());
+      verify(client, times(0)).committers(anyObject(), anyObject());
     }
 
 }

@@ -7,7 +7,8 @@ import v1.model.User
 
 trait SCM {
   def name: String
-  def committersFrom(group: String, repo: String): Future[WSResponse]
+  def committers(group: String, repo: String): Future[WSResponse]
+  def user(user: String): Future[WSResponse]
 }
 
 
