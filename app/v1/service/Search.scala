@@ -14,12 +14,7 @@ import v1.util.GithubUrlParser
 import scala.concurrent.Future
 import scala.util.{ Success, Failure }
 trait Search {
-
-  /**
-   *
-   */
-
-  def users(url: String): Future[List[User]]
+  def committers(url: String): Future[List[User]]
 
 }
 
@@ -29,16 +24,16 @@ class SearchImpl @Inject() (githubClient: SCM) extends Search with GithubUrlPars
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
   import scala.concurrent._
 
-  def users(url: String): Future[List[User]] = {
+  def committers(url: String): Future[List[User]] = {
     Logger.info(s"Searching for $url");
     parse(url) match {
       case ("", "", "") =>
         Future(Nil)
       case (host, group, repo) =>
-        val res = githubClient.committersFrom(group, repo)
+        val res = githubClient.committers(group, repo)
         res onComplete {
           case Success(posts) =>
-            Logger.debug("received"+posts.json.validate[List[User]].get) 
+            Logger.debug("received" + posts.json.validate[List[User]].get)
           case Failure(t) =>
             Logger.error("An error as occured: " + t.getMessage())
         }

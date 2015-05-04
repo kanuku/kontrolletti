@@ -12,8 +12,13 @@ import com.google.inject.Guice
 import play.api.Play
 import v1.module.Production
 import v1.module.Develop
+import v1.job.SimpleJob
 
 object Global extends GlobalSettings {
+
+  private lazy val simpleJob: SimpleJob = {
+    injector.getInstance(classOf[SimpleJob])
+  }
 
   /** bind types for Guice (Dependency Injection)**/
   private lazy val injector = {
@@ -39,7 +44,7 @@ object Global extends GlobalSettings {
   def startJob = {
     Akka.system.scheduler.schedule(0 minutes, 5 minutes) {
       Logger.info("Started the job")
-      SimpleJob.execute
+      simpleJob.execute 
     }
   }
 

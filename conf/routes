@@ -3,20 +3,19 @@
 # ~~~~
 
 #################### SWAGGER ####################
-GET   /swagger               controllers.Application.swagger
-GET   /api-docs              controllers.ApiHelpController.getResources
+GET   /swagger                  controllers.Application.swagger
+GET   /api-docs                 controllers.ApiHelpController.getResources
 
 #################### Mapping to endpoint V1 ####################
-GET   /api-docs/v1/commits   controllers.ApiHelpController.getResource(path="/v1/commits")
-GET   /api-docs/v1/users     controllers.ApiHelpController.getResource(path="/v1/users")
+GET   /api-docs/v1/commits      controllers.ApiHelpController.getResource(path="/v1/commits")
+GET   /api-docs/v1/committers   controllers.ApiHelpController.getResource(path="/v1/committers")
 
 # Map static scm from the /public folder to the /assets URL path
-GET   /assets/*file          controllers.Assets.at(path="/public", file)
-GET   /status                controllers.Application.status
+GET   /assets/*file             controllers.Assets.at(path="/public", file)
+GET   /status                   controllers.Application.status
 
 #################### V1 ####################
 
-GET   /v1/commits            @v1.endpoint.CommitWS.get(repo:String ?= "") 
-
-GET   /v1/users              @v1.endpoint.UserWS.get(repo:String ?= "")
+GET   /v1/commits               @v1.endpoint.CommitWS.get(repo:String ?= "") 
+GET   /v1/committers            @v1.endpoint.CommitterWS.get(repo:String ?= "")
  

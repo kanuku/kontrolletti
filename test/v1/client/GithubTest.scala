@@ -31,7 +31,7 @@ class GithubTest extends FlatSpec with MockitoSugar {
         when(requestHolder.get).thenReturn(response)
 
         // Start testing
-        val result = client.committersFrom(group, repo)
+        val result = client.committers(group, repo)
 
         val urlCap = ArgumentCaptor.forClass(classOf[String])
         
