@@ -16,6 +16,6 @@ GET   /status                   controllers.Application.status
 
 #################### V1 ####################
 
-GET   /v1/commits               @v1.endpoint.CommitWS.get(repo:String ?= "") 
-GET   /v1/committers            @v1.endpoint.CommitterWS.get(repo:String ?= "")
+GET   /v1/commits               @v1.endpoint.CommitWS.get(repo: Option[String], select:Option[String] ?= "all",  Option[String]:String, to_commit_id: Option[String]) 
+# GET   /v1/committers            @v1.endpoint.CommitterWS.get(repo:String ?= "")
  

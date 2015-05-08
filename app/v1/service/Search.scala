@@ -13,8 +13,11 @@ import v1.model.User
 import v1.util.GithubUrlParser
 import scala.concurrent.Future
 import scala.util.{ Success, Failure }
+import v1.model.Commit
 trait Search {
   def committers(url: String): Future[List[User]]
+  def commits(url: String): Future[List[Commit]]
+  
 
 }
 
@@ -24,6 +27,8 @@ class SearchImpl @Inject() (githubClient: SCM) extends Search with GithubUrlPars
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
   import scala.concurrent._
 
+  
+  def commits(url: String): Future[List[Commit]] = ???
   def committers(url: String): Future[List[User]] = {
     Logger.info(s"Searching for $url");
     parse(url) match {

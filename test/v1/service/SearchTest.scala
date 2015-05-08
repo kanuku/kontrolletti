@@ -23,7 +23,7 @@ class SearchTest extends FlatSpec with MockitoSugar with BeforeAndAfter {
   val group = "zalando-bus"
   val repo = "kontrolletti"
   val url = s"https://git-hub.com:8080/$group/$repo/"
-  val users = List(User("login", 1, 2))
+  val users = List(User(1,"login",  "email"))
 
   before {
     reset(client)
