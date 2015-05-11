@@ -17,7 +17,7 @@ trait Search {
   def committers(url: String): Future[List[Author]]
 
 }
-
+ 
 @Singleton
 class SearchImpl @Inject() (githubClient: SCM) extends Search with GithubUrlParser with JsonParserGithub {
 
