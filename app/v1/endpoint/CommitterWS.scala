@@ -26,7 +26,7 @@ class CommitterWS @Inject() (searchService: Search) extends Controller with Json
     notes = "A committer represents an entity that pushed changes to repository.",
     httpMethod = "GET",
     //responseContainer = "List",
-    response = classOf[User])
+    response = classOf[Author])
   @ApiResponses(Array(
     new ApiResponse(code = 200, message = "Operation succeeded!"),
     new ApiResponse(code = 404, message = "Did not find any resources!")))
