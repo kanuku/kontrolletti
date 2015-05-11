@@ -15,8 +15,6 @@ GET   /api-docs/api/v1/repos        controllers.ApiHelpController.getResource(pa
 
 
 
-
-
 # Map static scm from the /public folder to the /assets URL path
 GET   /assets/*file             controllers.Assets.at(path="/public", file)
 GET   /status                   controllers.Application.status

@@ -24,7 +24,7 @@ class SearchImpl @Inject() (githubClient: SCM) extends Search with GithubUrlPars
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
   import scala.concurrent._
 
-  def committers(url: String): Future[List[Author]] = {
+  def committers(url: String): Future[List[Author]] = { 
     Logger.info(s"Searching for $url");
     parse(url) match {
       case ("", "", "") =>
