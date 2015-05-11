@@ -28,11 +28,11 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
     //notes = "A commit is a record of the change(s) in a repository",
     ,httpMethod = "GET" //
     ,response = classOf[Commit] //
-    ,responseContainer = "List" //
+    //,responseContainer = "List" //
     )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, message = "Operation succeeded!"),
-    new ApiResponse(code = 404, message = "Did not find any resources!")))
+    new ApiResponse(code = 200, message = "Operation succeeded."),
+    new ApiResponse(code = 404, message = "Did not find the resource.")))
   @ApiImplicitParams(Array(
      new ApiImplicitParam(name = "repo", value = "repo url", required = true, dataType = "string", paramType = "query")
     ,new ApiImplicitParam(name = "valid", value = "State of spec validation", allowableValues = "yes,no,true,false,both", required = false, dataType = "string", paramType = "query")
