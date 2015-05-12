@@ -34,7 +34,7 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
     new ApiResponse(code = 200, message = "Operation succeeded."),
     new ApiResponse(code = 404, message = "Did not find the resource.")))
   @ApiImplicitParams(Array(
-     new ApiImplicitParam(name = "repo", value = "repo url", required = true, dataType = "string", paramType = "query")
+     new ApiImplicitParam(name = "repo", value = "repo url", required = true, dataType = "string", paramType = "path")
     ,new ApiImplicitParam(name = "valid", value = "State of spec validation", allowableValues = "true,false", required = false, dataType = "string", paramType = "query")
     ,new ApiImplicitParam(name = "from_commit_id", value = "Starting from commit-id", required = false, dataType = "string", paramType = "query")
     ,new ApiImplicitParam(name = "to_commit_id", value = "Untill commit-id", required = false, dataType = "string", paramType = "query")
