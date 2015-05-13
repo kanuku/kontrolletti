@@ -1,5 +1,40 @@
 package v1.test.util
 
+object ParsingData {
+
+  val projects = List("-", "Test_Now", "asdf", "...", "_-", "1_1_2_3_", "ZKON_-A.ZKON_-A.", "_Guess-_11_-D", "Proje123", "Test-project")
+  //Github has none, but stash does it REST-STyle /projects/
+  val projectAntecedents = List("/", "/projects/")
+  val ports = List("", ":8080", ":80")
+  val hostnames = List("stash", "stash-server", "stash.net", "stash-zalando", "live-stash-zalando", "stash.cd.zalando")
+  val users = List("", "git@", "fbenjamin@")
+  val protocols = List("", "http://", "http://", "https://", "ssh://")
+
+  def fixture = new {
+    val hosts =
+      for {
+        host <- hostnames
+        port <- ports
+      } yield (host + port)
+
+    val protocolUsers = for {
+      protocol <- protocols
+      user <- users
+    } yield (protocol + user)
+
+    val protocolUserHosts = for {
+      protocolUser <- protocolUsers
+      host <- hosts
+    } yield (protocolUser + host)
+    
+    val protocolUserHostAntecedents = for {
+      protocolUserHost <- protocolUserHosts
+     antecedent  <- projectAntecedents 
+    } yield (protocolUserHost + antecedent)
+  }
+
+}
+
 trait Data {
 
   val ghUsers = """
