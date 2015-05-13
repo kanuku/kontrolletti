@@ -10,7 +10,7 @@ import play.api.libs.json.Reads._
 import v1.client.SCM
 import v1.model.JsonParserGithub
 import v1.model.Author
-import v1.util.GithubUrlParser
+import v1.util.UrlParser
 import scala.concurrent.Future
 import scala.util.{ Success, Failure }
 trait Search {
@@ -19,7 +19,7 @@ trait Search {
 }
  
 @Singleton
-class SearchImpl @Inject() (githubClient: SCM) extends Search with GithubUrlParser with JsonParserGithub {
+class SearchImpl @Inject() (githubClient: SCM) extends Search with UrlParser with JsonParserGithub {
 
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
   import scala.concurrent._

@@ -4,12 +4,7 @@ package v1.util
 
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-import org.scalatest.WordSpec
-import org.scalatest.junit.JUnitRunner
 
-import play.api.test.Helpers._
-
-@RunWith(classOf[JUnitRunner])
 class GithubUrlParserTest extends FunSuite {
 
   sealed case class GithubProject(name: String, url: String)
@@ -17,11 +12,12 @@ class GithubUrlParserTest extends FunSuite {
   private val ghHost = "git-hub.com"
   private val ghProject = "zalando-bus"
   private val ghRepo = "kontrolletti"
-
+  private val hosts=List("git-hub.com","git-hub.com:8080","git-hub.com:22")
+  private val project= List("zalando-bus","stups","..test","---","___","--")
   private val ghUrls = List(
-    GithubProject("test0", "https://git-hub.com/zalando-bus/kontrolletti") //
+    GithubProject("test0", "") //
     , GithubProject("test1", "https://git-hub.com/zalando-bus/kontrolletti/") //
-    , GithubProject("test2", "https://git-hub.com:8080/zalando-bus/kontrolletti") //
+    , GithubProject("test2", "https:///zalando-bus/kontrolletti") //
     , GithubProject("test3", "https://git-hub.com:8080/zalando-bus/kontrolletti/") //
     , GithubProject("test4", "git@git-hub.com:zalando-bus/kontrolletti.git") //
     , GithubProject("test5", "git@git-hub.com:22/zalando-bus/kontrolletti.git") //
@@ -30,57 +26,40 @@ class GithubUrlParserTest extends FunSuite {
     , GithubProject("test8", "git-hub.com/zalando-bus/kontrolletti/") //
     )
 
-  test(getName("test0")) {
-    val project = getProject("test0")
-    test(project.url, project.name)
+  test("test-0") {
+    test("https://git-hub.com/zalando-bus/kontrolletti","git-hub.com" ,"zalando-bus","kontrolletti")
   }
-  test(getName("test1")) {
-    val project = getProject("test1")
-    test(project.url, project.name)
+  test("test-1") {
+	  test("https://git-hub.com/zalando-bus/kontrolletti/","git-hub.com" ,"zalando-bus","kontrolletti")
   }
-  test(getName("test2")) {
-    val project = getProject("test2")
-    test(project.url, project.name)
+  test("test-2") {
+	  test("https://git-hub.com/zalando-bus/kontrolletti/","git-hub.com" ,"zalando-bus","kontrolletti")
   }
-  test(getName("test3")) {
-    val project = getProject("test3")
-    test(project.url, project.name)
+  test("test-3") {
+	  test("https://git-hub.com:8080/zalando-bus/kontrolletti/","git-hub.com:8080" ,"zalando-bus","kontrolletti")
   }
-  test(getName("test4")) {
-    val project = getProject("test4")
-    test(project.url, project.name)
+  test("test-4") {
+	  test("git@git-hub.com/zalando-bus/kontrolletti.git","git-hub.com" ,"zalando-bus","kontrolletti")
   }
-  test(getName("test5")) {
-    val project = getProject("test5")
-    test(project.url, project.name)
+  test("test-5") {
+	  test("git@git-hub.com:22/zalando-bus/kontrolletti.git","git-hub.com:22" ,"zalando-bus","kontrolletti")
   }
-  test(getName("test6")) {
-    val project = getProject("test6")
-    test(project.url, project.name)
+  test("test-6") {
+	  test("ssh://git@git-hub.com:22/zalando-bus/kontrolletti.git","git-hub.com:22" ,"zalando-bus","kontrolletti")
   }
-  test(getName("test7")) {
-    val project = getProject("test7")
-    test(project.url, project.name)
+  test("test-7") {
+	  test("git-hub.com/zalando-bus/kontrolletti","git-hub.com" ,"zalando-bus","kontrolletti")
   }
-  test(getName("test8")) {
-    val project = getProject("test8")
-    test(project.url, project.name)
+  test("test-8") {
+	  test("git-hub.com/zalando-bus/kontrolletti/","git-hub.com" ,"zalando-bus","kontrolletti")
   }
 
-  def getName(name: String): String = {
-    val res = getProject(name)
-    res.name + " -> " + res.url
-  }
-  def getProject(name: String): GithubProject = {
-    ghUrls.find { x => x.name == name }.get
-  }
-
-  def test(url: String, name: String) = {
-    val parser = new GithubUrlParser() {}
-    val (host, group, repo) = parser.parse(url)
-    assert(host == ghHost, s"Testing $name")
-    assert(group == ghProject, s"Testing $name")
-    assert(repo == ghRepo, s"Testing $name")
+  def test(url: String, host: String, project:String, repo:String) = {
+    val parser = new UrlParser() {}
+    val (testHost, testGroup, testRepo) = parser.parse(url)
+    assert(testHost == host)
+    assert(testGroup == project)
+    assert(testRepo == repo)
   }
 
 }

@@ -6,7 +6,7 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.11.1"
 
-ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 65
+ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 15
 	
 ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := true
 

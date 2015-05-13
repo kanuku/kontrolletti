@@ -2,8 +2,10 @@ package v1.test.util
 
 object ParsingData {
 
+  val repoSucceeders = List("",".git", "/", "/browse", "/browse/", "/browse/dockerfiles/fashion-advice/master", "/browse/asdf/lest")
+  val repos = List("___", "-", "Test_Repo", "repo", "...", "_-", "1_1_2_3_", "ZKON_-A.ZKON_-A.", "_Guess-_11_-D", "Proje123", "Test-repo")
+  val repoAntecedents = List("/", "/repos/")
   val projects = List("-", "Test_Now", "asdf", "...", "_-", "1_1_2_3_", "ZKON_-A.ZKON_-A.", "_Guess-_11_-D", "Proje123", "Test-project")
-  //Github has none, but stash does it REST-STyle /projects/
   val projectAntecedents = List("/", "/projects/")
   val ports = List("", ":8080", ":80")
   val hostnames = List("stash", "stash-server", "stash.net", "stash-zalando", "live-stash-zalando", "stash.cd.zalando")
@@ -26,11 +28,31 @@ object ParsingData {
       protocolUser <- protocolUsers
       host <- hosts
     } yield (protocolUser + host)
-    
+
     val protocolUserHostAntecedents = for {
       protocolUserHost <- protocolUserHosts
-     antecedent  <- projectAntecedents 
+      antecedent <- projectAntecedents
     } yield (protocolUserHost + antecedent)
+
+    val protocolUserHostAntecedentsProjects = for {
+      protocolUserHostAntecedent <- protocolUserHostAntecedents
+      project <- projects
+    } yield (protocolUserHostAntecedent + project)
+
+    val protocolUserHostAntecedentsProjectAntecedents = for {
+      protocolUserHostAntecedentsProject <- protocolUserHostAntecedentsProjects
+      antecedent <- repoAntecedents
+    } yield (protocolUserHostAntecedentsProject + antecedent)
+    
+    val protocolUserHostAntecedentsProjectAntecedentRepos = for {
+    	protocolUserHostAntecedentsProjectAntecedent <- protocolUserHostAntecedentsProjectAntecedents
+    	repo <- repos
+    } yield (protocolUserHostAntecedentsProjectAntecedent + repo)
+    
+    val protocolUserHostAntecedentsProjectAntecedentReposRepoSucceeders = for {
+    	protocolUserHostAntecedentsProjectAntecedentRepo <- protocolUserHostAntecedentsProjectAntecedentRepos
+    	repoSucceeder <- repoSucceeders
+    } yield (protocolUserHostAntecedentsProjectAntecedentRepo + repoSucceeder)
   }
 
 }
