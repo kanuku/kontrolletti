@@ -10,11 +10,16 @@ import org.scalatest.junit.JUnitRunner
 import play.api.test.Helpers._
 import v1.test.util.ParsingData
 import scala.util.matching.Regex
+
+/**
+ * This class tests for parsing URL composed of corner cases.
+ * The URL's are being tested simultaneous
+ */
 class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with UrlParser with ScalaFutures {
   import ParsingData._
 
   /**
-   * This test has 712800 URLS to test, that is why a future is being used here.
+   * This test has 712800 URLS to test, that is why the URLS are being tested in parallel.
    */
   test("parse(protocol+user+hostname+antecedent+project+antecedent+repo+repoSucceeders) and get (protocol+user+hostname+antecedent+project+antecedent+repo+repoSucceeders)") {
     for (input <- fixture.protocolUserHostAntecedentsProjectAntecedentReposRepoSucceeders.grouped(30)) {
@@ -35,7 +40,8 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
   }
 
   /**
-   * This test has 118800 URLS to test, that is why a future is being used here.
+   * This test has 118800 URLS to test, that is why the URLS are being tested in parallel.
+   *
    */
   test("parse(protocol+user+hostname+antecedent+project+antecedent+repo) and get (protocol+user+hostname+antecedent+project+antecedent+repo)") {
     for (input <- fixture.protocolUserHostAntecedentsProjectAntecedentRepos.grouped(30)) {
@@ -95,6 +101,19 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
     val parsed = for (value <- input if !value.isEmpty()) yield value match { case regex(protocol, user) => concat(protocol, user) }
     val diff = input.filterNot { x => x.isEmpty() }.filterNot { x => parsed.contains(x) }
     diff shouldBe empty
+  }
+
+  test("parse (null) and get empty tuple") {
+    val parsed = parse(null)
+    assert(parsed == ("", "", ""))
+  }
+  test("parse (empty String) and get empty tuple") {
+	  val parsed = parse("")
+			  assert(parsed == ("", "", ""))
+  }
+  test("parse (NoneURL) and get empty tuple") {
+	  val parsed = parse("asdfasdfölakjsdfölkajsdfölkj1230790823702934857")
+			  assert(parsed == ("", "", ""))
   }
 
   /**

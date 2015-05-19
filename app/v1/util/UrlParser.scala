@@ -30,10 +30,10 @@ trait UrlParser {
     Logger.error(s" #### $url ")
     url match {
       case "" =>
-        Logger.info(s"URL is empty")
+        Logger.info("URL is empty")
         ("", "", "")
       case null =>
-        Logger.info(s"URL is null")
+        Logger.info("URL is null")
         ("", "", "")
       case urlRegex(protocol, user, host, prjAntecedent, project, repoAntecedent, repo, succeeder) =>
         Logger.error(s"urlRegex $url => protocol($protocol) user($user) host(host) antecedent($prjAntecedent)"

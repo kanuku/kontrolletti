@@ -20,28 +20,26 @@ import v1.model.Commit
 @Singleton
 class RepoWS @Inject() (searchService: Search) extends Controller {
 
-  
-  
-    @ApiOperation(
+  //TODO: Replace it with internal parser only
+  import v1.client.KontrollettiToJsonParser._
+
+  @ApiOperation(
     nickname = "get" //
-    ,value = "Get list of commits" //
+    , value = "Get list of commits" //
     //notes = "A commit is a record of the change(s) in a repository",
-    ,httpMethod = "GET" //
-    ,response = classOf[Commit] //
+    , httpMethod = "GET" //
+    , response = classOf[Commit] //
     //,responseContainer = "List" //
     )
   @ApiResponses(Array(
     new ApiResponse(code = 200, message = "Operation succeeded."),
     new ApiResponse(code = 404, message = "Did not find the resource.")))
   @ApiImplicitParams(Array(
-     new ApiImplicitParam(name = "repo", value = "repo url", required = true, dataType = "string", paramType = "path")
-    ,new ApiImplicitParam(name = "valid", value = "State of spec validation", allowableValues = "true,false", required = false, dataType = "string", paramType = "query")
-    ,new ApiImplicitParam(name = "from_commit_id", value = "Starting from commit-id", required = false, dataType = "string", paramType = "query")
-    ,new ApiImplicitParam(name = "to_commit_id", value = "Untill commit-id", required = false, dataType = "string", paramType = "query")
-        ))
-  def get(repo: String, valid: Option[Boolean], from_commit_id: Option[String])= Action { //, to_commit_id: Option[String]) = Action {
-      Logger.info("Request received");
-    Ok("get")
+    new ApiImplicitParam(name = "repo", value = "repo url", required = true, dataType = "string", paramType = "path"), new ApiImplicitParam(name = "valid", value = "State of spec validation", allowableValues = "true,false", required = false, dataType = "string", paramType = "query"), new ApiImplicitParam(name = "from_commit_id", value = "Starting from commit-id", required = false, dataType = "string", paramType = "query"), new ApiImplicitParam(name = "to_commit_id", value = "Untill commit-id", required = false, dataType = "string", paramType = "query")))
+  def get(repo: String, valid: Option[Boolean], from_commit_id: Option[String]) = Action.async { //, to_commit_id: Option[String]) = Action {
+    searchService.commits(repo).map { response =>
+      Logger.info("WSResult " + response)
+      Ok(Json.prettyPrint(Json.toJson(response))).as("application/json")
+    }
   }
-  
 }

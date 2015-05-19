@@ -13,6 +13,7 @@ import org.mockito.Mockito._
 import v1.test.util.MockitoUtils._
 
 class GithubTest extends FlatSpec with MockitoSugar {
+  val host= "github.com"
   val group = "kanuku"
   val repo = "misc"
 
@@ -23,7 +24,7 @@ class GithubTest extends FlatSpec with MockitoSugar {
         val method = mock[(String) => WSRequestHolder]
         val requestHolder = mock[WSRequestHolder]
         val response = mockFutureWSResponse(mock[WSResponse], true)
-        val client = github(method)
+        val client: SCMClient = createClient(method)
 
         //Record
         when(method.apply(anyString())).thenReturn(requestHolder)
@@ -31,14 +32,14 @@ class GithubTest extends FlatSpec with MockitoSugar {
         when(requestHolder.get).thenReturn(response)
 
         // Start testing
-        val result = client.committers(group, repo)
+        val result = client.committers(host, group, repo)
 
         val urlCap = ArgumentCaptor.forClass(classOf[String])
         
         verify(method,times(1)).apply(urlCap.capture())
         
         //Verfiy
-        assert(urlCap.getValue==Githubs.contributors(group, repo),"Url is not correct");
+        assert(urlCap.getValue==GithubResolver.contributors(group, repo),"Url is not correct");
         assert(result == response, "Client should return the mocked response")
 
       }

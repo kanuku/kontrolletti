@@ -104,5 +104,5 @@ class UrlParserIndividualRegexExpressionTest extends FunSuite with Matchers with
     diff1 shouldBe empty
     diff2 shouldBe empty
   }
-
+ 
 }
