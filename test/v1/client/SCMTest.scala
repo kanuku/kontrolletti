@@ -12,7 +12,7 @@ import org.mockito.Matchers._
 import org.mockito.Mockito._
 import v1.test.util.MockitoUtils._
 
-class GithubTest extends FlatSpec with MockitoSugar {
+class SCMTest extends FlatSpec with MockitoSugar {
   val host= "github.com"
   val group = "kanuku"
   val repo = "misc"
@@ -24,7 +24,7 @@ class GithubTest extends FlatSpec with MockitoSugar {
         val method = mock[(String) => WSRequestHolder]
         val requestHolder = mock[WSRequestHolder]
         val response = mockFutureWSResponse(mock[WSResponse], true)
-        val client: SCMClient = createClient(method)
+        val client: SCM = createClient(method)
 
         //Record
         when(method.apply(anyString())).thenReturn(requestHolder)

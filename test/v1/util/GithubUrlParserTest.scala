@@ -4,6 +4,8 @@ package v1.util
 
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import Accumulation._
+
 
 class GithubUrlParserTest extends FunSuite {
 
@@ -12,8 +14,8 @@ class GithubUrlParserTest extends FunSuite {
   private val ghHost = "git-hub.com"
   private val ghProject = "zalando-bus"
   private val ghRepo = "kontrolletti"
-  private val hosts=List("git-hub.com","git-hub.com:8080","git-hub.com:22")
-  private val project= List("zalando-bus","stups","..test","---","___","--")
+  private val hosts = List("git-hub.com", "git-hub.com:8080", "git-hub.com:22")
+  private val project = List("zalando-bus", "stups", "..test", "---", "___", "--")
   private val ghUrls = List(
     GithubProject("test0", "") //
     , GithubProject("test1", "https://git-hub.com/zalando-bus/kontrolletti/") //
@@ -27,39 +29,45 @@ class GithubUrlParserTest extends FunSuite {
     )
 
   test("test-0") {
-    test("https://git-hub.com/zalando-bus/kontrolletti","git-hub.com" ,"zalando-bus","kontrolletti")
+    test("https://git-hub.com/zalando-bus/kontrolletti", "git-hub.com", "zalando-bus", "kontrolletti")
   }
   test("test-1") {
-	  test("https://git-hub.com/zalando-bus/kontrolletti/","git-hub.com" ,"zalando-bus","kontrolletti")
+    test("https://git-hub.com/zalando-bus/kontrolletti/", "git-hub.com", "zalando-bus", "kontrolletti")
   }
   test("test-2") {
-	  test("https://git-hub.com/zalando-bus/kontrolletti/","git-hub.com" ,"zalando-bus","kontrolletti")
+    test("https://git-hub.com/zalando-bus/kontrolletti/", "git-hub.com", "zalando-bus", "kontrolletti")
   }
   test("test-3") {
-	  test("https://git-hub.com:8080/zalando-bus/kontrolletti/","git-hub.com:8080" ,"zalando-bus","kontrolletti")
+    test("https://git-hub.com:8080/zalando-bus/kontrolletti/", "git-hub.com:8080", "zalando-bus", "kontrolletti")
   }
   test("test-4") {
-	  test("git@git-hub.com/zalando-bus/kontrolletti.git","git-hub.com" ,"zalando-bus","kontrolletti")
+    test("git@git-hub.com/zalando-bus/kontrolletti.git", "git-hub.com", "zalando-bus", "kontrolletti")
   }
   test("test-5") {
-	  test("git@git-hub.com:22/zalando-bus/kontrolletti.git","git-hub.com:22" ,"zalando-bus","kontrolletti")
+    test("git@git-hub.com:22/zalando-bus/kontrolletti.git", "git-hub.com:22", "zalando-bus", "kontrolletti")
   }
   test("test-6") {
-	  test("ssh://git@git-hub.com:22/zalando-bus/kontrolletti.git","git-hub.com:22" ,"zalando-bus","kontrolletti")
+    test("ssh://git@git-hub.com:22/zalando-bus/kontrolletti.git", "git-hub.com:22", "zalando-bus", "kontrolletti")
   }
   test("test-7") {
-	  test("git-hub.com/zalando-bus/kontrolletti","git-hub.com" ,"zalando-bus","kontrolletti")
+    test("git-hub.com/zalando-bus/kontrolletti", "git-hub.com", "zalando-bus", "kontrolletti")
   }
   test("test-8") {
-	  test("git-hub.com/zalando-bus/kontrolletti/","git-hub.com" ,"zalando-bus","kontrolletti")
+    test("git-hub.com/zalando-bus/kontrolletti/", "git-hub.com", "zalando-bus", "kontrolletti")
+  }
+  test("test-9") {
+    test("https://github.com/zalando-bus/kontrolletti", "github.com", "zalando-bus", "kontrolletti")
   }
 
-  def test(url: String, host: String, project:String, repo:String) = {
+  def test(url: String, host: String, project: String, repo: String) = {
     val parser = new UrlParser() {}
-    val (testHost, testGroup, testRepo) = parser.parse(url)
-    assert(testHost == host)
-    assert(testGroup == project)
-    assert(testRepo == repo)
+    val result = parser.parse(url)
+    assert(result.isGood, "Parsing failed")
+    withGood(result) {
+      assert(testHost == host)
+      assert(testGroup == project)
+      assert(testRepo == repo)
+    }
   }
 
 }

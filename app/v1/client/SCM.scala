@@ -7,16 +7,16 @@ import play.api.Play.current
 import play.api.Logger
 import play.api.libs.json.Reads
 
-sealed trait Callable{
-  def f:Future[WSResponse]
+sealed trait Callable {
+  def f: Future[WSResponse]
 }
 
-sealed trait SCMClient {
+sealed trait SCM {
   def committers(host: String, group: String, repo: String): Future[WSResponse]
   def commits(host: String, group: String, repo: String): Future[WSResponse]
 }
 
-class SCMClientImpl extends SCMClient {
+class SCMImpl extends SCM {
 
   def committers(host: String, group: String, repo: String): Future[WSResponse] = {
     val res = resolver(host)
@@ -32,7 +32,11 @@ class SCMClientImpl extends SCMClient {
   }
 
   def request: (String, String, String) => Future[WSResponse] = {
-    (url, accessTokenKey, accessTokenValue) => requestHolder(url).withHeaders(accessTokenKey -> accessTokenValue).get()
+    (url, accessTokenKey, accessTokenValue) =>
+      if (accessTokenValue != null || accessTokenValue.isEmpty()) 
+    	  requestHolder(url).get()
+      else
+    	  requestHolder(url).withHeaders(accessTokenKey -> accessTokenValue).get()
   }
 
   def resolver = GithubResolver.resolve orElse StashResolver.resolve
@@ -73,7 +77,7 @@ object GithubResolver extends SCMResolver {
 
   // Authorization variables
   def accessTokenKey = "access_token"
-  val accessTokenValue = "897674c1118fa83e8819dbab7fa501ddec3dfb24"
+  val accessTokenValue = "506955b18a2ffceed85f081e2ab4503c46800d46"
 }
 
 //https://stash.zalando.net/rest/api/1.0/projects/doc/repos/ci-cd/commits

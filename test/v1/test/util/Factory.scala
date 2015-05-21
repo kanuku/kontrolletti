@@ -17,7 +17,8 @@ import play.api.Application
 import play.api.test.FakeApplication
 import play.api.test.Helpers._
 import play.api.libs.ws.WSRequestHolder
-import v1.client.SCMClientImpl
+import v1.client.SCMImpl
+import play.api.libs.json.JsString
 
 object MockitoUtils extends MockitoSugar {
 
@@ -38,6 +39,8 @@ object MockitoUtils extends MockitoSugar {
     }
   }
 
+   
+
   /**
    *
    * Creates an implementation of the SCMCClient
@@ -45,7 +48,7 @@ object MockitoUtils extends MockitoSugar {
    * which can be mocked.
    *
    */
-  def createClient(requestParam: ((String) => WSRequestHolder)) = new SCMClientImpl {
+  def createClient(requestParam: ((String) => WSRequestHolder)) = new SCMImpl {
     override def requestHolder = requestParam
   }
 

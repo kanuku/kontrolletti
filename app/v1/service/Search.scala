@@ -1,8 +1,5 @@
 package v1.service
 
-import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
 import akka.dispatch.OnComplete
 import akka.dispatch.OnFailure
 import javax.inject._
@@ -10,21 +7,29 @@ import play.api.Logger
 import play.api.libs.json._
 import play.api.libs.json._
 import play.api.libs.json.Reads._
-import play.api.libs.ws.WSResponse
-import v1.client.GithubResolver
-import v1.client.GithubToJsonParser
-import v1.client.SCMClient
-import v1.client.StashResolver
-import v1.client.StashToJsonParser
+import v1.client.SCM
 import v1.model.Author
-import v1.model.Commit
 import v1.util.UrlParser
-import com.typesafe.config.ConfigException.Parse
-import play.api.libs.ws.EmptyBody
+import scala.concurrent.Future
+import scala.util.{ Success, Failure }
+import play.api.libs.ws.WSResponse
+import v1.client.GithubToJsonParser
+import v1.client.StashToJsonParser
+import v1.model.Commit
+import v1.client.SCMParser
+import v1.client.SCMParser
+import scalaz.std.util.parsing.combinator.parser
+import org.scalactic._
+import Accumulation._
 
 trait Search {
-  def committers(url: String): Future[List[Author]]
-  def commits(url: String): Future[List[Commit]]
+  def committers(url: String): Either[String, Future[List[Author]]]
+  /**
+   * Returns commits fetched(cached) from the given url repository.
+   * @param url url of the repository
+   * @return a future containing the list of commits
+   */
+  def commits(url: String): Future[Either[String, List[Commit]]]
 }
 
 /**
@@ -33,84 +38,51 @@ trait Search {
  *
  */
 @Singleton
-class SearchImpl @Inject() (client: SCMClient) extends Search with UrlParser {
+class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
   import scala.concurrent._
-
-  val github = GithubResolver
-  val stash = StashResolver
-
-  type ParsableUrl = (String) => (String, String, String)
-  type CallableRequest = (String, String, String) => Future[WSResponse]
-  type DeserializableResult[T] = (Future[WSResponse]) => List[T]
-
-  val parseURL: ParsableUrl = { url => parse(url) }
-  val callCommitters: CallableRequest = { (host, group, repo) => client.commits(host, group, repo) }
-
+  type Parser[A, B] = A => B
+  type Callable = () => Future[WSResponse]
   /**
    *
    */
-  def committers(url: String): Future[List[Author]] = {
-    val parsedUrl = parseURL(url)
+  def committers(repoURL: String): Either[String, Future[List[Author]]] = {
+    Logger.info(s"Searching for $repoURL");
+    parse(repoURL)
+    Left("")
 
-    handleWSRequest(url, f)
   }
 
-  /**
-   *
-   */
-  def commits(url: String): Future[List[Commit]] = {
-    Logger.info(s"Searching commits for $url");
-    val f: Callable = {}
-
-    implicit val parser: Parser[Commit] = GithubToJsonParser.commitsGithubDeserializer
-    handleWSRequest(url, f)
-  }
-
-  def handleWSRequest(url: String, f: Callable)(implicit parser: Parser[Commit]): Future[List[Commit]] = {
-    parse(url) match {
-      case ("", "", "") =>
-        Future(Nil)
-      case (host, group, repo) =>
-        val res = call(host, group, repo, f)
-        res.map {
-          response =>
-            deserialize(host, response)
+  def commits(repoURL: String): Future[Either[String, List[Commit]]] = {
+    Logger.info(s"Searching for $repoURL");
+    parse(repoURL) match {
+      case Left(error) =>
+        Logger.error(error)
+        Future { Left(error) }
+      case Right((host, group, repo)) =>
+        resolveParser(host) match {
+          case Left(error) => Future { Left(error) }
+          case Right(parser) =>
+            lazy val call: Callable = () => client.commits(host, group, repo)
+            requestFromUrl(call)(parser.commitToModel)
         }
     }
   }
 
-  def call(host: String, group: String, repo: String, f: Callable): Future[WSResponse] = {
-    val res = f(host, group, repo)
-    res onComplete {
+  def requestFromUrl[A](callSCM: Callable)(implicit parse: Parser[JsValue, Either[String, List[Commit]]]): Future[Either[String, List[Commit]]] = {
+    val futureResponse = callSCM()
+    futureResponse onComplete {
       case Success(posts) =>
-      case Failure(t) =>
-        Logger.error("An error as occured: " + t.getMessage())
+      case Failure(t) => // Clients of this service don't need to know the details
+        Logger.error("Error while calling SCM" + t.getMessage)
     }
-    res.map { x => x }
+    futureResponse.map { posts =>
+      parse(posts.json)
+    }
   }
 
-  def deserialize[T](host: String, response: WSResponse)(implicit parser: Parser[T]): List[T] = {
-    if (github.names.contains(host)) {
-      Logger.info(s"Parsing data from Github -> $host")
-      import v1.client.GithubToJsonParser._
-
-      parser(response)
-
-    } else if (stash.names.contains(host)) {
-
-      Logger.info(s"Parsing data from Stash -> $host")
-      import v1.client.StashToJsonParser._
-      parser(response)
-
-    } else {
-      Logger.warn(s"No parser found for -> $host")
-      List()
-
-    }
-
-  }
+  def resolveParser =
+    (GithubToJsonParser.resolve orElse StashToJsonParser.resolve)
+      .andThen { x => if (x.isDefined) Right(x.get) else Left("Could not resolve the SCMParser") }
 
 }
-
-

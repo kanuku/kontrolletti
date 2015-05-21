@@ -15,13 +15,14 @@ import play.api.mvc.Action
 import play.api.mvc.Controller
 import v1.service.Search
 import v1.model.Commit
+import play.utils.UriEncoding
 
 @Api(value = "/api/v1/repos", description = "Access repository information.")
 @Singleton
 class RepoWS @Inject() (searchService: Search) extends Controller {
 
-  //TODO: Replace it with internal parser only
-  import v1.client.KontrollettiToJsonParser._
+
+  import v1.model.KontrollettiToJsonParser._
 
   @ApiOperation(
     nickname = "get" //
@@ -37,9 +38,12 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "repo", value = "repo url", required = true, dataType = "string", paramType = "path"), new ApiImplicitParam(name = "valid", value = "State of spec validation", allowableValues = "true,false", required = false, dataType = "string", paramType = "query"), new ApiImplicitParam(name = "from_commit_id", value = "Starting from commit-id", required = false, dataType = "string", paramType = "query"), new ApiImplicitParam(name = "to_commit_id", value = "Untill commit-id", required = false, dataType = "string", paramType = "query")))
   def get(repo: String, valid: Option[Boolean], from_commit_id: Option[String]) = Action.async { //, to_commit_id: Option[String]) = Action {
-    searchService.commits(repo).map { response =>
-      Logger.info("WSResult " + response)
-      Ok(Json.prettyPrint(Json.toJson(response))).as("application/json")
-    }
+    val repository = UriEncoding.decodePath(repo, "UTF-8")
+    Logger.info("Message received " + repository)
+//    searchService.commits(repository).map { response =>
+//      Logger.info("WSResult " + response)
+//      Ok(Json.prettyPrint(Json.toJson(response))).as("application/json")
+//    }
+    Future{Ok("")}
   }
 }

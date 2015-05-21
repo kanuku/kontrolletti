@@ -14,7 +14,7 @@ import play.api.libs.ws.WSResponse
 import v1.test.util.MockitoUtils._
 import v1.model.Author
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import v1.client.SCMClient
+import v1.client.SCM
 
 /**
  * This class tests the interaction between the Service and the Client.
@@ -24,7 +24,7 @@ import v1.client.SCMClient
  */
 class SearchTest extends FlatSpec with MockitoSugar with BeforeAndAfter {
 
-  val client = mock[SCMClient]
+  val client = mock[SCM]
   val search: Search = new SearchImpl(client)
   val host = "git-hub.com:8080"
   val group = "zalando-bus"
