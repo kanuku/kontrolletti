@@ -11,12 +11,12 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Reads
 import v1.model.Author
 import v1.model.Commit
-import org.scalactic._
 
 /**
  * Json deserializer for converting external json types, from the SCM,
  * into internal model.
  */
+
 
 sealed trait SCMParser {
   type Parser[A, B] = A => B

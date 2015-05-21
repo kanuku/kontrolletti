@@ -18,9 +18,7 @@ import v1.client.StashToJsonParser
 import v1.model.Commit
 import v1.client.SCMParser
 import v1.client.SCMParser
-import scalaz.std.util.parsing.combinator.parser
-import org.scalactic._
-import Accumulation._
+ 
 
 trait Search {
   def committers(url: String): Either[String, Future[List[Author]]]
@@ -41,8 +39,9 @@ trait Search {
 class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
   import scala.concurrent._
-  type Parser[A, B] = A => B
+  type Parser[JsValue, B] = JsValue => B
   type Callable = () => Future[WSResponse]
+  
   /**
    *
    */
@@ -53,9 +52,9 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   }
 
-  def commits(repoURL: String): Future[Either[String, List[Commit]]] = {
-    Logger.info(s"Searching for $repoURL");
-    parse(repoURL) match {
+  def commits(url: String): Future[Either[String, List[Commit]]] = {
+    Logger.info(s"Searching for $url");
+    parse(url) match {
       case Left(error) =>
         Logger.error(error)
         Future { Left(error) }
@@ -68,9 +67,10 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
         }
     }
   }
-
-  def requestFromUrl[A](callSCM: Callable)(implicit parse: Parser[JsValue, Either[String, List[Commit]]]): Future[Either[String, List[Commit]]] = {
-    val futureResponse = callSCM()
+  
+   
+  def requestFromUrl[A](call: Callable)(implicit parse: Parser[JsValue, A]): Future[A] = {
+    val futureResponse = call()
     futureResponse onComplete {
       case Success(posts) =>
       case Failure(t) => // Clients of this service don't need to know the details

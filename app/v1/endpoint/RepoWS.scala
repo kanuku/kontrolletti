@@ -40,10 +40,12 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
   def get(repo: String, valid: Option[Boolean], from_commit_id: Option[String]) = Action.async { //, to_commit_id: Option[String]) = Action {
     val repository = UriEncoding.decodePath(repo, "UTF-8")
     Logger.info("Message received " + repository)
-//    searchService.commits(repository).map { response =>
-//      Logger.info("WSResult " + response)
-//      Ok(Json.prettyPrint(Json.toJson(response))).as("application/json")
-//    }
-    Future{Ok("")}
+    searchService.commits(repository).map { response =>
+      Logger.info("WSResult " + response)
+      if(response.isLeft)
+        NotFound(response.left.get)
+        else 
+      Ok(Json.prettyPrint(Json.toJson(response.right.get))).as("application/json")
+    }
   }
 }

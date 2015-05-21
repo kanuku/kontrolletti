@@ -56,7 +56,8 @@ class SearchTest extends FlatSpec with MockitoSugar with BeforeAndAfter {
     assert(repoCap.getValue == repo)
 
     assert(result != null)
-    result.map { rep =>
+    assert(result.isRight, "Result returned an error")
+    result.right.get.map { rep =>
       assert(rep == users)
     }
   }
@@ -78,7 +79,8 @@ class SearchTest extends FlatSpec with MockitoSugar with BeforeAndAfter {
     assert(hostCap.getValue == host)
     assert(groupCap.getValue == group)
     assert(repoCap.getValue == repo)
-    result.map { rep =>
+    assert(result.isRight, "Result returned an error")
+    result.right.get.map { rep =>
       assert(rep == users)
     }
   }

@@ -3,8 +3,7 @@
 package v1.util
 
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import Accumulation._
+import org.scalatest.FunSuite 
 
 
 class GithubUrlParserTest extends FunSuite {
@@ -62,12 +61,11 @@ class GithubUrlParserTest extends FunSuite {
   def test(url: String, host: String, project: String, repo: String) = {
     val parser = new UrlParser() {}
     val result = parser.parse(url)
-    assert(result.isGood, "Parsing failed")
-    withGood(result) {
-      assert(testHost == host)
-      assert(testGroup == project)
-      assert(testRepo == repo)
-    }
+    assert(result.isRight, "Parsing failed")
+    val (testHost, testGroup, testRepo) = result.right.toOption.get 
+    assert(testHost == host)
+    assert(testGroup == project)
+    assert(testRepo == repo)
   }
 
 }
