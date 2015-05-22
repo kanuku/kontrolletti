@@ -1,4 +1,5 @@
-#### Kontrolletti API
+#### Kontrolletti API 
+[![Coverage Status](https://coveralls.io/repos/zalando/kontrolletti/badge.svg?branch=develop)](https://coveralls.io/r/zalando/kontrolletti?branch=develop)
 
 The goal of this project is to retrieve and unify information from different SCM tools (Source Control Management) and provide an interface where this information can be requested.
 
