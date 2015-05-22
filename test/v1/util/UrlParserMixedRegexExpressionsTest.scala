@@ -10,6 +10,7 @@ import org.scalatest.junit.JUnitRunner
 import play.api.test.Helpers._
 import v1.test.util.ParsingData
 import scala.util.matching.Regex
+import v1.test.util.TestUtils
 
 /**
  * This class tests for parsing URL composed of corner cases.
@@ -17,7 +18,7 @@ import scala.util.matching.Regex
  */
 class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with UrlParser with ScalaFutures {
   import ParsingData._
-
+  import TestUtils._
   /**
    * This test has 712800 URLS to test, that is why the URLS are being tested in parallel.
    */
@@ -104,16 +105,23 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
   }
 
   test("parse (null) and get empty tuple") {
-    val parsed = parse(null)
-    assert(parsed == ("", "", ""))
+    val either = parse(null)
+    assertEitherIsNotNull(either)
+    assertEitherIsLeft(either)
+    assert(either.left.get == "URL is null")
   }
   test("parse (empty String) and get empty tuple") {
-	  val parsed = parse("")
-			  assert(parsed == ("", "", ""))
+    val either = parse("")
+    assertEitherIsNotNull(either)
+    assertEitherIsLeft(either)
+    assert(either.left.get == "URL is empty")
   }
   test("parse (NoneURL) and get empty tuple") {
-	  val parsed = parse("asdfasdfölakjsdfölkajsdfölkj1230790823702934857")
-			  assert(parsed == ("", "", ""))
+    val url="asdfasdfölakjsdfölkajsdfölkj1230790823702934857"
+    val either = parse(url)
+    assertEitherIsNotNull(either)
+    assertEitherIsLeft(either)
+    assert(either.left.get == s"Could not parse $url")
   }
 
   /**

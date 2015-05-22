@@ -23,7 +23,7 @@ class SCMTest extends FlatSpec with MockitoSugar {
 
         val method = mock[(String) => WSRequestHolder]
         val requestHolder = mock[WSRequestHolder]
-        val response = mockFutureWSResponse(mock[WSResponse], true)
+        val response = mockSuccessfullParsableFutureWSResponse(mock[WSResponse])
         val client: SCM = createClient(method)
 
         //Record
@@ -44,4 +44,19 @@ class SCMTest extends FlatSpec with MockitoSugar {
 
       }
     }
+  
+   "SCM.resolver" should "return the github-client when issued with a github domain" in {
+     val client=new SCMImpl()
+     val resolver=client.resolver("github.com")
+     assert(resolver!=null)
+     assert(resolver.names.contains("github.com"))
+     
+   } 
+   "SCM.resolver" should "return the stash-client when issued with a stash domain" in {
+	   val client=new SCMImpl()
+	   val resolver=client.resolver("stash.zalando.net")
+	   assert(resolver!=null)
+	   assert(resolver.names.contains("stash.zalando.net"))
+	   
+   } 
 }

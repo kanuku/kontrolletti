@@ -12,17 +12,12 @@ import play.api.libs.json.Writes
  *
  */
 
-//case class Repository(name: String, resource: Resource, url: String, commits: List[Commit])
-//case class Commit(id: String, message: String, committer: User)
-//case class Resource(name: String, url: String)
-case class Author(name: String, email: String)
-case class Commit(id: String //
-, message: String, valid: Option[Boolean], author: Author)
 
+case class Author(name: String, email: String)
+case class Commit(id: String, message: String, valid: Option[Boolean], author: Author)
 
 //TODO: Evaluate Moving the readers in this parser(KontrollettiToJsonParser) into Companion objects
 // And overriding those companion objects in the SCM Parser
-
 
 object KontrollettiToJsonParser {
   implicit val authorReader: Reads[Author] = (

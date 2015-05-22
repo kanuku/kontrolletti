@@ -25,21 +25,16 @@ object MockitoUtils extends MockitoSugar {
   /**
    * Creates a successfull/failed mocked WSResponse
    */
-  def mockFutureWSResponse[T](result: T, success: Boolean = true): Future[WSResponse] = {
+  def mockSuccessfullParsableFutureWSResponse[T](result: T, httpCode:Int=200): Future[WSResponse] = {
     val wsResponse = mock[WSResponse]
     val jsValue = mock[JsValue]
     val jsResult: JsResult[T] = new JsSuccess(result, null)
 
     when(jsValue.validate[T](anyObject())).thenReturn(jsResult)
+    when(wsResponse.status).thenReturn(200)
     when(wsResponse.json).thenReturn(jsValue)
-    success match {
-      case true =>
-        Future.successful(wsResponse)
-      case false => Future.failed(new RuntimeException)
-    }
+    Future.successful(wsResponse)
   }
-
-   
 
   /**
    *

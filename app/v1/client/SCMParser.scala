@@ -1,6 +1,5 @@
 package v1.client
 
-import play.api.Logger
 import play.api.libs.functional.syntax.functionalCanBuildApplicative
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.JsError
@@ -16,7 +15,6 @@ import v1.model.Commit
  * Json deserializer for converting external json types, from the SCM,
  * into internal model.
  */
-
 
 sealed trait SCMParser {
   type Parser[A, B] = A => B
@@ -37,8 +35,21 @@ sealed trait SCMParser {
     case host if domains.contains(host) => Some(this)
     case _                              => None
   }
+
+  /**
+   * Returns the parser for deserializing a jsonValue to a List of Commits
+   */
   def commitToModel: Parser[JsValue, Either[String, List[Commit]]]
+  /**
+   * Returns the parser for deserializing a jsonValue to a List of Authors
+   */
   def authorToModel: Parser[JsValue, Either[String, List[Author]]]
+
+  /**
+   * Unwraps the result from the JsResult and returns the successfully deserialized
+   * object or the detailed error message.
+   * @return Either[Left,Right] - Left contains the error message and Right the deserialized Object
+   */
   def extract[T](input: JsResult[T]): Either[String, T] = {
     input match {
       case s: JsSuccess[T] =>
@@ -58,12 +69,9 @@ object GithubToJsonParser extends SCMParser {
 
   def domains = GithubResolver.names
 
-  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = {
-    (value) => extract(value.validate[List[Commit]])
-  }
-  val authorToModel: Parser[JsValue, Either[String, List[Author]]] = {
-    (author) => extract(author.validate[List[Author]])
-  }
+  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => extract(value.validate[List[Commit]])
+
+  val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (author) => extract(author.validate[List[Author]])
 
   private implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
@@ -77,16 +85,15 @@ object GithubToJsonParser extends SCMParser {
 }
 
 /**
- * Deserializer for objects from Stash SCM
+ * Deserializer for objects from Stash
  *
  */
 object StashToJsonParser extends SCMParser {
 
   def domains = StashResolver.names
 
-  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = {
-    (value) => extract(value.validate[List[Commit]])
-  }
+  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) =>  extract((value \ "values").validate[List[Commit]]) 
+
   val authorToModel: Parser[JsValue, Either[String, List[Author]]] = {
     (author) => extract(author.validate[List[Author]])
   }

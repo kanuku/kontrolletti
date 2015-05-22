@@ -19,24 +19,27 @@ sealed trait SCM {
 class SCMImpl extends SCM {
 
   def committers(host: String, group: String, repo: String): Future[WSResponse] = {
-    val res = resolver(host)
+    val res: SCMResolver = resolver(host)
     val url: String = res.contributors(group, repo)
-    Logger.debug(s"Requesting contributors from $url");
     request(url, res.accessTokenKey, res.accessTokenValue)
   }
   def commits(host: String, project: String, repo: String): Future[WSResponse] = {
-    val res = resolver(host)
+    val res: SCMResolver = resolver(host)
     val url: String = res.commits(project, repo)
-    Logger.debug(s"Requesting commits from $url");
+
     request(url, res.accessTokenKey, res.accessTokenValue)
   }
 
   def request: (String, String, String) => Future[WSResponse] = {
     (url, accessTokenKey, accessTokenValue) =>
-      if (accessTokenValue != null || accessTokenValue.isEmpty()) 
-    	  requestHolder(url).get()
-      else
-    	  requestHolder(url).withHeaders(accessTokenKey -> accessTokenValue).get()
+    val request = requestHolder(url)
+      if (accessTokenValue != null || accessTokenValue.isEmpty()) {
+        Logger.info(s"Request with access token "+request.url  );
+        request.get()
+      } else {
+        Logger.info(s"Requesting without access token $request.url");
+        request.withHeaders(accessTokenKey -> accessTokenValue).get()
+      }
   }
 
   def resolver = GithubResolver.resolve orElse StashResolver.resolve
@@ -47,6 +50,11 @@ class SCMImpl extends SCM {
 
 }
 
+/**
+ * Resolves the communication context for the SCM.  Holds configurations like URL's
+ * and Headers for communicating with the Rest Interface of a SCM server.
+ * The idea of this trait is to minimize the gap between the communication with different SCMs.
+ */
 sealed trait SCMResolver {
 
   /**
@@ -77,18 +85,18 @@ object GithubResolver extends SCMResolver {
 
   // Authorization variables
   def accessTokenKey = "access_token"
-  val accessTokenValue = "506955b18a2ffceed85f081e2ab4503c46800d46"
+  val accessTokenValue = "????????????????????"
 }
 
 //https://stash.zalando.net/rest/api/1.0/projects/doc/repos/ci-cd/commits
-object StashResolver extends SCMResolver {
+private object StashResolver extends SCMResolver {
   def names: List[String] = List("stash.zalando.net")
   def api_host: String = s"https://stash.zalando.net"
-  def contributors(project: String, repo: String) = s"$api_host//rest/api/1.0/projects/$project/repos/$repo/contributors"
-  def commits(project: String, repo: String) = s"$api_host//rest/api/1.0/projects/$project/repos/$repo/commits"
+  def contributors(project: String, repo: String) = s"$api_host/rest/api/1.0/projects/$project/repos/$repo/contributors"
+  def commits(project: String, repo: String) = s"$api_host/rest/api/1.0/projects/$project/repos/$repo/commits"
 
   // Authorization variables
-  def accessTokenKey = "access_token"
-  val accessTokenValue = "897674c1118fa83e8819dbab7fa501ddec3dfb24"
+  def accessTokenKey = "X-Auth-Token"
+  val accessTokenValue = "???????????????????"
 }
 

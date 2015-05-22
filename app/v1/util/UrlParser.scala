@@ -24,7 +24,7 @@ trait UrlParser {
    *  @param url URL of the repository
    *  @return A reason why it could not parse OR the result (`host`, `project` and `repo`) extracted from the url.
    */
-  def parse(url: String): Either[String, HostProjectRepo] = {
+  def extract(url: String): Either[String, HostProjectRepo] = {
     Logger.info(s" Parsing $url ")
     url match {
       case ""   => Left("URL is empty")

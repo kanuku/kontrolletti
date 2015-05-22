@@ -12,6 +12,7 @@ object ParsingData {
   val users = List("", "git@", "fbenjamin@")
   val protocols = List("", "http://", "http://", "https://", "ssh://")
 
+
   def fixture = new {
     val hosts =
       for {
@@ -60,7 +61,7 @@ object ParsingData {
 object FakeResponseData {
 
   val multiStashCommit = """
-      [
+       "values": [
         {
             "id": "d7d99a9ee6aa9c3d0960f1591fddf78f65171dd9",
             "displayId": "d7d99a9ee6a",
