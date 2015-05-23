@@ -7,10 +7,6 @@ import play.api.Play.current
 import play.api.Logger
 import play.api.libs.json.Reads
 
-sealed trait Callable {
-  def f: Future[WSResponse]
-}
-
 sealed trait SCM {
   def committers(host: String, group: String, repo: String): Future[WSResponse]
   def commits(host: String, group: String, repo: String): Future[WSResponse]

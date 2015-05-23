@@ -22,7 +22,7 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
   /**
    * This test has 712800 URLS to test, that is why the URLS are being tested in parallel.
    */
-  test("parse(protocol+user+hostname+antecedent+project+antecedent+repo+repoSucceeders) and get (protocol+user+hostname+antecedent+project+antecedent+repo+repoSucceeders)") {
+  test("extract(protocol+user+hostname+antecedent+project+antecedent+repo+repoSucceeders) and get (protocol+user+hostname+antecedent+project+antecedent+repo+repoSucceeders)") {
     for (input <- fixture.protocolUserHostAntecedentsProjectAntecedentReposRepoSucceeders.grouped(30)) {
       val test = executeParallellRepoUrlWithSucceeder(input)
       whenReady(test) { result =>
@@ -44,7 +44,7 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
    * This test has 118800 URLS to test, that is why the URLS are being tested in parallel.
    *
    */
-  test("parse(protocol+user+hostname+antecedent+project+antecedent+repo) and get (protocol+user+hostname+antecedent+project+antecedent+repo)") {
+  test("extract(protocol+user+hostname+antecedent+project+antecedent+repo) and get (protocol+user+hostname+antecedent+project+antecedent+repo)") {
     for (input <- fixture.protocolUserHostAntecedentsProjectAntecedentRepos.grouped(30)) {
       val test = executeParallellRepoUrl(input)
       whenReady(test) { result =>
@@ -61,7 +61,7 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
     }
   }
 
-  test("parse(protocol+user+hostname+antecedent+project+antecedent) and get (protocol+user+hostname+antecedent+project+antecedent)") {
+  test("extract(protocol+user+hostname+antecedent+project+antecedent) and get (protocol+user+hostname+antecedent+project+antecedent)") {
     val input = fixture.protocolUserHostAntecedentsProjectAntecedents
     val regex = s"$protocolRgx$userRgx$hostnameRgx$projectAntecedentRgx$projectRgx$repoAntecedentRgx".r
     val parsed = for (value <- input if !value.isEmpty()) yield value match {
@@ -72,7 +72,7 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
     diff shouldBe empty
   }
 
-  test("parse(protocol+user+hostname+antecedent+project) and get (protocol+user+hostname+antecedent+project)") {
+  test("extract(protocol+user+hostname+antecedent+project) and get (protocol+user+hostname+antecedent+project)") {
     val input = fixture.protocolUserHostAntecedentsProjects
     val regex = s"$protocolRgx$userRgx$hostnameRgx$projectAntecedentRgx$projectRgx".r
     val parsed = for (value <- input if !value.isEmpty()) yield value match { case regex(protocol, user, host, antecedent, project) => concat(protocol, user, host, antecedent, project) }
@@ -80,7 +80,7 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
     diff shouldBe empty
   }
 
-  test("parse(protocol+user+hostname+antecedent) and get (protocol+user+hostname+antecedent)") {
+  test("extract(protocol+user+hostname+antecedent) and get (protocol+user+hostname+antecedent)") {
     val input = fixture.protocolUserHostAntecedents
     val regex = s"$protocolRgx$userRgx$hostnameRgx$projectAntecedentRgx".r
     val parsed = for (value <- input if !value.isEmpty()) yield value match { case regex(protocol, user, host, antecedent) => concat(protocol, user, host, antecedent) }
@@ -88,7 +88,7 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
     diff shouldBe empty
   }
 
-  test("parse(protocol+user+hostname) and get (protocol+user+hostname)") {
+  test("extract(protocol+user+hostname) and get (protocol+user+hostname)") {
     val input = fixture.protocolUserHosts
     val regex = s"$protocolRgx$userRgx$hostnameRgx".r
     val parsed = for (value <- input) yield value match { case regex(protocol, user, host) => concat(protocol, user, host) }
@@ -96,7 +96,7 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
 
     diff shouldBe empty
   }
-  test("parse(protocol+user) and get (protocol+user)") {
+  test("extract(protocol+user) and get (protocol+user)") {
     val input = fixture.protocolUsers
     val regex = s"$protocolRgx$userRgx".r
     val parsed = for (value <- input if !value.isEmpty()) yield value match { case regex(protocol, user) => concat(protocol, user) }
@@ -105,20 +105,20 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
   }
 
   test("parse (null) and get empty tuple") {
-    val either = parse(null)
+    val either = extract(null)
     assertEitherIsNotNull(either)
     assertEitherIsLeft(either)
     assert(either.left.get == "URL is null")
   }
   test("parse (empty String) and get empty tuple") {
-    val either = parse("")
+    val either = extract("")
     assertEitherIsNotNull(either)
     assertEitherIsLeft(either)
     assert(either.left.get == "URL is empty")
   }
   test("parse (NoneURL) and get empty tuple") {
     val url="asdfasdfölakjsdfölkajsdfölkj1230790823702934857"
-    val either = parse(url)
+    val either = extract(url)
     assertEitherIsNotNull(either)
     assertEitherIsLeft(either)
     assert(either.left.get == s"Could not parse $url")

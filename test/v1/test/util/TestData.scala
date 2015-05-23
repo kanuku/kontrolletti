@@ -61,7 +61,7 @@ object ParsingData {
 object FakeResponseData {
 
   val multiStashCommit = """
-       "values": [
+       {"values": [
         {
             "id": "d7d99a9ee6aa9c3d0960f1591fddf78f65171dd9",
             "displayId": "d7d99a9ee6a",
@@ -94,7 +94,7 @@ object FakeResponseData {
                 }
             ]
         }
-        ]
+        ]}
     
     """
   val multiGithubCommit = """
