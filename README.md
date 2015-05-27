@@ -27,29 +27,21 @@ The service can be found here: http://localhost:9000/swagger
 
 ---
 
-#### Testing
+#### Unit tests
 ```sh
-sbt clean coverage test
+sbt clean test
 ```
 
-
+#### Creating a docker image
 ```sh
-# Will run the application a and automatically 
-activator ~run
+sbt clean docker:publishLocal
 ```
 
+#### Running the docker-image
 ```sh
-activator docker:publishLocal
-
-After running this command, check for the image with
-docker images
-```
-  
-```sh
-# The image needs to be published in your local/remote registry.
 docker run -d -p 8008:9000
 ```  
- [Navigate to](http://localhost:9000/repositories)
+
 
 
 ---
