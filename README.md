@@ -41,7 +41,7 @@ docker run -d -p 8008:9000
 
 
 #### License
-=======
+====
 
 Copyright © 2015 Zalando SE
 
