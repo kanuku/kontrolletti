@@ -7,20 +7,20 @@ Provides a REST API where this information can be accessed.
 
 ***
 #### Development
-You need to scala( >= 2.11 ), sbt (>= 0.13.6) installed to build or develop.
-```sh
-# Will generate eclipse project files for this project
-sbt eclipse
+You need scala(2.11) and sbt(0.13.6) installed to build or develop.
+To start the service:  
+```sh 
+sbt run 
 ```
+The service can be found here: http://localhost:9000/swagger
 
 ---
 
-#### Running/Compiling this project
+#### Testing
 ```sh
-# Will compile, test and run the application
-activator run
+sbt clean coverage test
 ```
- [Navigate to](http://localhost:9000/repositories)
+
 
 ```sh
 # Will run the application a and automatically 
