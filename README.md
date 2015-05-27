@@ -1,28 +1,10 @@
+***
 [![Build Status](https://travis-ci.org/zalando/kontrolletti.svg?branch=develop)](https://travis-ci.org/zalando/kontrolletti) [![Coverage Status](https://coveralls.io/repos/zalando/kontrolletti/badge.svg?branch=develop)](https://coveralls.io/r/zalando/kontrolletti?branch=develop)
-
+***
 #### Kontrolletti API 
 
-The goal of this project is to retrieve and unify information from different SCM tools (Source Control Management) and provide an interface where this information can be requested.
-
-Kontrolletti provides an REST API where projects for different
-
-
-
-
-
-#### Todo:
-
-- [X] Swagger Integration
-- [x] Job Scheduler Integration
-- [ ] Unit test examples
-  - [ ] Include code coversage [scoverage](https://github.com/scoverage)
-- [x] Webservice that returns simple json object
-- [ ] Client for stash
-- [ ] Client for github
-- [ ] Client for github
-  
-[Swagger integration](https://github.com/swagger-api/swagger-core/tree/develop_scala-2.11/modules/swagger-play2)  
-
+Aggregates and unifies information from different Source Control Management for history and auditing purposes.
+Provides a REST API where this information can be accessed.
 ---
 
 #### Working on this project?  
