@@ -37,7 +37,7 @@ sbt clean docker:publishLocal
 ===
 #### Running the docker-image
 ```sh
-docker run -d -p 8008:9000
+docker run -d -p 8080:9000 pierone.stups.zalan.do/bus-team/kontrolleti:1.0-SNAPSHOT
 ```  
 
 ===
