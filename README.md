@@ -3,7 +3,7 @@
 Aggregates and unifies information from different Source Control Management for historical and auditing purposes.  
 Provides a REST API where this information can be accessed.
 
-***
+===
 #### Development
 * You need scala(2.11) and sbt(0.13.6) installed to build or develop.  
 ```sh
@@ -21,7 +21,7 @@ sbt run
 ```
 The service can be found here: http://localhost:9000/swagger
 
----
+===
 
 #### Unit tests
 ```sh
@@ -38,10 +38,10 @@ sbt clean docker:publishLocal
 docker run -d -p 8008:9000
 ```  
 
-
+===
 
 #### License
-====
+
 
 Copyright © 2015 Zalando SE
 
