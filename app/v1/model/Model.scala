@@ -1,43 +1,45 @@
 package v1.model
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import play.api.libs.functional.syntax.functionalCanBuildApplicative
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.functional.syntax.unlift
+import play.api.libs.json.JsPath
+import play.api.libs.json.Reads
+import play.api.libs.json.Writes
+
 /**
  * The models
  *
  */
 
-//case class Repository(name: String, resource: Resource, url: String, commits: List[Commit])
-//case class Commit(id: String, message: String, committer: User)
-//case class Resource(name: String, url: String)
+
 case class Author(name: String, email: String)
-case class Commit(id: String, message: String, valid: Boolean, author: Author)
+case class Commit(id: String, message: String, valid: Option[Boolean], author: Author)
 
-trait JsonParserGithub {
+//TODO: Evaluate Moving the readers in this parser(KontrollettiToJsonParser) into Companion objects
+// And overriding those companion objects in the SCM Parser
 
-  implicit val userWriter: Writes[Author] = (
-    (JsPath \ "name").write[String] and
-    (JsPath \ "email").write[String])(unlift(Author.unapply))
-
-  implicit val userReader: Reads[Author] = (
+object KontrollettiToJsonParser {
+  implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
     (JsPath \ "email").read[String])(Author.apply _)
 
-  implicit val commitWriter: Writes[Commit] = (
-    (JsPath \ "id").write[String] and
-    (JsPath \ "message").write[String] and
-    (JsPath \ "valie").write[Boolean] and
-    (JsPath \ "author").write[Author])(unlift(Commit.unapply))
-
   implicit val commitReader: Reads[Commit] = (
-    (JsPath \ "id").read[String] and
-    (JsPath \ "message").read[String] and
-    (JsPath \ "valid").read[Boolean] and
-    (JsPath \ "author").read[Author])(Commit.apply _)
+    (JsPath \ "id").read[String]
+    and (JsPath \ "message").read[String]
+    and Reads.pure(None)
+    and (JsPath \ "author").read[Author])(Commit.apply _)
 
+  implicit val authorWriter: Writes[Author] = (
+    (JsPath \ "name").write[String] and
+    (JsPath \ "email").write[String])(unlift(Author.unapply))
+
+  implicit val commitWriter: Writes[Commit] = (
+    (JsPath \ "id").write[String]
+    and (JsPath \ "message").write[String]
+    and (JsPath \ "valid").writeNullable[Boolean]
+    and (JsPath \ "author").write[Author])(unlift(Commit.unapply))
 }
-
-
 
 
 

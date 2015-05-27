@@ -13,40 +13,38 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsError
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSResponse
-import v1.client.SCM
-import v1.client.Github
 import play.api.Application
 import play.api.test.FakeApplication
 import play.api.test.Helpers._
 import play.api.libs.ws.WSRequestHolder
+import v1.client.SCMImpl
+import play.api.libs.json.JsString
 
 object MockitoUtils extends MockitoSugar {
 
   /**
    * Creates a successfull/failed mocked WSResponse
    */
-  def mockFutureWSResponse[T](result: T, success: Boolean = true): Future[WSResponse] = {
+  def mockSuccessfullParsableFutureWSResponse[T](result: T, httpCode:Int=200): Future[WSResponse] = {
     val wsResponse = mock[WSResponse]
     val jsValue = mock[JsValue]
     val jsResult: JsResult[T] = new JsSuccess(result, null)
 
     when(jsValue.validate[T](anyObject())).thenReturn(jsResult)
+    when(wsResponse.status).thenReturn(200)
     when(wsResponse.json).thenReturn(jsValue)
-    success match {
-      case true  => Future.successful(wsResponse)
-      case false => Future.failed(new RuntimeException)
-    }
+    Future.successful(wsResponse)
   }
 
   /**
    *
-   * Github creates an implementation of the Github client
+   * Creates an implementation of the SCMCClient
    * where the method requestHolder is overridden to always return the passed `WSRequestHolder`,
    * which can be mocked.
    *
    */
-  def github(requestParam: ((String) => WSRequestHolder)) = new Github {
-    override def requestHolder =  requestParam 
+  def createClient(requestParam: ((String) => WSRequestHolder)) = new SCMImpl {
+    override def requestHolder = requestParam
   }
 
   def withFakeApplication(block: => Unit): Unit = {

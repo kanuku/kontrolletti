@@ -14,16 +14,13 @@ GET   /api-docs/api/v1/repos        controllers.ApiHelpController.getResource(pa
 
 
 
-
-
-
 # Map static scm from the /public folder to the /assets URL path
 GET   /assets/*file             controllers.Assets.at(path="/public", file)
 GET   /status                   controllers.Application.status
 
 #################### V1 ####################
 
-GET   /api/v1/repos/:repo/commits   @v1.endpoint.RepoWS.get(repo: String,  valid:Option[Boolean] ?= None,from_commit_id:Option[String]) 
+GET   /api/v1/repos/:repo_url/commits   @v1.endpoint.RepoWS.get(repo_url: String,  valid:Option[Boolean] ?= None,from_commit_id:Option[String]) 
 #, page:Int ?= 30, per_page:Int ?= 100) 
 #, valid:Option[Boolean],  , to_commit_id:Option[String])
 #GET   /v1/commits            @v1.endpoint.CommitWS.get(repo: Option[String])

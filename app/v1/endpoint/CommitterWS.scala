@@ -16,28 +16,28 @@ import play.api.Logger
 import v1.service.Search
 import play.api.libs.json.Json
 
-@Api(value = "/v1/committers", description = "Committer information")
-@Singleton
-class CommitterWS @Inject() (searchService: Search) extends Controller with JsonParserGithub {
-
-  @ApiOperation(
-    nickname = "get",
-    value = "Returns the committer identified by the given name in the given resource",
-    notes = "A committer represents an entity that pushed changes to repository.",
-    httpMethod = "GET",
-    //responseContainer = "List",
-    response = classOf[Author])
-  @ApiResponses(Array(
-    new ApiResponse(code = 200, message = "Operation succeeded!"),
-    new ApiResponse(code = 404, message = "Did not find any resources!")))
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "repo", value = "Url of the repository", required = false, dataType = "string", paramType = "query")))
-  def get(repo: String) = Action.async {
-    searchService.committers(repo).map { response =>
-      Logger.info("WSResult " + response)
-      Ok(Json.prettyPrint(Json.toJson(response))).as("application/json")
-    }
-
-  }
-
-}
+//@Api(value = "/v1/committers", description = "Committer information")
+//@Singleton
+//class CommitterWS @Inject() (searchService: Search) extends Controller with JsonParserGithub {
+//
+//  @ApiOperation(
+//    nickname = "get",
+//    value = "Returns the committer identified by the given name in the given resource",
+//    notes = "A committer represents an entity that pushed changes to repository.",
+//    httpMethod = "GET",
+//    //responseContainer = "List",
+//    response = classOf[Author])
+//  @ApiResponses(Array(
+//    new ApiResponse(code = 200, message = "Operation succeeded!"),
+//    new ApiResponse(code = 404, message = "Did not find any resources!")))
+//  @ApiImplicitParams(Array(
+//    new ApiImplicitParam(name = "repo", value = "Url of the repository", required = false, dataType = "string", paramType = "query")))
+//  def get(repo: String) = Action.async {
+//    searchService.committers(repo).map { response =>
+//      Logger.info("WSResult " + response)
+//      Ok(Json.prettyPrint(Json.toJson(response))).as("application/json")
+//    }
+//
+//  }
+//
+//}
