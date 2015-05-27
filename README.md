@@ -21,9 +21,13 @@ sbt run
 ```  
 
 ===
-#### Unit tests
+#### Running unit tests
 ```sh
+## To run unit tests
 sbt clean test
+
+## To generate coverage reports
+sbt clean coverage test && sbt coverageReport
 ```
 
 #### Creating a docker image
