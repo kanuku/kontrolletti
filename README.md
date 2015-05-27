@@ -1,20 +1,18 @@
-***
+
 [![Build Status](https://travis-ci.org/zalando/kontrolletti.svg?branch=develop)](https://travis-ci.org/zalando/kontrolletti) [![Coverage Status](https://coveralls.io/repos/zalando/kontrolletti/badge.svg?branch=develop)](https://coveralls.io/r/zalando/kontrolletti?branch=develop)
 ***
-#### Kontrolletti API 
-
-Aggregates and unifies information from different Source Control Management for history and auditing purposes.
+#### Kontrolletti API  
+Aggregates and unifies information from different Source Control Management for history and auditing purposes.  
 Provides a REST API where this information can be accessed.
----
 
-#### Working on this project?  
-#### # **Do not push to master, but use a pull request!**  
-Then you need to install:  
+***
+#### Development
+You need to install:  
 1. scala 2.11  
 2. sbt >= 0.13  
 3. activator  
 4. IDE [scala-ide](http://scala-ide.org/) [IntelliJ](https://www.jetbrains.com/idea/features/scala.html)  
-> ```sh
+```sh
 # Will generate eclipse project files for this project
 sbt eclipse
 ```
