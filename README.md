@@ -9,7 +9,7 @@ Provides a REST API where this information can be accessed.
 ```sh
 ## Export the access-token of stash and github REST API's:  
 export AUTH_TOKEN_GITHUB="19j1923u4Jh866ahsWLS==aw$"
-export AUTH_TOKEN_STASH="5HHAS87JS12KL@"/899??=112SALNCM"
+export AUTH_TOKEN_STASH="5HHAS87JS12KL@/899??=112SALNCM"
 
 ## Configure url for stash server in `conf/application.conf`:
 client.stash.hosts=["stash-scm.myserver.com"]
