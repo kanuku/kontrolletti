@@ -7,7 +7,13 @@ Provides a REST API where this information can be accessed.
 
 ***
 #### Development
-You need scala(2.11) and sbt(0.13.6) installed to build or develop.
+1. You need scala(2.11) and sbt(0.13.6) installed to build or develop.  
+1. Generate access tokens for stash and github REST API's and export them as environment variables:  
+```sh
+export AUTH_TOKEN_GITHUB="19j1923u4Jh866ahsWLS==aw$"
+export AUTH_TOKEN_STASH="5HHAS87JS12KL@"/899??=112SALNCM"
+```
+
 To start the service:  
 ```sh 
 sbt run 
