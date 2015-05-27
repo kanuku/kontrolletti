@@ -9,9 +9,9 @@ Provides a REST API where this information can be accessed.
 #### Development
 1. You need scala(2.11) and sbt(0.13.6) installed to build or develop.  
 1. Export the access-token of stash and github REST API's:  
-  ```sh
-export AUTH_TOKEN_GITHUB="19j1923u4Jh866ahsWLS==aw$"
-export AUTH_TOKEN_STASH="5HHAS87JS12KL@"/899??=112SALNCM"
+  ```sh  
+export AUTH_TOKEN_GITHUB="19j1923u4Jh866ahsWLS==aw$"  
+export AUTH_TOKEN_STASH="5HHAS87JS12KL@"/899??=112SALNCM"  
 ```  
 
 ```sh
