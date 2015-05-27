@@ -23,7 +23,7 @@ sealed trait SCMParser {
    * parse json objects from.
    * @return list of domains
    */
-  def domains: List[String]
+  def domains: Set[String]
 
   /**
    * Resolves the Deserializer(parser) for a domain from a set of known parsers.
@@ -67,7 +67,7 @@ sealed trait SCMParser {
  */
 object GithubToJsonParser extends SCMParser {
 
-  def domains = GithubResolver.names
+  def domains = GithubResolver.hosts
 
   val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => extract(value.validate[List[Commit]])
 
@@ -90,7 +90,7 @@ object GithubToJsonParser extends SCMParser {
  */
 object StashToJsonParser extends SCMParser {
 
-  def domains = StashResolver.names
+  def domains = StashResolver.hosts
 
   val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) =>  extract((value \ "values").validate[List[Commit]]) 
 
