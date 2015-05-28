@@ -6,8 +6,8 @@
 GET   /swagger                  controllers.Application.swagger
 GET   /api-docs                 controllers.ApiHelpController.getResources
 
-#################### Mapping to endpoint V1 ####################
-GET   /api-docs/api/v1/repos        controllers.ApiHelpController.getResource(path="/api/v1/repos") 
+#################### Mapping to endpoints ####################
+GET   /api-docs/api/repos        controllers.ApiHelpController.getResource(path="/api/repos") 
 
 
 
@@ -18,10 +18,10 @@ GET   /api-docs/api/v1/repos        controllers.ApiHelpController.getResource(pa
 GET   /assets/*file             controllers.Assets.at(path="/public", file)
 GET   /status                   controllers.Application.status
 
-#################### V1 ####################
+#################### ENDPOINTS ####################
 
-GET   /api/v1/repos/:repo_url/commits   @v1.endpoint.RepoWS.get(repo_url: String,  valid:Option[Boolean] ?= None,from_commit_id:Option[String]) 
+GET   /api/repos/:repo_url/commits   @endpoint.RepoWS.get(repo_url: String,  valid:Option[Boolean] ?= None,from_commit_id:Option[String]) 
 #, page:Int ?= 30, per_page:Int ?= 100) 
 #, valid:Option[Boolean],  , to_commit_id:Option[String])
-#GET   /v1/commits            @v1.endpoint.CommitWS.get(repo: Option[String])
+#GET   /api/commits            @endpoint.CommitWS.get(repo: Option[String])
 #, select:Option[String] ?= "all",  from_commit_id:Option[String], to_commit_id:Option[String]) 

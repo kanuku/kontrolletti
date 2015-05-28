@@ -1,4 +1,4 @@
-name := """kontrolleti"""
+name := """kontrolletti"""
 
 version := "1.0-SNAPSHOT"
 
