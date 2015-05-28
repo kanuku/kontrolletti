@@ -1,6 +1,6 @@
 
 #### Kontrolletti API      [![Build Status](https://travis-ci.org/zalando/kontrolletti.svg?branch=develop)](https://travis-ci.org/zalando/kontrolletti) [![Coverage Status](https://coveralls.io/repos/zalando/kontrolletti/badge.svg?branch=develop)](https://coveralls.io/r/zalando/kontrolletti?branch=develop)
-Aggregates and unifies information from different Source Control Management for historical and auditing purposes and provides a REST API where this information can be retrieved.
+Aggregates and unifies information from different Source Control Management for historical and auditing purposes and serves this information through a REST API.
 
 ===
 #### Development
