@@ -38,9 +38,9 @@ sbt clean docker:publishLocal
 #### Running the docker-image
 ```sh
 docker run -d -p 8080:9000 --name kontrolletti \
-        -e AUTH_TOKEN_GITHUB=f12gals1/22am87h9j32 \
-        -e AUTH_TOKEN_STASH=f12gals1/22am87h9j32 \
-        pierone.stups.zalan.do/bus-team/kontrolleti:1.0-SNAPSHOT \
+    -e AUTH_TOKEN_GITHUB=f12gals1/22am87h9j32 \
+    -e AUTH_TOKEN_STASH=f12gals1/22am87h9j32 \
+    pierone.stups.zalan.do/bus-team/kontrolleti:1.0-SNAPSHOT
 ```  
 
 ===
