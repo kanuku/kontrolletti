@@ -1,4 +1,4 @@
-package v1.service
+package service
 
 import akka.dispatch.OnComplete
 import akka.dispatch.OnFailure
@@ -7,18 +7,18 @@ import play.api.Logger
 import play.api.libs.json._
 import play.api.libs.json._
 import play.api.libs.json.Reads._
-import v1.client.SCM
-import v1.model.Author
-import v1.util.UrlParser
+import client.SCM
+import model.Author
 import scala.concurrent.Future
 import scala.util.{ Success, Failure }
 import play.api.libs.ws.WSResponse
-import v1.client.GithubToJsonParser
-import v1.client.StashToJsonParser
-import v1.model.Commit
-import v1.client.SCMParser
-import v1.client.SCMParser
-import v1.client.SCMResolver
+import client.GithubToJsonParser
+import client.StashToJsonParser
+import model.Commit
+import client.SCMParser
+import client.SCMParser
+import client.SCMResolver
+import utility.UrlParser
 
 trait Search {
   def committers(url: String): Future[Either[String, List[Author]]]
@@ -31,26 +31,27 @@ trait Search {
 }
 
 /**
- * This class handles the calls to the right SCM (Stash/Github).
- *
+ * This class delegates the calls to the right target (ElasticSearch/Stash/Github).
  *
  */
-
 @Singleton
 class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
+
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
   import scala.concurrent._
+
   type Parser[JsValue, B] = JsValue => B
   type Callable = () => Future[WSResponse]
+
+  private val logger: Logger = Logger(this.getClass())
+
   def committers(url: String): Future[Either[String, List[Author]]] = {
-    Logger.info(s"Searching for $url");
     extract(url) match {
-      case Left(error) =>
-        Logger.error(error)
-        Future { Left(error) }
+      case Left(message) =>
+        Future { Left(message) }
       case Right((host, group, repo)) =>
         resolveParser(host) match {
-          case Left(error) => Future { Left(error) }
+          case Left(message) => Future { Left(message) }
           case Right(parser) =>
             lazy val call: Callable = () => client.committers(host, group, repo)
             requestFromUrl(call)(parser.authorToModel)
@@ -59,45 +60,43 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
   }
 
   def commits(url: String): Future[Either[String, List[Commit]]] = {
-    Logger.info(s"Searching for $url");
-    
     extract(url) match {
-      case Left(error) =>
-        Logger.error(error)
-        Future { Left(error) }
+      case Left(message) =>
+        Future { Left(message) }
       case Right((host, group, repo)) =>
         resolveParser(host) match {
-          case Left(error) => Future { Left(error) }
+          case Left(message) => Future {
+            Left(message)
+          }
           case Right(parser) =>
             lazy val call: Callable = () => client.commits(host, group, repo)
             requestFromUrl(call)(parser.commitToModel)
         }
     }
   }
-  
-  def handleRequest(url:String) = ???
+
   def requestFromUrl[A](call: Callable)(implicit parser: Parser[JsValue, Either[String, A]]): Future[Either[String, A]] = {
     val futureResponse = call()
     futureResponse onComplete {
       case Success(response) =>
-        Logger.info("Received HTTP Code " + response.status)
       case Failure(t) => // Clients of this service don't need to know the details
-        Logger.error("Error while calling SCM " + t.getMessage)
+        logger.error("Error while calling SCM " + t.getMessage)
     }
     futureResponse.map { response =>
-      if (response.status != 200)
-        Left("Something went wrong, HTTP CODE =>" + response.status)
-      else {
+      if (response.status != 200) {
+        logger.warn("Response: " + response.status + " => " + response.body)
+        Left("Unexpected SCM response: " + response.status)
+      } else {
         parser(response.json) match {
-          case Left(error) =>
-            Logger.info(error)
+          case Left(message) =>
+            logger.info(message)
             Left("Could not parse the json result(scm)!")
           case Right(obj) => Right(obj)
         }
       }
     } recover {
       case e =>
-        Logger.error(e.getMessage)
+        logger.error(e.getMessage)
         Left("An internal error occurred!")
     }
   }
@@ -105,7 +104,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
   def resolveParser(host: String): Either[String, SCMParser] =
     (GithubToJsonParser.resolve(host) orElse StashToJsonParser.resolve(host)) match {
       case Some(parser) => Right(parser)
-      case None         => Left("Could not resolve the SCMResolver")
+      case None         => Left(s"Could not resolve the client for $host")
     }
 
 }

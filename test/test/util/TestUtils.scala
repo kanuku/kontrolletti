@@ -1,6 +1,6 @@
-package v1.test.util
+package test.util
 
-import v1.model.Author
+import model.Author
 
 object TestUtils {
 

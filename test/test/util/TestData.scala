@@ -1,4 +1,4 @@
-package v1.test.util
+package test.util
 
 object ParsingData {
 

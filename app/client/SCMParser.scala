@@ -1,4 +1,4 @@
-package v1.client
+package client
 
 import play.api.libs.functional.syntax.functionalCanBuildApplicative
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
@@ -8,8 +8,8 @@ import play.api.libs.json.JsResult
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Reads
-import v1.model.Author
-import v1.model.Commit
+import model.Author
+import model.Commit
 
 /**
  * Json deserializer for converting external json types, from the SCM,

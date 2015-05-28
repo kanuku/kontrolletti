@@ -1,4 +1,4 @@
-package v1.module
+package module
 import org.scalatest.FreeSpec
 import com.google.inject.AbstractModule
 import com.google.inject.Guice

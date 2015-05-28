@@ -1,11 +1,11 @@
-package v1.module
+package module
 
 import com.google.inject.AbstractModule
 
-import v1.client.SCM
-import v1.client.SCMImpl
-import v1.service.Search
-import v1.service.SearchImpl
+import client.SCM
+import client.SCMImpl
+import service.Search
+import service.SearchImpl
 
 class Develop extends AbstractModule {
 

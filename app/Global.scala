@@ -1,7 +1,7 @@
 
 
 import scala.concurrent.duration.DurationInt
-import v1.job.SimpleJob
+import job.SimpleJob
 import play.api.Application
 import play.api.GlobalSettings
 import play.api.Logger
@@ -10,12 +10,12 @@ import play.api.libs.concurrent.Akka
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import com.google.inject.Guice
 import play.api.Play
-import v1.module.Production
-import v1.module.Develop
-import v1.job.SimpleJob
+import module.Production
+import module.Develop
+import job.SimpleJob
 
 object Global extends GlobalSettings {
-
+  private val logger: Logger = Logger(this.getClass())
   private lazy val simpleJob: SimpleJob = {
     injector.getInstance(classOf[SimpleJob])
   }
@@ -33,17 +33,17 @@ object Global extends GlobalSettings {
   }
 
   override def onStart(app: Application) {
-    Logger.info("Application has started")
+    logger.info("Application has started")
     startJob
   }
 
   override def onStop(app: Application) {
-    Logger.info("Application shutdown...")
+    logger.info("Application shutdown...")
   }
 
   def startJob() = {
     Akka.system.scheduler.schedule(0 minutes, 5 minutes) {
-      Logger.info("Started the job")
+      logger.info("Started the job")
       simpleJob.execute 
     }
   }

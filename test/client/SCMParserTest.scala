@@ -1,11 +1,13 @@
-package v1.client
+package client
 
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
+
+
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.libs.json.Json._
-import v1.test.util.FakeResponseData
+import test.util.FakeResponseData
 
 /**
  * This class tests the Parsing process implemented in SCMParser file.

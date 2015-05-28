@@ -1,4 +1,4 @@
-package v1.client
+package client
 
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.anyString
@@ -8,12 +8,13 @@ import org.mockito.Mockito.when
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneAppPerSuite
 import org.scalatestplus.play.PlaySpec
+ 
 
 import play.api.libs.ws.WSRequestHolder
 import play.api.libs.ws.WSResponse
 import play.api.test.FakeApplication
-import v1.test.util.MockitoUtils.createClient
-import v1.test.util.MockitoUtils.mockSuccessfullParsableFutureWSResponse
+import test.util.MockitoUtils.createClient
+import test.util.MockitoUtils.mockSuccessfullParsableFutureWSResponse
 
 /**
  * This tests make sure that the configurations for the client are being

@@ -1,6 +1,6 @@
 
 
-package v1.util
+package util
 
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -9,7 +9,8 @@ import org.scalatest.junit.JUnitRunner
 import play.api.test.Helpers._
 import org.scalatest.concurrent.AsyncAssertions.Waiter
 import org.scalatest.Matchers
-import v1.test.util.ParsingData
+import test.util.ParsingData
+import utility.UrlParser
 
 /**
  * In this class you can find the individual tests for the regular expressions in UrlParser. <br/>
@@ -18,7 +19,8 @@ import v1.test.util.ParsingData
 class UrlParserIndividualRegexExpressionTest extends FunSuite with Matchers with UrlParser {
 
   //Github has none, but stash does it REST-STyle /projects/ 
-  import ParsingData._
+import utility.UrlParser;
+import ParsingData._
 
   test("parse (protocol) and get protocol") {
     val regex = s"$protocolRgx".r

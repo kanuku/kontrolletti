@@ -1,17 +1,22 @@
-package v1.client
+package client
 
 import org.scalatest._
 import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
+
 import play.api.libs.ws.WSResponse
-import v1.test.util.MockitoUtils._
+import test.util.MockitoUtils._
 import play.api.libs.ws.WS
 import play.api.libs.ws.WSRequestHolder
+
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers._
 import org.mockito.Mockito._
-import v1.test.util.MockitoUtils._
+
+import test.util.MockitoUtils._
+
 import org.scalatestplus.play.OneAppPerSuite
+
 
 class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar {
   val host = "github.com"

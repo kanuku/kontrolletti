@@ -1,4 +1,4 @@
-package v1.endpoint
+package endpoint
 
 import play.api.test.FakeApplication
 import org.specs2.mutable._

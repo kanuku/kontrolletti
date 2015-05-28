@@ -1,9 +1,10 @@
 
 
-package v1.util
+package util
 
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite 
+import utility.UrlParser
 
 
 class GithubUrlParserTest extends FunSuite {

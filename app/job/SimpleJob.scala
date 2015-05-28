@@ -1,15 +1,14 @@
-package v1.job
+package job
 
 import akka.actor.Actor
 import akka.actor.Cancellable
 import play.api.Logger
 import javax.inject.Inject
-import v1.service.Search
+import service.Search
 
-
-class SimpleJob @Inject() (search:Search){
-
+class SimpleJob @Inject() (search: Search) {
+   private val logger: Logger = Logger(this.getClass())
   def execute = {
-    Logger.info("Jobs is executing")
+    logger.info("Jobs is executing")
   }
 }

@@ -1,4 +1,4 @@
-package v1.client
+package client
 
 import java.util.ServiceConfigurationError
 
@@ -12,7 +12,7 @@ import play.api.Logger
  * The idea of this trait is to minimize the gap between the communication with different SCMs.
  */
 sealed trait SCMResolver {
-
+  private val logger: Logger = Logger(this.getClass())
   def name: String
 
   /**
@@ -27,7 +27,7 @@ sealed trait SCMResolver {
   lazy val hosts: Set[String] = {
     import collection.JavaConverters._
     val result = play.Play.application.configuration.getStringList(hostsProperty).asScala.toSet
-    Logger.info(s"Configuring $name with hosts $result")
+    logger.info(s"Configuring $name with hosts $result")
     result
   }
 
@@ -61,11 +61,11 @@ sealed trait SCMResolver {
    * Otherwise to an instance of None
    */
   def resolve(host: String): Option[SCMResolver] = host match {
-      case host if hosts.contains(host) => 
-        Some(this)
-      case _ =>
-        None
-    }
+    case host if hosts.contains(host) =>
+      Some(this)
+    case _ =>
+      None
+  }
 
   /**
    * The access-token property for the access-token the rest api of this client.
@@ -83,9 +83,9 @@ sealed trait SCMResolver {
   lazy val accessTokenValue = {
     val input = play.Play.application.configuration.getString(accessTokenProperty)
     if (input == null || input.isEmpty())
-      Logger.error(s"Configuration($accessTokenProperty) for the client is missing")
+      logger.error(s"Configuration($accessTokenProperty) for the client is missing")
     else
-      Logger.info(s"Loaded Token configuration for $accessTokenProperty")
+      logger.info(s"Loaded Token configuration for $accessTokenProperty")
     input
   }
 

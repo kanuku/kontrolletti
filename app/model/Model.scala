@@ -1,4 +1,4 @@
-package v1.model
+package model
 
 import play.api.libs.functional.syntax.functionalCanBuildApplicative
 import play.api.libs.functional.syntax.toFunctionalBuilderOps

@@ -1,4 +1,4 @@
-package v1.client
+package client
 
 import java.util.ServiceConfigurationError
 
@@ -14,6 +14,7 @@ sealed trait SCM {
 }
 
 class SCMImpl extends SCM {
+  private val logger: Logger = Logger(this.getClass())
 
   def committers(host: String, group: String, repo: String): Future[WSResponse] = {
     val res: SCMResolver = resolver(host).get
@@ -31,10 +32,10 @@ class SCMImpl extends SCM {
     (url, accessTokenKey, accessTokenValue) =>
       val request = requestHolder(url)
       if (accessTokenValue == null || accessTokenValue.isEmpty()) {
-        Logger.info(s"Request with access token " + request.url);
+        logger.info(s"$url with access-token ");
         request.get()
       } else {
-        Logger.info(s"Requesting without access token $request.url");
+        logger.info(s"$url without access-token");
         request.withHeaders(accessTokenKey -> accessTokenValue).get()
       }
   }

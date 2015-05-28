@@ -1,4 +1,4 @@
-package v1.util
+package util
 
 import scala.concurrent._
 import org.scalatest.Distributor
@@ -8,17 +8,19 @@ import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
 import play.api.test.Helpers._
-import v1.test.util.ParsingData
+import test.util.ParsingData
 import scala.util.matching.Regex
-import v1.test.util.TestUtils
+import test.util.TestUtils
+import utility.UrlParser
 
 /**
  * This class tests for parsing URL composed of corner cases.
  * The URL's are being tested simultaneous
  */
 class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with UrlParser with ScalaFutures {
+import utility.UrlParser;
   import ParsingData._
-  import TestUtils._
+import TestUtils._
   /**
    * This test has 712800 URLS to test, that is why the URLS are being tested in parallel.
    */

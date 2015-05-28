@@ -1,4 +1,4 @@
-package v1.test.util
+package test.util
 
 import org.scalatest.BeforeAndAfter
 import org.scalatest.FlatSpec
@@ -17,7 +17,7 @@ import play.api.Application
 import play.api.test.FakeApplication
 import play.api.test.Helpers._
 import play.api.libs.ws.WSRequestHolder
-import v1.client.SCMImpl
+import client.SCMImpl
 import play.api.libs.json.JsString
 
 object MockitoUtils extends MockitoSugar {
