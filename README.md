@@ -5,7 +5,7 @@ Provides a REST API where this information can be accessed.
 
 ===
 #### Development
-You need scala(2.11) and sbt(0.13.6) installed to build or develop.  
+You need scala(2.11) and sbt(0.13.8) installed to build or develop.  
 ```sh
 ## Export the access-token of stash and github REST API's:  
 export AUTH_TOKEN_GITHUB="19j1923u4Jh866ahsWLS==aw$"
