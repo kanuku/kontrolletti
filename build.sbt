@@ -28,7 +28,7 @@ maintainer in Docker := "fernando.benjamin@zalando.de"
 
 
 // Add this to let Jenkins overwrite your 
-dockerRepository :=  Some("pierone.stups.zalan.do/bus-team") 
+dockerRepository :=  Some("pierone.stups.zalan.do/cd") 
 
 dockerBaseImage := "zalando/openjdk:8u40-b09-2"
 
