@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Kontrolletti by zalando</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Kontrolletti</h1>
+        <p>Aggregates and unifies information from different Source Control Management for historical and auditing purposes.</p>
+
+        <p class="view"><a href="https://github.com/zalando/kontrolletti">View the Project on GitHub <small>zalando/kontrolletti</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/zalando/kontrolletti/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/zalando/kontrolletti/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/zalando/kontrolletti">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h4>
+<a id="kontrolletti--------" class="anchor" href="#kontrolletti--------" aria-hidden="true"><span class="octicon octicon-link"></span></a>Kontrolletti       <a href="https://travis-ci.org/zalando/kontrolletti"><img src="https://travis-ci.org/zalando/kontrolletti.svg?branch=develop" alt="Build Status"></a> <a href="https://coveralls.io/r/zalando/kontrolletti?branch=develop"><img src="https://coveralls.io/repos/zalando/kontrolletti/badge.svg?branch=develop" alt="Coverage Status"></a>
+</h4>
+
+<p>A service that aggregates and stores information from different Source Control Management for historical and auditing purposes and serves this information through a REST API in a unified model.</p>
+
+<h1></h1>
+
+<h4>
+<a id="development" class="anchor" href="#development" aria-hidden="true"><span class="octicon octicon-link"></span></a>Development</h4>
+
+<p>You need scala(2.11) and sbt(0.13.8) installed to build or develop.  </p>
+
+<div class="highlight highlight-sh"><pre><span class="pl-c">## Export the access-token of stash and github REST API's:  </span>
+<span class="pl-k">export</span> AUTH_TOKEN_GITHUB=<span class="pl-s"><span class="pl-pds">"</span>19j1923u4Jh866ahsWLS==aw$<span class="pl-pds">"</span></span>
+<span class="pl-k">export</span> AUTH_TOKEN_STASH=<span class="pl-s"><span class="pl-pds">"</span>5HHAS87JS12KL@/899??=112SALNCM<span class="pl-pds">"</span></span>
+
+<span class="pl-c">## Configure url for stash server in `conf/application.conf`:</span>
+client.stash.hosts=[<span class="pl-s"><span class="pl-pds">"</span>stash-scm.myserver.com<span class="pl-pds">"</span></span>]
+
+<span class="pl-c">## Start the service:  </span>
+sbt run 
+
+<span class="pl-c">## Navigate to  http://localhost:9000/swagger</span></pre></div>
+
+<h1></h1>
+
+<h4>
+<a id="running-unit-tests" class="anchor" href="#running-unit-tests" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running unit tests</h4>
+
+<div class="highlight highlight-sh"><pre><span class="pl-c">## To run unit tests</span>
+sbt clean <span class="pl-c1">test</span>
+
+<span class="pl-c">## To generate coverage reports</span>
+sbt clean coverage <span class="pl-c1">test</span> <span class="pl-k">&amp;&amp;</span> sbt coverageReport</pre></div>
+
+<h1></h1>
+
+<h4>
+<a id="creating-a-docker-image" class="anchor" href="#creating-a-docker-image" aria-hidden="true"><span class="octicon octicon-link"></span></a>Creating a docker image</h4>
+
+<div class="highlight highlight-sh"><pre>sbt clean docker:publishLocal</pre></div>
+
+<h1></h1>
+
+<h4>
+<a id="running-the-docker-image" class="anchor" href="#running-the-docker-image" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running the docker-image</h4>
+
+<div class="highlight highlight-sh"><pre>docker run -d -p 8080:9000 --name kontrolletti \
+    -e AUTH_TOKEN_GITHUB=<span class="pl-s"><span class="pl-pds">"</span>f12gals1/22am87h9j32<span class="pl-pds">"</span></span> \
+    -e AUTH_TOKEN_STASH=<span class="pl-s"><span class="pl-pds">"</span>f12gals1/22am87h9j32<span class="pl-pds">"</span></span> \
+    pierone.stups.zalan.<span class="pl-k">do</span>/cd/kontrolletti:1.0-SNAPSHOT</pre></div>
+
+<h1></h1>
+
+<h4>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h4>
+
+<p>Copyright © 2015 Zalando SE</p>
+
+<p>Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at</p>
+
+<p><a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a></p>
+
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/zalando">zalando</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
