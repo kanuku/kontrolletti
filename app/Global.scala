@@ -13,6 +13,10 @@ import play.api.Play
 import module.Production
 import module.Develop
 import job.SimpleJob
+import play.api._
+import play.api.mvc._
+import play.api.mvc.Results._
+import scala.concurrent.Future
 
 object Global extends GlobalSettings {
   private val logger: Logger = Logger(this.getClass())
@@ -20,7 +24,7 @@ object Global extends GlobalSettings {
     injector.getInstance(classOf[SimpleJob])
   }
 
-  /** bind types for Guice (Dependency Injection)**/
+  /** binds types for Guice (Dependency Injection)**/
   private lazy val injector = {
     Play.isProd match {
       case true  => Guice.createInjector(new Production)
@@ -32,13 +36,23 @@ object Global extends GlobalSettings {
     injector.getInstance(clazz)
   }
 
+  
+  // 500 - internal server error
+  override def onError(request: RequestHeader, throwable: Throwable) = {
+     Future.successful(InternalServerError(views.html.errors.onError(throwable)))
+  }
+  
+// 404 - page not found error
+  override def onHandlerNotFound(request: RequestHeader): Future[Result] = {
+   Future.successful(NotFound(views.html.errors.onHandlerNotFound(request)))
+  }
   override def onStart(app: Application) {
-    logger.info("Application has started")
+    logger.info("############# Application has started!")
     startJob
   }
 
   override def onStop(app: Application) {
-    logger.info("Application shutdown...")
+    logger.info("############# Application is shutting down!")
   }
 
   def startJob() = {
