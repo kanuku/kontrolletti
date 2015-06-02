@@ -23,13 +23,29 @@ libraryDependencies ++= Seq(
 )
 
 // -------------Docker configuration-------------
-
 maintainer in Docker := "fernando.benjamin@zalando.de"
 
-
+daemonUser in Docker := "root"
+ 
 // Add this to let Jenkins overwrite your 
 dockerRepository :=  Some("pierone.stups.zalan.do/cd") 
 
 dockerBaseImage := "zalando/openjdk:8u40-b09-2"
 
 dockerExposedPorts in Docker := Seq(9000, 9443)
+
+// ------------- Generate scm-source.json ---------
+lazy val genScmSource = taskKey[Unit]("Execute the scm-source.sh shell script")
+
+genScmSource := {
+  "sh ./scm-source.sh" !
+}
+
+mappings in Universal += {
+  genScmSource.value
+  file( "./scm-source.json") -> "../../scm-source.json" 
+}
+
+import com.typesafe.sbt.packager.docker._
+dockerCommands +=  ExecCmd("ADD", "/scm-source.json", "/scm-source.json")
+
