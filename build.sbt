@@ -30,7 +30,7 @@ daemonUser in Docker := "root"
 // Add this to let Jenkins overwrite your 
 dockerRepository :=  Some("pierone.stups.zalan.do/cd") 
 
-dockerBaseImage := "zalando/openjdk:8u40-b09-2"
+dockerBaseImage := "zalando/openjdk:8u40-b09-4"
 
 dockerExposedPorts in Docker := Seq(9000, 9443)
 
