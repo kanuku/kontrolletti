@@ -22,9 +22,6 @@ libraryDependencies ++= Seq(
   "org.mockito" 			% "mockito-core" 	% "1.9.5" 		% "test" withSources() withJavadoc()
 )
 
-import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
-import com.typesafe.sbt.packager.docker._
-
 // -------------Docker configuration-------------
 maintainer in Docker := "fernando.benjamin@zalando.de"
 
@@ -37,6 +34,7 @@ dockerBaseImage := "zalando/openjdk:8u40-b09-2"
 
 dockerExposedPorts in Docker := Seq(9000, 9443)
 
+// ------------- Generate scm-source.json ---------
 lazy val genScmSource = taskKey[Unit]("Execute the scm-source.sh shell script")
 
 genScmSource := {

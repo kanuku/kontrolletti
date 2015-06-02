@@ -1,1 +1,1 @@
-{"url": "git:git@github.com:zalando/kontrolletti.git", "revision": "acf13d04760b86cae6273951c92a7f22c55920eb (locally modified)", "author": "fbenjamin", "status": " M build.sbt M project/plugins.sbt ?? scm-source.json ?? scm-source.sh"}
+{"url": "git:git@github.com:zalando/kontrolletti.git", "revision": "1c067c6f2e647f61252e66a18ca4fbdc893675be (locally modified)", "author": "fbenjamin", "status": " M build.sbt M scm-source.json"}
