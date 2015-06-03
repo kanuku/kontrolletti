@@ -2,7 +2,7 @@ package service
 
 import scala.concurrent.Await
 import scala.concurrent.Future
-import scala.concurrent.duration.Duration 
+import scala.concurrent.duration.Duration
 
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers._
@@ -28,10 +28,9 @@ import org.scalatest.FunSpec
  * and passed to the client correctly.
  * The client is mocked and therefore not tested here.
  */
-class SearchTest extends  FlatSpec with OneAppPerSuite with MockitoSugar with BeforeAndAfter {
+class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with BeforeAndAfter {
 
-
-import test.util.TestUtils._
+  import test.util.TestUtils._
 
   val client = mock[SCM]
   val search: Search = new SearchImpl(client)
@@ -55,7 +54,7 @@ import test.util.TestUtils._
     val url = s"https://stash.zalando.net/projects/$project/repos/$repo"
   }
 
-  "Search with a Github repo" should "call the client with parsed values from url" in {
+  "committers " should "call the client with parsed github Url params" in {
 
     val clientResult = mockSuccessfullParsableFutureWSResponse(users)
 
@@ -81,7 +80,7 @@ import test.util.TestUtils._
 
   }
 
-  "Search with a Stash repo" should "call the client with parsed values from url" in {
+  it should "call the client with parsed stash Url params" in {
 
     val clientResult = mockSuccessfullParsableFutureWSResponse(users)
 
@@ -106,7 +105,7 @@ import test.util.TestUtils._
     assert(repoCap.getValue == stashFixture.repo)
 
   }
-  "Search" should "handle Unexpected client-exceptions gracefully" in {
+  it should "handle Unexpected client-exceptions gracefully" in {
 
     val clientResult = Future.failed(new RuntimeException("Something bad happened!"))
 
@@ -131,7 +130,7 @@ import test.util.TestUtils._
 
   }
 
-  "Search" should "never call the client when the url is not parsable" in {
+  it should "never call the client when the url is not parsable" in {
     val url = "asdfasdfasdfaölkajsdf"
     //Start testing    
     val either = Await.result(search.committers(url), Duration("10 seconds"))
@@ -163,5 +162,25 @@ import test.util.TestUtils._
     assertEitherIsLeft(either)
     assert(either.left.get == "URL is null")
   }
-
+  "normalize " should "return normalized uri" in {
+    val url = "git@github.com:zalando/kontrolletti.git"
+    val either = search.normalize(url)
+    assertEitherIsNotNull(either)
+    assertEitherIsRight(either)
+    assert(either.right.get === "https://github.com/zalando/kontrolletti")
+  }
+  it should "Return an error when url is not parsable" in {
+    val url = "why-is-this-url-not-workinggitzalando/.git"
+    val either = search.normalize(url)
+    assertEitherIsNotNull(either)
+    assertEitherIsLeft(either)
+    assert(either.left.get === s"Could not parse $url")
+  }
+  it should "Return an error when url is null" in {
+    val url = null
+    val either = search.normalize(url)
+    assertEitherIsNotNull(either)
+    assertEitherIsLeft(either)
+    assert(either.left.get === s"URL is $url")
+  }
 }

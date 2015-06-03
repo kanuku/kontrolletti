@@ -16,17 +16,7 @@ class GithubUrlParserTest extends FunSuite {
   private val ghRepo = "kontrolletti"
   private val hosts = List("git-hub.com", "git-hub.com:8080", "git-hub.com:22")
   private val project = List("zalando-bus", "stups", "..test", "---", "___", "--")
-  private val ghUrls = List(
-    GithubProject("test0", "") //
-    , GithubProject("test1", "https://git-hub.com/zalando-bus/kontrolletti/") //
-    , GithubProject("test2", "https:///zalando-bus/kontrolletti") //
-    , GithubProject("test3", "https://git-hub.com:8080/zalando-bus/kontrolletti/") //
-    , GithubProject("test4", "git@git-hub.com:zalando-bus/kontrolletti.git") //
-    , GithubProject("test5", "git@git-hub.com:22/zalando-bus/kontrolletti.git") //
-    , GithubProject("test6", "ssh://git@git-hub.com:22/zalando-bus/kontrolletti.git") //
-    , GithubProject("test7", "git-hub.com/zalando-bus/kontrolletti") //
-    , GithubProject("test8", "git-hub.com/zalando-bus/kontrolletti/") //
-    )
+  
 
   test("test-0") {
     test("https://git-hub.com/zalando-bus/kontrolletti", "git-hub.com", "zalando-bus", "kontrolletti")
@@ -57,6 +47,9 @@ class GithubUrlParserTest extends FunSuite {
   }
   test("test-9") {
     test("https://github.com/zalando-bus/kontrolletti", "github.com", "zalando-bus", "kontrolletti")
+  }
+  test("test-10") {
+	  test("git@github.com:zalando/kontrolletti.git", "github.com", "zalando", "kontrolletti")
   }
 
   def test(url: String, host: String, project: String, repo: String) = {

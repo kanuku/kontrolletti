@@ -3,11 +3,11 @@
 # ~~~~
 
 #################### SWAGGER ####################
-GET   /swagger                  controllers.Application.swagger
-GET   /api-docs                 controllers.ApiHelpController.getResources
+GET    /swagger                       controllers.Application.swagger
+GET    /api-docs                      controllers.ApiHelpController.getResources
 
 #################### Mapping to endpoints ####################
-GET   /api-docs/api/repos        controllers.ApiHelpController.getResource(path="/api/repos") 
+GET    /api-docs/api/repos            controllers.ApiHelpController.getResource(path="/api/repos") 
 
 
 
@@ -15,13 +15,11 @@ GET   /api-docs/api/repos        controllers.ApiHelpController.getResource(path=
 
 
 # Map static scm from the /public folder to the /assets URL path
-GET   /assets/*file             controllers.Assets.at(path="/public", file)
-GET   /status                   controllers.Application.status
+GET    /assets/*file                  controllers.Assets.at(path="/public", file)
+GET    /status                        controllers.Application.status
 
 #################### ENDPOINTS ####################
 
-GET   /api/repos/:repo_url/commits   @endpoint.RepoWS.get(repo_url: String,  valid:Option[Boolean] ?= None,from_commit_id:Option[String]) 
-#, page:Int ?= 30, per_page:Int ?= 100) 
-#, valid:Option[Boolean],  , to_commit_id:Option[String])
-#GET   /api/commits            @endpoint.CommitWS.get(repo: Option[String])
-#, select:Option[String] ?= "all",  from_commit_id:Option[String], to_commit_id:Option[String]) 
+GET    /api/repos/:repo_url/commits   @endpoint.RepoWS.commits(repo_url: String,  valid:Option[Boolean] ?= None,from_commit_id:Option[String]) 
+
+HEAD   /api/repos/:repo_url           @endpoint.RepoWS.normalize(repo_url: String)

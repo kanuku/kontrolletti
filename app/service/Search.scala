@@ -25,13 +25,21 @@ trait Search {
   /**
    * Returns commits fetched(cached) from the given url repository.
    * @param url url of the repository
-   * @return a future containing the list of commits
+   * @return a future containing either the error(left) or list of commits(right)
    */
   def commits(url: String): Future[Either[String, List[Commit]]]
+
+  /**
+   * Parses and returns the normalized URI for a repository-URL.
+   * @param url url of the repository
+   * @return either the error(left) or the normalized URI (right)
+   */
+  def normalize(url: String): Either[String, String]
 }
 
 /**
- * This class delegates the calls to the right target (ElasticSearch/Stash/Github).
+ * This class handles the search logic and retrieves the data from 
+ * the right target (ElasticSearch/Stash/Github).
  *
  */
 @Singleton
@@ -47,11 +55,10 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   def committers(url: String): Future[Either[String, List[Author]]] = {
     extract(url) match {
-      case Left(message) =>
-        Future { Left(message) }
+      case Left(message) => Future.successful(Left(message))
       case Right((host, group, repo)) =>
         resolveParser(host) match {
-          case Left(message) => Future { Left(message) }
+          case Left(message) => Future.successful(Left(message))
           case Right(parser) =>
             lazy val call: Callable = () => client.committers(host, group, repo)
             requestFromUrl(call)(parser.authorToModel)
@@ -61,13 +68,10 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   def commits(url: String): Future[Either[String, List[Commit]]] = {
     extract(url) match {
-      case Left(message) =>
-        Future { Left(message) }
+      case Left(message) => Future.successful(Left(message))
       case Right((host, group, repo)) =>
         resolveParser(host) match {
-          case Left(message) => Future {
-            Left(message)
-          }
+          case Left(message) => Future.successful(Left(message))
           case Right(parser) =>
             lazy val call: Callable = () => client.commits(host, group, repo)
             requestFromUrl(call)(parser.commitToModel)
@@ -98,6 +102,13 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
       case e =>
         logger.error(e.getMessage)
         Left("An internal error occurred!")
+    }
+  }
+
+  def normalize(uri: String): Either[String, String] = {
+    extract(uri) match {
+      case Left(message)                => Left(message)
+      case Right((host, project, repo)) => Right(s"https://$host/$project/$repo")
     }
   }
 

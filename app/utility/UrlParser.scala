@@ -15,7 +15,7 @@ trait UrlParser {
   val repoRgx = """(\w*(?!.git)*|[\w.-]*){1,1}"""
   val repoAntecedentRgx = """(/repos/|/){1,1}"""
   val projectRgx = """([\w-.]+){1,1}"""
-  val projectAntecedentRgx = """(/projects/|/){1,1}"""
+  val projectAntecedentRgx = """(/projects/|/|:){1,1}"""
   val hostnameRgx = """(\w+[-.\w]*\w*[:\d]*){1,1}"""
   val userRgx = """(\w+@)?"""
   val protocolRgx = """(\w+://)?"""

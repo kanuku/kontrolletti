@@ -142,7 +142,6 @@ import TestUtils._
         else val1 + val2
       }
     }
-
   }
 
 }
