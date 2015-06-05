@@ -150,7 +150,7 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
 
     assertEitherIsNotNull(either)
     assertEitherIsLeft(either)
-    assert(either.left.get == "URL is empty")
+    assert(either.left.get == "Repository-url should not be empty/null")
   }
   it should "never call the client when the url is null" in {
     //Start testing.
@@ -160,27 +160,48 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
 
     assertEitherIsNotNull(either)
     assertEitherIsLeft(either)
-    assert(either.left.get == "URL is null")
+    assert(either.left.get == "Repository-url should not be empty/null")
   }
-  "normalize " should "return normalized uri" in {
+  "normalize" should "normalize github anonymous git-clone-url" in {
     val url = "git@github.com:zalando/kontrolletti.git"
-    val either = search.normalize(url)
+    val either = search.normalizeURL(url)
     assertEitherIsNotNull(either)
     assertEitherIsRight(either)
     assert(either.right.get === "https://github.com/zalando/kontrolletti")
   }
+  it should "normalize github https-clone-url" in {
+    val url = "https://github.com/zalando/kontrolletti.git"
+    val either = search.normalizeURL(url)
+    assertEitherIsNotNull(either)
+    assertEitherIsRight(either)
+    assert(either.right.get === "https://github.com/zalando/kontrolletti")
+  }
+  it should "normalize stash ssh-clone-url" in {
+    val url = "ssh://git@stash-server.com/cd/ansible-playbooks.git"
+    val either = search.normalizeURL(url)
+    assertEitherIsNotNull(either)
+    assertEitherIsRight(either)
+    assert(either.right.get === "https://stash-server.com/projects/cd/repos/ansible-playbooks/browse")
+  }
+  it should "normalize stash https-clone-url" in {               
+    val url = "https://kanuku@stash-server.com/scm/cd/ansible-playbooks.git"
+    val either = search.normalizeURL(url)
+    assertEitherIsNotNull(either)
+    assertEitherIsRight(either)
+    assert(either.right.get === "https://stash-server.com/projects/cd/repos/ansible-playbooks/browse")
+  }
   it should "Return an error when url is not parsable" in {
     val url = "why-is-this-url-not-workinggitzalando/.git"
-    val either = search.normalize(url)
+    val either = search.normalizeURL(url)
     assertEitherIsNotNull(either)
     assertEitherIsLeft(either)
     assert(either.left.get === s"Could not parse $url")
   }
   it should "Return an error when url is null" in {
     val url = null
-    val either = search.normalize(url)
+    val either = search.normalizeURL(url)
     assertEitherIsNotNull(either)
     assertEitherIsLeft(either)
-    assert(either.left.get === s"URL is $url")
+    assert(either.left.get === s"Repository-url should not be empty/null")
   }
 }

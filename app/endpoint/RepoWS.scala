@@ -1,14 +1,12 @@
 package endpoint
 
 import scala.concurrent.Future
-
 import com.wordnik.swagger.annotations.Api
 import com.wordnik.swagger.annotations.ApiImplicitParam
 import com.wordnik.swagger.annotations.ApiImplicitParams
 import com.wordnik.swagger.annotations.ApiOperation
 import com.wordnik.swagger.annotations.ApiResponse
 import com.wordnik.swagger.annotations.ApiResponses
-
 import javax.inject._
 import model.Commit
 import play.api.Logger
@@ -19,11 +17,12 @@ import play.api.mvc.Action
 import play.api.mvc.Controller
 import play.utils.UriEncoding
 import service.Search
+import java.net.URLEncoder
 
 @Api(value = "/api/repos", description = "Access repository information.")
 @Singleton
 class RepoWS @Inject() (searchService: Search) extends Controller {
-
+  val NORMALIZED_REQUEST_PARAMETER = "Normalized-Repository-Identifier"
   import model.KontrollettiToJsonParser._
   val logger: Logger = Logger { this.getClass }
   @ApiOperation(
@@ -59,8 +58,8 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
     }
   }
   @ApiOperation(
-    nickname = "head", value = "Access repository's meta information" //
-    , notes = "Shouldn't be automatically redirected." //
+    nickname = "head", //
+    value = "Access repository's meta information" //
     , httpMethod = "HEAD" //
     )
   @ApiResponses(Array(
@@ -75,21 +74,28 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
       required = true, //
       dataType = "string", //
       paramType = "path")))
-  def normalize(repoUrl: String) = Action { //, to_commit_id: Option[String]) = Action {
+  def normalize(repoUrl: String) = Action {
+    request =>
+      val repository = UriEncoding.decodePath(repoUrl, "UTF-8")
+      logger.info(s"Request: $repository")
 
-    val repository = UriEncoding.decodePath(repoUrl, "UTF-8")
-    logger.info(s"Request: $repository")
-
-    searchService.normalize(repository) match {
-      case Left(error) =>
-        logger.warn(s"Result: 400 $error")
-        BadRequest
-      case Right(url) if (repository.equals(url)) =>
-        logger.info(s"Result: 200 $url")
-        Ok
-      case Right(url) =>
-        logger.info(s"Result: 301 $url")
-        MovedPermanently(url)
-    }
+      searchService.normalizeURL(repository) match {
+        case Left(error) =>
+          logger.warn(s"Result: 400 $error")
+          BadRequest(error)
+        case Right(url) if (repository.equals(url)) =>
+          logger.info(s"Result: 200 $url")
+          if (searchService.isRepoValid(url))
+            Ok
+          else
+            NotFound
+        case Right(url) =>
+          logger.info(s"Result: 301 $url")
+          MovedPermanently(routes.RepoWS.get(URLEncoder.encode(url, "UTF-8")).url) //
+            .withHeaders(NORMALIZED_REQUEST_PARAMETER -> url)
+      }
   }
+
+  def get(repoUrl: String) = Action { NotImplemented }
+
 }

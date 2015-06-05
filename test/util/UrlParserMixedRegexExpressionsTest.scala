@@ -110,13 +110,13 @@ import TestUtils._
     val either = extract(null)
     assertEitherIsNotNull(either)
     assertEitherIsLeft(either)
-    assert(either.left.get == "URL is null")
+    assert(either.left.get == "Repository-url should not be empty/null")
   }
   test("parse (empty String) and get empty tuple") {
     val either = extract("")
     assertEitherIsNotNull(either)
     assertEitherIsLeft(either)
-    assert(either.left.get == "URL is empty")
+    assert(either.left.get == "Repository-url should not be empty/null")
   }
   test("parse (NoneURL) and get empty tuple") {
     val url="asdfasdfölakjsdfölkajsdfölkj1230790823702934857"

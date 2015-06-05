@@ -3,20 +3,13 @@
 package util
 
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite 
+import org.scalatest.FunSuite
 import utility.UrlParser
+import client.SCM
+import service.SearchImpl
 
-
-class GithubUrlParserTest extends FunSuite {
-
-  sealed case class GithubProject(name: String, url: String)
-
-  private val ghHost = "git-hub.com"
-  private val ghProject = "zalando-bus"
-  private val ghRepo = "kontrolletti"
-  private val hosts = List("git-hub.com", "git-hub.com:8080", "git-hub.com:22")
-  private val project = List("zalando-bus", "stups", "..test", "---", "___", "--")
-  
+class UrlParserTest extends FunSuite   {
+	val parser:UrlParser = new SearchImpl(null)
 
   test("test-0") {
     test("https://git-hub.com/zalando-bus/kontrolletti", "git-hub.com", "zalando-bus", "kontrolletti")
@@ -49,14 +42,31 @@ class GithubUrlParserTest extends FunSuite {
     test("https://github.com/zalando-bus/kontrolletti", "github.com", "zalando-bus", "kontrolletti")
   }
   test("test-10") {
-	  test("git@github.com:zalando/kontrolletti.git", "github.com", "zalando", "kontrolletti")
+    test("git@github.com:zalando/kontrolletti.git", "github.com", "zalando", "kontrolletti")
   }
 
+  // stash tests
+  test("test-11") {
+    test("ssh://git@stash-server.com/cd/ansible-playbooks.git", "stash-server.com", "cd", "ansible-playbooks")
+  }
+  test("test-12") {
+    test("https://kanuku@stash-server.com/scm/cd/ansible-playbooks.git", "stash-server.com", "cd", "ansible-playbooks")
+  }
+
+  test("test empty method") {
+
+    assert(parser.empty("") == true, "Empty means empty")
+    assert(parser.empty(null) == true, "Null means empty")
+    assert(parser.empty(" ") == true, "Whitespace must in this case also result in Empty")
+    assert(parser.empty("a") == false, "character means NOT empty")
+  }
+  
+
   def test(url: String, host: String, project: String, repo: String) = {
-    val parser = new UrlParser() {}
+    
     val result = parser.extract(url)
     assert(result.isRight, "Parsing failed")
-    val (testHost, testGroup, testRepo) = result.right.toOption.get 
+    val (testHost, testGroup, testRepo) = result.right.toOption.get
     assert(testHost == host)
     assert(testGroup == project)
     assert(testRepo == repo)

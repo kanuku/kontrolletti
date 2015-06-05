@@ -30,15 +30,17 @@ trait Search {
   def commits(url: String): Future[Either[String, List[Commit]]]
 
   /**
-   * Parses and returns the normalized URI for a repository-URL.
+   * Parses and returns the normalized URI for a github/stash repository-URL.
    * @param url url of the repository
-   * @return either the error(left) or the normalized URI (right)
+   * @return either an error(left) or the normalized URI (right)
    */
-  def normalize(url: String): Either[String, String]
+  def normalizeURL(url: String): Either[String, String]
+
+  def isRepoValid(url: String): Boolean
 }
 
 /**
- * This class handles the search logic and retrieves the data from 
+ * This class handles the search logic and retrieves the data from
  * the right target (ElasticSearch/Stash/Github).
  *
  */
@@ -104,12 +106,8 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
         Left("An internal error occurred!")
     }
   }
-
-  def normalize(uri: String): Either[String, String] = {
-    extract(uri) match {
-      case Left(message)                => Left(message)
-      case Right((host, project, repo)) => Right(s"https://$host/$project/$repo")
-    }
+  def normalizeURL(url: String): Either[String, String] = {
+    normalize(url)
   }
 
   def resolveParser(host: String): Either[String, SCMParser] =
@@ -117,5 +115,9 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
       case Some(parser) => Right(parser)
       case None         => Left(s"Could not resolve the client for $host")
     }
+
+  def isRepoValid(url: String) = {
+    true
+  }
 
 }
