@@ -116,5 +116,20 @@ import ParsingData._
     diff1 shouldBe empty
     diff2 shouldBe empty
   }
+  
+  // Very specific tests motivated by findings after first implementation
+  test("parse project antecent for stash(/scm/)"){
+    val regex = s"$projectAntecedentRgx".r
+    val input = "/scm/"
+    val result = input match {case regex(result)=> result case _ => ""}
+    assert(result === input)
+  }
+  // Very specific tests motivated by findings after first implementation
+  test("parse project antecent for stash(ansible-playbooks.git)"){
+	  val regex = s"$repoRgx".r
+			  val input = "ansible-playbooks.git"
+			  val result = input match {case regex(result)=> result case _ => ""}
+	  assert(result === "ansible-playbooks")
+  }
  
 }
