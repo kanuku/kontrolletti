@@ -106,8 +106,13 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
         Left("An internal error occurred!")
     }
   }
+
   def normalizeURL(url: String): Either[String, String] = {
-    normalize(url)
+    extract(url) match {
+      case Left(error) => Left(error)
+      case Right((host, project, repo)) =>
+        Right(client.normalize(host, project, repo))
+    }
   }
 
   def resolveParser(host: String): Either[String, SCMParser] =

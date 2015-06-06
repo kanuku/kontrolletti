@@ -53,14 +53,7 @@ class UrlParserTest extends FunSuite   {
     test("https://kanuku@stash-server.com/scm/cd/ansible-playbooks.git", "stash-server.com", "cd", "ansible-playbooks")
   }
 
-  test("test empty method") {
-
-    assert(parser.empty("") == true, "Empty means empty")
-    assert(parser.empty(null) == true, "Null means empty")
-    assert(parser.empty(" ") == true, "Whitespace must in this case also result in Empty")
-    assert(parser.empty("a") == false, "character means NOT empty")
-  }
-  
+   
 
   def test(url: String, host: String, project: String, repo: String) = {
     

@@ -3,24 +3,22 @@ package service
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
-
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
-
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSResponse
 import client.SCM
 import model.Author
 import test.util.MockitoUtils._
-
 import org.scalatestplus.play.OneAppPerSuite
 import org.scalatestplus.play.PlaySpec
 import org.scalatest.FunSpec
+import client.SCMImpl
 
 /**
  * This class tests the interaction between the Service and the Client.
@@ -33,7 +31,8 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
   import test.util.TestUtils._
 
   val client = mock[SCM]
-  val search: Search = new SearchImpl(client)
+  val searchWithMockClient: Search = new SearchImpl(client)
+  val search: Search = new SearchImpl(new SCMImpl())
   val users = List(Author("name", "email"))
 
   before {
@@ -48,10 +47,10 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
   }
 
   def stashFixture = new {
-    val host = "stash.zalando.net"
+    val host = "stash-server.com"
     val project = "DOC"
     val repo = "ci-cd"
-    val url = s"https://stash.zalando.net/projects/$project/repos/$repo"
+    val url = s"https://stash-server.com/projects/$project/repos/$repo"
   }
 
   "committers " should "call the client with parsed github Url params" in {
@@ -61,7 +60,7 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
     when(client.committers(anyString, anyString, anyString)).thenReturn(clientResult)
 
     //Start testing
-    val either = Await.result(search.committers(githubFixture.url), Duration("10 seconds"))
+    val either = Await.result(searchWithMockClient.committers(githubFixture.url), Duration("10 seconds"))
 
     assertEitherIsNotNull(either)
     assertEitherIsRight(either)
@@ -87,7 +86,7 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
     when(client.committers(anyString, anyString, anyString)).thenReturn(clientResult)
 
     //Start testing
-    val either = Await.result(search.committers(stashFixture.url), Duration("10 seconds"))
+    val either = Await.result(searchWithMockClient.committers(stashFixture.url), Duration("10 seconds"))
 
     assertEitherIsNotNull(either)
     assertEitherIsRight(either)
@@ -112,7 +111,7 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
     when(client.committers(anyString, anyString, anyString)).thenReturn(clientResult)
 
     //Start testing
-    val either = Await.result(search.committers(githubFixture.url), Duration("10 seconds"))
+    val either = Await.result(searchWithMockClient.committers(githubFixture.url), Duration("10 seconds"))
     val hostCap = ArgumentCaptor.forClass(classOf[String])
     val groupCap = ArgumentCaptor.forClass(classOf[String])
     val repoCap = ArgumentCaptor.forClass(classOf[String])
@@ -133,7 +132,7 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
   it should "never call the client when the url is not parsable" in {
     val url = "asdfasdfasdfaölkajsdf"
     //Start testing    
-    val either = Await.result(search.committers(url), Duration("10 seconds"))
+    val either = Await.result(searchWithMockClient.committers(url), Duration("10 seconds"))
     // Verify the method is never called when
     verify(client, times(0)).committers(anyObject(), anyObject(), anyObject());
 
@@ -144,7 +143,7 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
   }
   it should "never call the client when the url is empty" in {
     //Start testing
-    val either = Await.result(search.committers(""), Duration("10 seconds"))
+    val either = Await.result(searchWithMockClient.committers(""), Duration("10 seconds"))
     // Verify the method is never called when
     verify(client, times(0)).committers(anyObject(), anyObject(), anyObject());
 
@@ -154,7 +153,7 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
   }
   it should "never call the client when the url is null" in {
     //Start testing.
-    val either = Await.result(search.committers(null), Duration("10 seconds"))
+    val either = Await.result(searchWithMockClient.committers(null), Duration("10 seconds"))
     // Verify the method is never called when
     verify(client, times(0)).committers(anyObject(), anyObject(), anyObject());
 

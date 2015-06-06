@@ -11,6 +11,8 @@ import play.api.libs.ws._
 sealed trait SCM {
   def committers(host: String, group: String, repo: String): Future[WSResponse]
   def commits(host: String, group: String, repo: String): Future[WSResponse]
+  def normalize(host: String, project: String, repo: String): String
+
 }
 
 class SCMImpl extends SCM {
@@ -26,6 +28,11 @@ class SCMImpl extends SCM {
     val res: SCMResolver = resolver(host).get
     val url: String = res.commits(host, project, repo)
     request(url, res.accessTokenKey, res.accessTokenValue)
+  }
+
+  def normalize(host: String, project: String, repo: String): String = {
+    val res: SCMResolver = resolver(host).get
+    res.normalize(host, project, repo)
   }
 
   def request: (String, String, String) => Future[WSResponse] = {
