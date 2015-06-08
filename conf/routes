@@ -24,4 +24,4 @@ GET    /api/repos/:repo_url/commits   @endpoint.RepoWS.commits(repo_url: String,
 
 HEAD   /api/repos/:repo_url           @endpoint.RepoWS.normalize(repo_url: String)
 
-GET   /api/repos/:repo_url           @endpoint.RepoWS.get(repo_url: String)
+GET    /api/repos/:repo_url           @endpoint.RepoWS.get(repo_url: String)

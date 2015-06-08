@@ -36,7 +36,14 @@ trait Search {
    */
   def normalizeURL(url: String): Either[String, String]
 
-  def isRepoValid(url: String): Boolean
+  /**
+   * Validates if the repository exists in internal data-store or
+   * in the remote origin(SCM).
+   * @param url url of the repository
+   * @return Either a Left=(Message) if an error occurred or a Right(True/False) if the repository exists.
+   */
+
+  def isRepoValid(url: String): Either[String, Boolean]
 }
 
 /**
@@ -93,12 +100,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
         logger.warn("Response: " + response.status + " => " + response.body)
         Left("Unexpected SCM response: " + response.status)
       } else {
-        parser(response.json) match {
-          case Left(message) =>
-            logger.info(message)
-            Left("Could not parse the json result(scm)!")
-          case Right(obj) => Right(obj)
-        }
+        processResponse(parser(response.json))("Could not parse the json result(scm)!")
       }
     } recover {
       case e =>
@@ -121,8 +123,30 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
       case None         => Left(s"Could not resolve the client for $host")
     }
 
-  def isRepoValid(url: String) = {
-    true
+  def isRepoValid(url: String): Either[String, Boolean] = {
+    extract(url) match {
+      case Left(error) => Left(error)
+      case Right((host, project, repo)) =>
+        processResponse(client.doesRepoExist(host, project, repo))
+    }
+  }
+
+  /**
+   *
+   * This method handles error messages such that sensitive message is not passed to the client.
+   * I.e.: When authorization handshake fails, details shouldn't leave the service layer.
+   *
+   * @param Left the erroneous message and right the result.
+   * @param errorMessage(implicit) 
+   * @return either a more general error left or the result right
+   */
+  private def processResponse[A](either: Either[String, A])(implicit errorMessage:String ="An internal error occurred!"): Either[String, A] = {
+    either match {
+      case Left(error) =>
+        logger.warn(error)
+        Left(errorMessage)
+      case Right(result) => Right(result)
+    }
   }
 
 }

@@ -78,17 +78,23 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
     request =>
       val repository = UriEncoding.decodePath(repoUrl, "UTF-8")
       logger.info(s"Request: $repository")
-
       searchService.normalizeURL(repository) match {
         case Left(error) =>
           logger.warn(s"Result: 400 $error")
-          BadRequest(error)
+          BadRequest
         case Right(url) if (repository.equals(url)) =>
-          logger.info(s"Result: 200 $url")
-          if (searchService.isRepoValid(url))
-            Ok
-          else
-            NotFound
+          searchService.isRepoValid(url) match {
+            case Right(result) =>
+              if (result) {
+                logger.info(s"Result: 200 $url")
+                Ok
+              } else {
+                logger.info(s"Result: 404 $url")
+                NotFound
+              }
+            case Left(error) =>
+              InternalServerError
+          }
         case Right(url) =>
           logger.info(s"Result: 301 $url")
           MovedPermanently(routes.RepoWS.get(URLEncoder.encode(url, "UTF-8")).url) //

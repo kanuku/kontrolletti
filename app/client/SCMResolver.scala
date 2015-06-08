@@ -41,29 +41,44 @@ sealed trait SCMResolver {
   }
 
   /**
-   * Fetches the list of contributors of a repository in the given `project` at the given `host`.
+   * Url for listing contributors of a repository in the given `project` at the given `host`.
    * @param repo repository
    * @param host host of the SCM server
    * @param project project where the repository belongs to
+   * @return The url
    */
   def contributors(host: String, project: String, repo: String): String
 
   /**
-   * Fetches the list of commits of a repository in the given `project` at the given `host`.
+   *  Url for listing commits of a repository in the given `project` at the given `host`.
    * @param repo repository
    * @param host host of the SCM server
    * @param project project where the repository belongs to
+   * @return The url
    */
   def commits(host: String, project: String, repo: String): String
 
   /**
-   * Fetches the information of a repository in the given `project` at the given `host`.
+   *  Url for the repository in the given user namespace at the given `host`.
    * @param repo repository
    * @param host host of the SCM server
    * @param project project where the repository belongs to
+   * @return The url
    */
   def repo(host: String, project: String, repo: String): String
+  
+//  /**
+//   * Url for the repository in the given organization namespace at the given `host`.
+//   * @param repo repository
+//   * @param host host of the SCM server
+//   * @param user project where the repository belongs to
+//   * @return The url
+//   */
+//  def organizationRepo(host: String, organization: String, repo: String): String
 
+  
+  
+  
   /**
    * Resolves to itself if the host matches to any of the configured `hosts`
    * Otherwise to an instance of None
@@ -112,7 +127,7 @@ object GithubResolver extends SCMResolver {
 
   def contributors(host: String, project: String, repo: String) = s"$antecedent$host/repos/$project/$repo/contributors"
   def commits(host: String, project: String, repo: String) = s"$antecedent$host/repos/$project/$repo/commits"
-  def repo(host: String, project: String, repo: String) = ???
+  def repo(host: String, project: String, repo: String) = s"$antecedent$host/repos/$project/$repo"
   def normalize(host: String, project: String, repo: String) = s"https://$host/$project/$repo"
 
   // Authorization variables

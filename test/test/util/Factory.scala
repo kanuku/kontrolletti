@@ -19,6 +19,8 @@ import play.api.test.Helpers._
 import play.api.libs.ws.WSRequestHolder
 import client.SCMImpl
 import play.api.libs.json.JsString
+import service.Search
+import play.api.GlobalSettings
 
 object MockitoUtils extends MockitoSugar {
 
@@ -52,5 +54,13 @@ object MockitoUtils extends MockitoSugar {
       block
     }
   }
+  def withFakeApplication(global:GlobalSettings)(block: => Unit): Unit = {
+		  running(FakeApplication(withGlobal=Some(global))) {
+			  block
+		  }
+  }
+   
+  
+  
 
 }

@@ -9,9 +9,22 @@ import play.api.Play.current
 import play.api.libs.ws._
 
 sealed trait SCM {
+
   def committers(host: String, group: String, repo: String): Future[WSResponse]
+
   def commits(host: String, group: String, repo: String): Future[WSResponse]
+
   def normalize(host: String, project: String, repo: String): String
+
+  /**
+   * Checks if a repository exists with a HTTP Head request to the repository url.
+   * @param host DNS/IP of the SCM server <br/>
+   * @param project name of the project
+   * @param repo name of the repository
+   * @return on the right true if the response was 200 or false if it was 404/301 or a Error message left for any other HTTP code.
+   *
+   */
+  def doesRepoExist(host: String, project: String, repo: String): Either[String, Boolean]
 
 }
 
@@ -58,6 +71,11 @@ class SCMImpl extends SCM {
       else
         throw new IllegalStateException(s"Could not resolve SCM context for $host")
     }
+  }
+
+  def doesRepoExist(host: String, project: String, repo: String): Either[String, Boolean] = {
+
+    Left("")
   }
 
   def requestHolder: (String) => WSRequestHolder = {

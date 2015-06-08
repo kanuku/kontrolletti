@@ -60,6 +60,10 @@ class SCMResolverTest extends PlaySpec with OneAppPerSuite with MockitoSugar {
       val contributorsUrl = "https://api.github.com/repos/kanuku/misc/contributors"
       assert(resolver.contributors(host, project, repo) === contributorsUrl)
     }
+    "use the passed parameters in the reposory url" in {
+    	val contributorsUrl = "https://api.github.com/repos/kanuku/misc"
+    			assert(resolver.repo(host, project, repo) === contributorsUrl)
+    }
   }
   "The StashResolver " must {
 
