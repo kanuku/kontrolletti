@@ -41,21 +41,44 @@ sealed trait SCMResolver {
   }
 
   /**
-   * Fetches the list of contributors of a repository in the given `project` at the given `host`.
+   * Url for listing contributors of a repository in the given `project` at the given `host`.
    * @param repo repository
    * @param host host of the SCM server
    * @param project project where the repository belongs to
+   * @return The url
    */
   def contributors(host: String, project: String, repo: String): String
 
   /**
-   * Fetches the list of commits of a repository in the given `project` at the given `host`.
+   *  Url for listing commits of a repository in the given `project` at the given `host`.
    * @param repo repository
    * @param host host of the SCM server
    * @param project project where the repository belongs to
+   * @return The url
    */
   def commits(host: String, project: String, repo: String): String
 
+  /**
+   *  Url for the repository in the given user namespace at the given `host`.
+   * @param repo repository
+   * @param host host of the SCM server
+   * @param project project where the repository belongs to
+   * @return The url
+   */
+  def repo(host: String, project: String, repo: String): String
+  
+//  /**
+//   * Url for the repository in the given organization namespace at the given `host`.
+//   * @param repo repository
+//   * @param host host of the SCM server
+//   * @param user project where the repository belongs to
+//   * @return The url
+//   */
+//  def organizationRepo(host: String, organization: String, repo: String): String
+
+  
+  
+  
   /**
    * Resolves to itself if the host matches to any of the configured `hosts`
    * Otherwise to an instance of None
@@ -66,6 +89,13 @@ sealed trait SCMResolver {
     case _ =>
       None
   }
+
+  /**
+   * Parses and returns the normalized URI for a github/stash repository-URL.
+   * @param url url of the repository
+   * @return either an error(left) or the normalized URI (right)
+   */
+  def normalize(host: String, project: String, repo: String): String
 
   /**
    * The access-token property for the access-token the rest api of this client.
@@ -97,6 +127,8 @@ object GithubResolver extends SCMResolver {
 
   def contributors(host: String, project: String, repo: String) = s"$antecedent$host/repos/$project/$repo/contributors"
   def commits(host: String, project: String, repo: String) = s"$antecedent$host/repos/$project/$repo/commits"
+  def repo(host: String, project: String, repo: String) = s"$antecedent$host/repos/$project/$repo"
+  def normalize(host: String, project: String, repo: String) = s"https://$host/$project/$repo"
 
   // Authorization variables
   def accessTokenKey = "access_token"
@@ -108,6 +140,8 @@ object StashResolver extends SCMResolver {
 
   def contributors(host: String, project: String, repo: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repo/contributors"
   def commits(host: String, project: String, repo: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repo/commits"
+  def repo(host: String, project: String, repo: String) = ???
+  def normalize(host: String, project: String, repo: String) = s"https://$host/projects/$project/repos/$repo/browse"
 
   // Authorization variables
   def accessTokenKey = "X-Auth-Token"

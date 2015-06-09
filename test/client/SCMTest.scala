@@ -29,7 +29,7 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar {
 
         val method = mock[(String) => WSRequestHolder]
         val requestHolder = mock[WSRequestHolder]
-        val response = mockSuccessfullParsableFutureWSResponse(mock[WSResponse])
+        val response = mockSuccessfullParsableFutureWSResponse(mock[WSResponse],200)
         val client: SCM = createClient(method)
 
         //Record
@@ -61,9 +61,9 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar {
 
   it should "return the stash-client when issued with a stash domain" in {
     val client = new SCMImpl()
-    val resolver = client.resolver("stash.zalando.net").get
+    val resolver = client.resolver("stash-server.com").get
     assert(resolver != null)
-    assert(resolver.isCompatible("stash.zalando.net"))
+    assert(resolver.isCompatible("stash-server.com"))
 
   }
 

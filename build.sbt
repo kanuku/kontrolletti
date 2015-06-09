@@ -1,8 +1,10 @@
+import com.typesafe.sbt.packager.docker._
+
 name := """kontrolletti"""
 
 version := "1.0-SNAPSHOT"
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
+lazy val root = (project in file(".")).enablePlugins(PlayScala).enablePlugins(DockerPlugin)
 
 scalaVersion := "2.11.1"
 
@@ -46,6 +48,5 @@ mappings in Universal += {
   file( "./scm-source.json") -> "../../scm-source.json" 
 }
 
-import com.typesafe.sbt.packager.docker._
 dockerCommands +=  ExecCmd("ADD", "/scm-source.json", "/scm-source.json")
 

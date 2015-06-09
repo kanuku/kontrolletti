@@ -32,7 +32,7 @@ class SCMResolverTest extends PlaySpec with OneAppPerSuite with MockitoSugar {
     val repo = "misc"
     val resolver: SCMResolver = GithubResolver
     "return the configured hosts in application.conf" in {
-      val hosts = Set("github.com", "ghe.zalando.net", "ghe.zalan.do")
+      val hosts = Set("github.com")
       assert(resolver.hosts == hosts)
     }
     "name must be github" in {
@@ -44,20 +44,8 @@ class SCMResolverTest extends PlaySpec with OneAppPerSuite with MockitoSugar {
     "be compatible with github.com" in {
       assert(resolver.isCompatible("github.com"))
     }
-    "be compatible with ghe.zalando.net" in {
-      assert(resolver.isCompatible("ghe.zalando.net"))
-    }
-    "be compatible with ghe.zalan.do" in {
-      assert(resolver.isCompatible("ghe.zalan.do"))
-    }
     "resolve to the same host on github.com" in {
       assert(resolver == resolver.resolve("github.com").get)
-    }
-    "resolve to the same host on ghe.zalando.net" in {
-      assert(resolver == resolver.resolve("ghe.zalando.net").get)
-    }
-    "resolve to the same host on ghe.zalan.do" in {
-      assert(resolver == resolver.resolve("ghe.zalan.do").get)
     }
     "not resolve to the same host on test.com" in {
       assert(resolver.resolve("test.com") == None)
@@ -72,16 +60,20 @@ class SCMResolverTest extends PlaySpec with OneAppPerSuite with MockitoSugar {
       val contributorsUrl = "https://api.github.com/repos/kanuku/misc/contributors"
       assert(resolver.contributors(host, project, repo) === contributorsUrl)
     }
+    "use the passed parameters in the reposory url" in {
+    	val contributorsUrl = "https://api.github.com/repos/kanuku/misc"
+    			assert(resolver.repo(host, project, repo) === contributorsUrl)
+    }
   }
   "The StashResolver " must {
 
-    val host = "stash.zalando.net"
+    val host = "stash-server.com"
     val project = "doc"
     val repo = "ci-cd"
 
     val resolver: SCMResolver = StashResolver
     "return the configured hosts in application.conf" in {
-      val hosts = Set("stash.zalando.net", "stash.zalan.do")
+      val hosts = Set("stash-server.com")
       assert(resolver.hosts == hosts)
     }
     "name must be stash" in {
@@ -90,30 +82,24 @@ class SCMResolverTest extends PlaySpec with OneAppPerSuite with MockitoSugar {
     "contain the host configuration in the property" in {
       assert(resolver.hostsProperty == "client.stash.hosts")
     }
-    "be compatible with stash.zalando.net" in {
-      assert(resolver.isCompatible("stash.zalando.net"))
+    "be compatible with stash-server.com" in {
+      assert(resolver.isCompatible("stash-server.com"))
     }
-    "be compatible with stash.zalan.do" in {
-      assert(resolver.isCompatible("stash.zalan.do"))
-    }
-    "resolve to the same host on stash.zalando.net" in {
-      assert(resolver == resolver.resolve("stash.zalando.net").get)
-    }
-    "resolve to the same host on stash.zalan.do" in {
-      assert(resolver == resolver.resolve("stash.zalan.do").get)
+    "resolve to the same host on stash-server.com" in {
+      assert(resolver == resolver.resolve("stash-server.com").get)
     }
     "not resolve to the same host on test.com" in {
       assert(resolver.resolve("test.com") == None)
     }
 
     "use the passed parameters in the commits url" in {
-      val commitsUrl = "https://stash.zalando.net/rest/api/1.0/projects/doc/repos/ci-cd/commits"
+      val commitsUrl = "https://stash-server.com/rest/api/1.0/projects/doc/repos/ci-cd/commits"
       println(resolver.commits(host, project, repo))
       assert(resolver.commits(host, project, repo) === commitsUrl)
     }
 
     "use the passed parameters in the contributors url" in {
-      val contributorsUrl = "https://stash.zalando.net/rest/api/1.0/projects/doc/repos/ci-cd/contributors"
+      val contributorsUrl = "https://stash-server.com/rest/api/1.0/projects/doc/repos/ci-cd/contributors"
       println(resolver.contributors(host, project, repo))
       assert(resolver.contributors(host, project, repo) === contributorsUrl)
     }

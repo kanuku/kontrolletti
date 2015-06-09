@@ -19,19 +19,21 @@ import play.api.test.Helpers._
 import play.api.libs.ws.WSRequestHolder
 import client.SCMImpl
 import play.api.libs.json.JsString
+import service.Search
+import play.api.GlobalSettings
 
 object MockitoUtils extends MockitoSugar {
 
   /**
    * Creates a successfull/failed mocked WSResponse
    */
-  def mockSuccessfullParsableFutureWSResponse[T](result: T, httpCode:Int=200): Future[WSResponse] = {
+  def mockSuccessfullParsableFutureWSResponse[T](result: T, httpCode:Int): Future[WSResponse] = {
     val wsResponse = mock[WSResponse]
     val jsValue = mock[JsValue]
     val jsResult: JsResult[T] = new JsSuccess(result, null)
 
     when(jsValue.validate[T](anyObject())).thenReturn(jsResult)
-    when(wsResponse.status).thenReturn(200)
+    when(wsResponse.status).thenReturn(httpCode)
     when(wsResponse.json).thenReturn(jsValue)
     Future.successful(wsResponse)
   }
@@ -52,5 +54,13 @@ object MockitoUtils extends MockitoSugar {
       block
     }
   }
+  def withFakeApplication(global:GlobalSettings)(block: => Unit): Unit = {
+		  running(FakeApplication(withGlobal=Some(global))) {
+			  block
+		  }
+  }
+   
+  
+  
 
 }

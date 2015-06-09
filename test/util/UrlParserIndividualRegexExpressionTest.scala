@@ -73,6 +73,16 @@ import ParsingData._
     diff1 shouldBe empty
     diff2 shouldBe empty
   }
+  test("parse project precedent and get (projects ))") {
+	  val regex = s"$projectRgx".r
+			  val input = projects
+			  val parsed = for (value <- input) yield value match { case regex(result) => result }
+	  val diff1 = input.filterNot { x => parsed.contains(x) }
+	  val diff2 = parsed.filterNot { x => input.contains(x) }
+	  parsed.size shouldEqual input.size
+	  diff1 shouldBe empty
+	  diff2 shouldBe empty
+  }
 
   test("parse repo antecedent ('/repos/ and '/') and get '/repos/' and '/'") {
     val regex = s"$repoAntecedentRgx".r
@@ -105,6 +115,14 @@ import ParsingData._
     parsed.size shouldEqual input.size
     diff1 shouldBe empty
     diff2 shouldBe empty
+  }
+  
+  // Very specific tests motivated by findings after first implementation
+  test("projectAntecedent regex should also include /scm/"){
+    val regex = s"$projectAntecedentRgx".r
+    val input = "/scm/"
+    val result = input match {case regex(result)=> result case _ => ""}
+    assert(result === input)
   }
  
 }

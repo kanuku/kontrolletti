@@ -31,6 +31,8 @@ dist
 /.project
 /RUNNING_PID
 /.settings
+/.cache-main
+/.cache-tests
 /bin
 
 #misc
