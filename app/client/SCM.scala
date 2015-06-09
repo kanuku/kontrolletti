@@ -10,9 +10,9 @@ import play.api.libs.ws._
 
 sealed trait SCM {
 
-  def committers(host: String, group: String, repo: String): Future[WSResponse]
+  def committers(host: String, project: String, repo: String): Future[WSResponse]
 
-  def commits(host: String, group: String, repo: String): Future[WSResponse]
+  def commits(host: String, project: String, repo: String): Future[WSResponse]
 
   def normalize(host: String, project: String, repo: String): String
 
@@ -21,26 +21,36 @@ sealed trait SCM {
    * @param host DNS/IP of the SCM server <br/>
    * @param project name of the project
    * @param repo name of the repository
-   * @return on the right true if the response was 200 or false if it was 404/301 or a Error message left for any other HTTP code.
+   * @return The future with the response of the call
    *
    */
-  def doesRepoExist(host: String, project: String, repo: String): Either[String, Boolean]
+  def repoExists(host: String, project: String, repo: String): Future[WSResponse]
 
 }
 
 class SCMImpl extends SCM {
   private val logger: Logger = Logger(this.getClass())
+  
+  type Call = (WSRequestHolder) => Future[WSResponse]
+  
+  val GET: Call = { requestHolder => requestHolder.get() }
+  val HEAD: Call = { requestHolder => requestHolder.head() }
 
-  def committers(host: String, group: String, repo: String): Future[WSResponse] = {
+  def committers(host: String, project: String, repo: String): Future[WSResponse] = {
     val res: SCMResolver = resolver(host).get
-    val url: String = res.contributors(host, group, repo)
-    request(url, res.accessTokenKey, res.accessTokenValue)
+    val url: String = res.contributors(host, project, repo)
+    request(GET, url, res.accessTokenKey, res.accessTokenValue)
   }
 
   def commits(host: String, project: String, repo: String): Future[WSResponse] = {
     val res: SCMResolver = resolver(host).get
     val url: String = res.commits(host, project, repo)
-    request(url, res.accessTokenKey, res.accessTokenValue)
+    request(GET, url, res.accessTokenKey, res.accessTokenValue)
+  }
+  def repoExists(host: String, project: String, repo: String): Future[WSResponse] = {
+    val res: SCMResolver = resolver(host).get
+    val url: String = res.repo(host, project, repo)
+    request(HEAD, url, res.accessTokenKey, res.accessTokenValue)
   }
 
   def normalize(host: String, project: String, repo: String): String = {
@@ -48,16 +58,15 @@ class SCMImpl extends SCM {
     res.normalize(host, project, repo)
   }
 
-  def request: (String, String, String) => Future[WSResponse] = {
-    (url, accessTokenKey, accessTokenValue) =>
-      val request = requestHolder(url)
-      if (accessTokenValue == null || accessTokenValue.isEmpty()) {
-        logger.info(s"$url with access-token ");
-        request.get()
-      } else {
-        logger.info(s"$url without access-token");
-        request.withHeaders(accessTokenKey -> accessTokenValue).get()
-      }
+  def request(call: Call, url: String, accessTokenKey: String, accessTokenValue: String): Future[WSResponse] = {
+    val request = requestHolder(url)
+    if (accessTokenValue == null || accessTokenValue.isEmpty()) {
+      logger.info(s"$url without access-token ");
+      call(request)
+    } else {
+      logger.info(s"$url with access-token");
+      call(request.withHeaders(accessTokenKey -> accessTokenValue))
+    }
   }
 
   def resolver(host: String) = {
@@ -71,11 +80,6 @@ class SCMImpl extends SCM {
       else
         throw new IllegalStateException(s"Could not resolve SCM context for $host")
     }
-  }
-
-  def doesRepoExist(host: String, project: String, repo: String): Either[String, Boolean] = {
-
-    Left("")
   }
 
   def requestHolder: (String) => WSRequestHolder = {

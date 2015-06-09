@@ -29,7 +29,7 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar {
 
         val method = mock[(String) => WSRequestHolder]
         val requestHolder = mock[WSRequestHolder]
-        val response = mockSuccessfullParsableFutureWSResponse(mock[WSResponse])
+        val response = mockSuccessfullParsableFutureWSResponse(mock[WSResponse],200)
         val client: SCM = createClient(method)
 
         //Record

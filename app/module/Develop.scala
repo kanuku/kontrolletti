@@ -14,6 +14,5 @@ class Develop extends AbstractModule {
     logger.info("Configured with a develop module")
     bind(classOf[Search]).to(classOf[SearchImpl])
     bind(classOf[SCM]).to(classOf[SCMImpl])
-
   }
 }

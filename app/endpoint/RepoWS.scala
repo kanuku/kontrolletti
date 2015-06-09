@@ -18,6 +18,8 @@ import play.api.mvc.Controller
 import play.utils.UriEncoding
 import service.Search
 import java.net.URLEncoder
+import scala.concurrent.future
+import scala.concurrent.Future
 
 @Api(value = "/api/repos", description = "Access repository information.")
 @Singleton
@@ -25,6 +27,9 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
   val NORMALIZED_REQUEST_PARAMETER = "Normalized-Repository-Identifier"
   import model.KontrollettiToJsonParser._
   val logger: Logger = Logger { this.getClass }
+
+  private val acceptableCodes = List(200, 301)
+
   @ApiOperation(
     nickname = "get" //
     , value = "Get list of commits" //
@@ -43,20 +48,20 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
     , new ApiImplicitParam(name = "from_commit_id", value = "Starting from commit-id", required = false, dataType = "string", paramType = "query") //
     , new ApiImplicitParam(name = "to_commit_id", value = "Untill commit-id", required = false, dataType = "string", paramType = "query")) //
     )
-  def commits(repoUrl: String, valid: Option[Boolean], from_commit_id: Option[String]) = Action.async { //, to_commit_id: Option[String]) = Action {
+  def commits(repoUrl: String, valid: Option[Boolean], from_commit_id: Option[String]) = Action.async {
     val repository = UriEncoding.decodePath(repoUrl, "UTF-8")
     logger.info(s"Request: $repository")
-    searchService.commits(repository).map { response =>
-      if (response.isLeft) {
-        val result = response.left.get
-        logger.warn(result)
-        BadRequest(result)
-      } else {
+
+    Future.firstCompletedOf(Seq(searchService.commits(repository))).map {
+      case Left(error) =>
+        logger.warn(error)
+        BadRequest(error)
+      case Right(response) =>
         logger.info("Result: OK")
-        Ok(Json.prettyPrint(Json.toJson(response.right.get))).as("application/json")
-      }
+        Ok(Json.prettyPrint(Json.toJson(response))).as("application/json")
     }
   }
+
   @ApiOperation(
     nickname = "head", //
     value = "Access repository's meta information" //
@@ -74,32 +79,34 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
       required = true, //
       dataType = "string", //
       paramType = "path")))
-  def normalize(repoUrl: String) = Action {
-    request =>
-      val repository = UriEncoding.decodePath(repoUrl, "UTF-8")
-      logger.info(s"Request: $repository")
-      searchService.normalizeURL(repository) match {
-        case Left(error) =>
-          logger.warn(s"Result: 400 $error")
-          BadRequest
-        case Right(url) if (repository.equals(url)) =>
-          searchService.isRepoValid(url) match {
-            case Right(result) =>
-              if (result) {
-                logger.info(s"Result: 200 $url")
-                Ok
-              } else {
-                logger.info(s"Result: 404 $url")
-                NotFound
-              }
-            case Left(error) =>
-              InternalServerError
-          }
-        case Right(url) =>
-          logger.info(s"Result: 301 $url")
-          MovedPermanently(routes.RepoWS.get(URLEncoder.encode(url, "UTF-8")).url) //
-            .withHeaders(NORMALIZED_REQUEST_PARAMETER -> url)
+  def normalize(repoUrl: String) = Action.async {
+    val repository = UriEncoding.decodePath(repoUrl, "UTF-8")
+    logger.info(s"Request: $repository")
+
+    searchService.normalizeURL(repository) match {
+      case Left(error) =>
+        logger.warn(s"Result: 400 $error")
+        Future.successful(BadRequest)
+
+      case Right(url) if (repository.equals(url)) => searchService.repoExists(url).map {
+        case Right(result) if acceptableCodes.contains(result) =>
+          logger.info(s"Result>>: 200 $url")
+          Ok
+
+        case Right(result) if result == 500 =>
+          logger.info(s"Result: 500 $url")
+          InternalServerError
+          
+        case Right(result) =>
+          logger.info(s"Result: 404 $url")
+          NotFound
       }
+
+      case Right(url) =>
+        logger.info(s"Result: 301 $url")
+        Future.successful(MovedPermanently(routes.RepoWS.get(URLEncoder.encode(url, "UTF-8")).url) //
+          .withHeaders(NORMALIZED_REQUEST_PARAMETER -> url))
+    }
   }
 
   def get(repoUrl: String) = Action { NotImplemented }

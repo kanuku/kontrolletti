@@ -55,7 +55,7 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
 
   "committers " should "call the client with parsed github Url params" in {
 
-    val clientResult = mockSuccessfullParsableFutureWSResponse(users)
+    val clientResult = mockSuccessfullParsableFutureWSResponse(users,200)
 
     when(client.committers(anyString, anyString, anyString)).thenReturn(clientResult)
 
@@ -81,7 +81,7 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
 
   it should "call the client with parsed stash Url params" in {
 
-    val clientResult = mockSuccessfullParsableFutureWSResponse(users)
+    val clientResult = mockSuccessfullParsableFutureWSResponse(users,200)
 
     when(client.committers(anyString, anyString, anyString)).thenReturn(clientResult)
 
