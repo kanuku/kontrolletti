@@ -140,7 +140,7 @@ object StashResolver extends SCMResolver {
 
   def contributors(host: String, project: String, repo: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repo/contributors"
   def commits(host: String, project: String, repo: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repo/commits"
-  def repo(host: String, project: String, repo: String) = ???
+  def repo(host: String, project: String, repo: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repo"
   def normalize(host: String, project: String, repo: String) = s"https://$host/projects/$project/repos/$repo/browse"
 
   // Authorization variables

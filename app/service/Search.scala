@@ -28,7 +28,14 @@ trait Search {
    * @return a future containing either the error(left) or list of commits(right)
    */
   def commits(url: String): Future[Either[String, List[Commit]]]
-
+ /**
+   * Parse a url into 3 separate parameters, the `host`, `project` and `repo` from a repository-url of a github or stash project
+   *
+   *  @param url URL of the repository
+   *  @return Either a [reason why it couldn't parse] left or a [result (`host`, `project` and `repo`)] right.
+   */
+  def parse(url:String): Either[String, (String, String, String)]
+  
   /**
    * Parses and returns the normalized URI for a github/stash repository-URL.
    * @param url url of the repository
@@ -61,6 +68,8 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   private val logger: Logger = Logger(this.getClass())
 
+  def parse(url: String): Either[String, (String, String, String)] = extract(url)
+  
   def committers(url: String): Future[Either[String, List[Author]]] = {
     extract(url) match {
       case Left(message) => Future.successful(Left(message))

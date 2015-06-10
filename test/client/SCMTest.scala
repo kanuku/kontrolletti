@@ -61,9 +61,9 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar {
 
   it should "return the stash-client when issued with a stash domain" in {
     val client = new SCMImpl()
-    val resolver = client.resolver("stash-server.com").get
+    val resolver = client.resolver("stash.zalando.net").get
     assert(resolver != null)
-    assert(resolver.isCompatible("stash-server.com"))
+    assert(resolver.isCompatible("stash.zalando.net"))
 
   }
 

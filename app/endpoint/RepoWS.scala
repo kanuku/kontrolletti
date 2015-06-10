@@ -40,7 +40,8 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
   @ApiResponses(Array(
     new ApiResponse(code = 200, message = "Operation succeeded.") //
     , new ApiResponse(code = 404, message = "Did not find the resource.") //
-    , new ApiResponse(code = 400, message = "Bad request.") //
+    , new ApiResponse(code = 400, message = "Bad Request.")
+    , new ApiResponse(code = 500, message = "Internal Server Error." ) //
     ))
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "repo_url", value = "repo url", required = true, dataType = "string", paramType = "path") //
@@ -49,17 +50,23 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
     , new ApiImplicitParam(name = "to_commit_id", value = "Untill commit-id", required = false, dataType = "string", paramType = "query")) //
     )
   def commits(repoUrl: String, valid: Option[Boolean], from_commit_id: Option[String]) = Action.async {
-    val repository = UriEncoding.decodePath(repoUrl, "UTF-8")
-    logger.info(s"Request: $repository")
-
-    Future.firstCompletedOf(Seq(searchService.commits(repository))).map {
+    val url = UriEncoding.decodePath(repoUrl, "UTF-8")
+    logger.info(s"Request: $url")
+    searchService.parse(url) match {
       case Left(error) =>
-        logger.warn(error)
-        BadRequest(error)
-      case Right(response) =>
-        logger.info("Result: OK")
-        Ok(Json.prettyPrint(Json.toJson(response))).as("application/json")
+        Future.successful(BadRequest(error))
+      case Right(_) =>
+        Future.firstCompletedOf(Seq(searchService.commits(url))).map {
+          case Left(error) =>
+            logger.warn(error)
+            InternalServerError(error)
+          case Right(response) =>
+            logger.info("Result: OK")
+            Ok(Json.prettyPrint(Json.toJson(response))).as("application/json")
+        }
+
     }
+
   }
 
   @ApiOperation(
@@ -96,7 +103,7 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
         case Right(result) if result == 500 =>
           logger.info(s"Result: 500 $url")
           InternalServerError
-          
+
         case Right(result) =>
           logger.info(s"Result: 404 $url")
           NotFound
