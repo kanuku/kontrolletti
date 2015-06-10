@@ -47,10 +47,10 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
   }
 
   def stashFixture = new {
-    val host = "stash-server.com"
+    val host = "stash.zalando.net"
     val project = "DOC"
     val repo = "ci-cd"
-    val url = s"https://stash-server.com/projects/$project/repos/$repo"
+    val url = s"https://stash.zalando.net/projects/$project/repos/$repo"
   }
 
   "committers " should "call the client with parsed github Url params" in {
@@ -176,18 +176,18 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
     assert(either.right.get === "https://github.com/zalando/kontrolletti")
   }
   it should "normalize stash ssh-clone-url" in {
-    val url = "ssh://git@stash-server.com/cd/ansible-playbooks.git"
+    val url = "ssh://git@stash.zalando.net/cd/ansible-playbooks.git"
     val either = search.normalizeURL(url)
     assertEitherIsNotNull(either)
     assertEitherIsRight(either)
-    assert(either.right.get === "https://stash-server.com/projects/cd/repos/ansible-playbooks/browse")
+    assert(either.right.get === "https://stash.zalando.net/projects/cd/repos/ansible-playbooks/browse")
   }
   it should "normalize stash https-clone-url" in {               
-    val url = "https://kanuku@stash-server.com/scm/cd/ansible-playbooks.git"
+    val url = "https://kanuku@stash.zalando.net/scm/cd/ansible-playbooks.git"
     val either = search.normalizeURL(url)
     assertEitherIsNotNull(either)
     assertEitherIsRight(either)
-    assert(either.right.get === "https://stash-server.com/projects/cd/repos/ansible-playbooks/browse")
+    assert(either.right.get === "https://stash.zalando.net/projects/cd/repos/ansible-playbooks/browse")
   }
   it should "Return an error when url is not parsable" in {
     val url = "why-is-this-url-not-workinggitzalando/.git"
