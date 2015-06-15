@@ -60,7 +60,7 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
     when(client.committers(anyString, anyString, anyString)).thenReturn(clientResult)
 
     //Start testing
-    val either = Await.result(searchWithMockClient.committers(githubFixture.url), Duration("10 seconds"))
+    val either = Await.result(searchWithMockClient.committers(githubFixture.host,githubFixture.project,githubFixture.repo), Duration("10 seconds"))
 
     assertEitherIsNotNull(either)
     assertEitherIsRight(either)
@@ -86,7 +86,7 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
     when(client.committers(anyString, anyString, anyString)).thenReturn(clientResult)
 
     //Start testing
-    val either = Await.result(searchWithMockClient.committers(stashFixture.url), Duration("10 seconds"))
+    val either = Await.result(searchWithMockClient.committers(stashFixture.host,stashFixture.project,stashFixture.repo), Duration("10 seconds"))
 
     assertEitherIsNotNull(either)
     assertEitherIsRight(either)
@@ -111,7 +111,7 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
     when(client.committers(anyString, anyString, anyString)).thenReturn(clientResult)
 
     //Start testing
-    val either = Await.result(searchWithMockClient.committers(githubFixture.url), Duration("10 seconds"))
+    val either = Await.result(searchWithMockClient.committers(githubFixture.host,githubFixture.project,githubFixture.repo), Duration("10 seconds"))
     val hostCap = ArgumentCaptor.forClass(classOf[String])
     val groupCap = ArgumentCaptor.forClass(classOf[String])
     val repoCap = ArgumentCaptor.forClass(classOf[String])
@@ -129,78 +129,30 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Bef
 
   }
 
-  it should "never call the client when the url is not parsable" in {
-    val url = "asdfasdfasdfaölkajsdf"
-    //Start testing    
-    val either = Await.result(searchWithMockClient.committers(url), Duration("10 seconds"))
-    // Verify the method is never called when
-    verify(client, times(0)).committers(anyObject(), anyObject(), anyObject());
-
-    assertEitherIsNotNull(either)
-    assertEitherIsLeft(either)
-    assert(either.left.get == (s"Could not parse $url"))
-
-  }
-  it should "never call the client when the url is empty" in {
+  
+  it should "not find the client when the host is empty" in {
     //Start testing
-    val either = Await.result(searchWithMockClient.committers(""), Duration("10 seconds"))
+    val either = Await.result(searchWithMockClient.committers("","",""), Duration("10 seconds"))
     // Verify the method is never called when
     verify(client, times(0)).committers(anyObject(), anyObject(), anyObject());
 
     assertEitherIsNotNull(either)
     assertEitherIsLeft(either)
-    assert(either.left.get == "Repository-url should not be empty/null")
+    assert(either.left.get == "Could not resolve the client for ")
   }
-  it should "never call the client when the url is null" in {
+  it should "not find the client when the host is null" in {
     //Start testing.
-    val either = Await.result(searchWithMockClient.committers(null), Duration("10 seconds"))
+    val either = Await.result(searchWithMockClient.committers(null,null,null), Duration("10 seconds"))
     // Verify the method is never called when
     verify(client, times(0)).committers(anyObject(), anyObject(), anyObject());
 
     assertEitherIsNotNull(either)
     assertEitherIsLeft(either)
-    assert(either.left.get == "Repository-url should not be empty/null")
+    assert(either.left.get == "Could not resolve the client for null")
   }
   "normalize" should "normalize github anonymous git-clone-url" in {
-    val url = "git@github.com:zalando/kontrolletti.git"
-    val either = search.normalizeURL(url)
-    assertEitherIsNotNull(either)
-    assertEitherIsRight(either)
-    assert(either.right.get === "https://github.com/zalando/kontrolletti")
+    assert(search.normalizeURL("github.com","zalando","kontrolletti") === "https://github.com/zalando/kontrolletti")
   }
-  it should "normalize github https-clone-url" in {
-    val url = "https://github.com/zalando/kontrolletti.git"
-    val either = search.normalizeURL(url)
-    assertEitherIsNotNull(either)
-    assertEitherIsRight(either)
-    assert(either.right.get === "https://github.com/zalando/kontrolletti")
-  }
-  it should "normalize stash ssh-clone-url" in {
-    val url = "ssh://git@stash.zalando.net/cd/ansible-playbooks.git"
-    val either = search.normalizeURL(url)
-    assertEitherIsNotNull(either)
-    assertEitherIsRight(either)
-    assert(either.right.get === "https://stash.zalando.net/projects/cd/repos/ansible-playbooks/browse")
-  }
-  it should "normalize stash https-clone-url" in {               
-    val url = "https://kanuku@stash.zalando.net/scm/cd/ansible-playbooks.git"
-    val either = search.normalizeURL(url)
-    assertEitherIsNotNull(either)
-    assertEitherIsRight(either)
-    assert(either.right.get === "https://stash.zalando.net/projects/cd/repos/ansible-playbooks/browse")
-  }
-  it should "Return an error when url is not parsable" in {
-    val url = "why-is-this-url-not-workinggitzalando/.git"
-    val either = search.normalizeURL(url)
-    assertEitherIsNotNull(either)
-    assertEitherIsLeft(either)
-    assert(either.left.get === s"Could not parse $url")
-  }
-  it should "Return an error when url is null" in {
-    val url = null
-    val either = search.normalizeURL(url)
-    assertEitherIsNotNull(either)
-    assertEitherIsLeft(either)
-    assert(either.left.get === s"Repository-url should not be empty/null")
-  }
+   
+  
 }

@@ -21,36 +21,41 @@ import client.SCMResolver
 import utility.UrlParser
 
 trait Search {
-  def committers(url: String): Future[Either[String, List[Author]]]
+  def committers(host: String, project: String, repo: String): Future[Either[String, List[Author]]]
   /**
    * Returns commits fetched(cached) from the given url repository.
-   * @param url url of the repository
+   * @param host DNS/IP of the SCM server <br/>
+   * @param project name of the project
+   * @param repo name of the repository
    * @return a future containing either the error(left) or list of commits(right)
    */
-  def commits(url: String): Future[Either[String, List[Commit]]]
- /**
+  def commits(host: String, project: String, repo: String): Future[Either[String, List[Commit]]]
+  /**
    * Parse a url into 3 separate parameters, the `host`, `project` and `repo` from a repository-url of a github or stash project
    *
    *  @param url URL of the repository
    *  @return Either a [reason why it couldn't parse] left or a [result (`host`, `project` and `repo`)] right.
    */
-  def parse(url:String): Either[String, (String, String, String)]
-  
+  def parse(url: String): Either[String, (String, String, String)]
+
   /**
    * Parses and returns the normalized URI for a github/stash repository-URL.
-   * @param url url of the repository
+   * @param host DNS/IP of the SCM server <br/>
+   * @param project name of the project
+   * @param repo name of the repository
    * @return either an error(left) or the normalized URI (right)
    */
-  def normalizeURL(url: String): Either[String, String]
+  def normalizeURL(host: String, project: String, repo: String): String
 
   /**
-   * Validates if the repository exists in internal data-store or
-   * in the remote origin(SCM).
-   * @param url url of the repository
-   * @return Either a Left=(Message) if an error occurred or a Right(True/False) if the repository exists.
+   * Validates if the repository exists by sending a HEAD request to the original repository link.
+   * @param host DNS/IP of the SCM server <br/>
+   * @param project name of the project
+   * @param repo name of the repository
+   * @return Either a Left=(Message) if an error occurred or a Right(HTTP-CODE) if the repository exists.
    */
 
-  def repoExists(url: String): Future[Either[String, Int]]
+  def repoExists(host: String, project: String, repo: String): Future[Either[String, Int]]
 }
 
 /**
@@ -69,47 +74,28 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
   private val logger: Logger = Logger(this.getClass())
 
   def parse(url: String): Either[String, (String, String, String)] = extract(url)
-  
-  def committers(url: String): Future[Either[String, List[Author]]] = {
-    extract(url) match {
+
+  def committers(host: String, project: String, repo: String): Future[Either[String, List[Author]]] = {
+    resolveParser(host) match {
       case Left(message) => Future.successful(Left(message))
-      case Right((host, group, repo)) =>
-        resolveParser(host) match {
-          case Left(message) => Future.successful(Left(message))
-          case Right(parser) =>
-            handleResponse(client.committers(host, group, repo), List(200))(parser.authorToModel)
-        }
+      case Right(parser) =>
+        handleResponse(client.committers(host, project, repo), List(200))(parser.authorToModel)
     }
   }
 
-  def commits(url: String): Future[Either[String, List[Commit]]] = {
-    extract(url) match {
+  def commits(host: String, project: String, repo: String): Future[Either[String, List[Commit]]] = {
+    resolveParser(host) match {
       case Left(message) => Future.successful(Left(message))
-      case Right((host, group, repo)) =>
-        resolveParser(host) match {
-          case Left(message) => Future.successful(Left(message))
-          case Right(parser) =>
-            handleResponse(client.commits(host, group, repo), List(200))(parser.commitToModel)
-        }
+      case Right(parser) =>
+        handleResponse(client.commits(host, project, repo), List(200))(parser.commitToModel)
     }
   }
 
-  def repoExists(url: String): Future[Either[String, Int]] = {
-    extract(url) match {
-      case Left(error) => Future.successful(Left(error))
-      case Right((host, project, repo)) =>
-        getHttpCode(client.repoExists(host, project, repo))
-    }
-  }
+  def repoExists(host: String, project: String, repo: String): Future[Either[String, Int]] = getHttpCode(client.repoExists(host, project, repo))
 
-  def normalizeURL(url: String): Either[String, String] = {
-    extract(url) match {
-      case Left(error)                  => Left(error)
-      case Right((host, project, repo)) => Right(client.normalize(host, project, repo))
-    }
+  def normalizeURL(host: String, project: String, repo: String): String = {
+    client.normalize(host, project, repo)
   }
-
-   
 
   def handleResponse[A](futureResponse: Future[WSResponse], httpCodes: List[Int])(implicit parser: Parser[JsValue, Either[String, A]]): Future[Either[String, A]] = {
     onComplete(futureResponse)

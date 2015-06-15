@@ -20,7 +20,7 @@ import com.google.inject.Guice
 import org.mockito.Matchers._
 
 class RepoWSTest extends PlaySpec with OneAppPerSuite with MockitoSugar {
-  val NORMALIZED_REQUEST_PARAMETER = "Normalized-Repository-Identifier"
+  val NORMALIZED_REQUEST_PARAMETER = "X-Normalized-Repository-Identifier"
   val reposRoute = "/api/repos/"
   val defaultUrl = "https://github.com/zalando/kontrolletti"
   val host = "github.com"
