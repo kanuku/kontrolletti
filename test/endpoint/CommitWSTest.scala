@@ -18,6 +18,7 @@ import service.Search
 import scala.concurrent.Future
 import org.scalatest.concurrent.ScalaFutures
 import scala.concurrent.duration.Duration
+import play.api.libs.json.Json
 
 class CommitWSTest extends PlaySpec with OneAppPerSuite with MockitoSugar with MockitoUtils with ScalaFutures {
   val host = "github.com"
@@ -26,20 +27,20 @@ class CommitWSTest extends PlaySpec with OneAppPerSuite with MockitoSugar with M
 
   s"GET /api/hosts/*/*/*/commits" should {
     "Return 200 on a successfull request with Result" in {
-    	val search = mock[Search]
+      val commits = List(new Commit("id", "message", List("parentId"), new Author("name", "email", List()), None, List(new Link("href", "method", "rel", "relType"))))
+      val response = Future.successful(Right(commits))
       
       // Mock search.commits to return list of commits
-//      val commits = List(new Commit("id", "message", List("parentId"), new Author("name", "email", List()), None, List(new Link("href", "method", "rel", "relType"))))
-      val commits = List()
-      val response  = Future.successful(Right(commits))
-      
+      val search = mock[Search]
+      when(search.commits(host, project, repo)).thenReturn(response)
+
       //Let Guice return mocked searchService
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, s"/api/hosts/$host/projects/$project/repos/$repo/commits"))
-        when(search.commits(host, project, repo)).thenReturn(response)
-        status(result) mustEqual NOT_FOUND
+        status(result) mustEqual OK
         contentType(result) mustEqual Some("application/x.zalando.commit+json")
-        contentAsString(result) mustBe empty
+        import model.KontrollettiToModelParser._
+        contentAsString(result) mustEqual Json.prettyPrint(Json.toJson(commits))
 
         //searchService should be called only once
         verify(search, times(1)).commits(host, project, repo)
@@ -47,16 +48,16 @@ class CommitWSTest extends PlaySpec with OneAppPerSuite with MockitoSugar with M
     }
 
     "Return 400 on a successfull request with empty Result" in {
-    	val search = mock[Search]
-      
-      // Mock search.commits to return an empty list
       val commits = List()
       val response = Future.successful(Right(commits))
+      
+      // Mock search.commits to return an empty list
+      val search = mock[Search]
+      when(search.commits(host, project, repo)).thenReturn(response)
 
       //Let Guice return mocked searchService
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, s"/api/hosts/$host/projects/$project/repos/$repo/commits"))
-        when(search.commits(host, project, repo)).thenReturn(response)
         status(result) mustEqual NOT_FOUND
         contentType(result) mustEqual Some("application/x.zalando.commit+json")
         contentAsString(result) mustBe empty
