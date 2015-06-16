@@ -21,13 +21,17 @@ import client.SCMImpl
 import play.api.libs.json.JsString
 import service.Search
 import play.api.GlobalSettings
+import com.google.inject.AbstractModule
+import client.SCM
+import com.google.inject.Guice
+import service.SearchImpl
 
-object MockitoUtils extends MockitoSugar {
+trait MockitoUtils extends MockitoSugar {
 
   /**
    * Creates a successfull/failed mocked WSResponse
    */
-  def mockSuccessfullParsableFutureWSResponse[T](result: T, httpCode:Int): Future[WSResponse] = {
+  def mockSuccessfullParsableFutureWSResponse[T](result: T, httpCode: Int): Future[WSResponse] = {
     val wsResponse = mock[WSResponse]
     val jsValue = mock[JsValue]
     val jsResult: JsResult[T] = new JsSuccess(result, null)
@@ -54,13 +58,35 @@ object MockitoUtils extends MockitoSugar {
       block
     }
   }
-  def withFakeApplication(global:GlobalSettings)(block: => Unit): Unit = {
-		  running(FakeApplication(withGlobal=Some(global))) {
-			  block
-		  }
+  def withFakeApplication(global: GlobalSettings)(block: => Unit): Unit = {
+    running(FakeApplication(withGlobal = Some(global))) {
+      block
+    }
   }
-   
+
   
-  
+  class FakeGlobalWithSearchService(service:Search) extends play.api.GlobalSettings {
+    private lazy val injector = Guice.createInjector(new AbstractModule {
+      def configure() {
+        bind(classOf[Search]).toInstance(service)
+      }
+    })
+    override def getControllerInstance[A](clazz: Class[A]) = {
+      injector.getInstance(clazz)
+    }
+
+  }
+
+  class FakeGlobalWithFakeClient(client: SCM) extends play.api.GlobalSettings {
+    private lazy val injector = Guice.createInjector(new AbstractModule {
+      def configure() {
+        bind(classOf[Search]).toInstance(new SearchImpl(client))
+      }
+    })
+    override def getControllerInstance[A](clazz: Class[A]) = {
+      injector.getInstance(clazz)
+    }
+
+  }
 
 }

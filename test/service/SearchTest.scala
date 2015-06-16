@@ -14,7 +14,7 @@ import play.api.libs.json.JsValue
 import play.api.libs.ws.WSResponse
 import client.SCM
 import model.Author
-import test.util.MockitoUtils._
+import test.util.MockitoUtils
 import org.scalatestplus.play.OneAppPerSuite
 import org.scalatestplus.play.PlaySpec
 import org.scalatest.FunSpec
@@ -26,14 +26,14 @@ import client.SCMImpl
  * and passed to the client correctly.
  * The client is mocked and therefore not tested here.
  */
-class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with BeforeAndAfter {
+class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with MockitoUtils with BeforeAndAfter {
 
   import test.util.TestUtils._
 
   val client = mock[SCM]
   val searchWithMockClient: Search = new SearchImpl(client)
   val search: Search = new SearchImpl(new SCMImpl())
-  val users = List(Author("name", "email"))
+  val users = List(Author("name", "email", null))
 
   before {
     reset(client)

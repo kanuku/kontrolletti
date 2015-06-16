@@ -1,0 +1,367 @@
+swagger: '2.0'
+
+info:
+  version: '0.1'
+  title: Kontrolletti
+  description: |
+    Kontrolletti is a service that aggregates and stores information from Github and Stash for historical and auditing purposes and serves this information through a REST API in a unified model.
+  contact:
+    name: Automata
+    url: https://zalando.github.io/kontrolletti/
+    email: automata-team@zalando.de
+paths:
+
+  /api/repos/{repositoryUrl}:
+    head:
+      description: |
+        Fetches meta information about the specified repositoryUrl.
+          This operation can be used to normalize repositoryUrl's, ie:  
+          - a request with `git@github.com:zalando/kontrolletti.git` as repositoryUrl will end up redirecting to  
+          `/api/repos/{NormalizedRepositoryUrl}`.
+          - a request with `https://stash.zalando.net/projects/CD/repos/ansible-playbooks/browse` as repositoryUrl will end up redirecting `/api/repos/{NormalizedRepositoryUrl}`.
+      produces:
+        - application/json
+      parameters:
+        - name: repositoryUrl
+          in: path
+          description: URL of the repository
+          required: true
+          type: string
+          format: uri
+      responses:
+        301:
+          description: The `repositoryUrl` is not normalized, follow the redirect for to its normalized URI.
+        404:
+          description: The `repositoryUrl` is normalized, but its resource cannot be found.
+        500:
+          description: Internal Server error.
+
+  /api/repos/{repositoryUrl}:
+    get:
+      description: |
+        Fetches the `Repository` object for the specified URI.
+      produces:
+      - application/problem+json
+      - application/x.zalando.repository+json
+      parameters:
+      - name: repositoryUrl
+        in: path
+        description: URL of the repository
+        required: true
+        type: string
+        format: uri
+      responses:
+          200:
+            description: Retrieved the object successfully.
+            schema: 
+              type: object
+              properties:
+                commits:
+                  type: array
+                  items:
+                    $ref: "#/definitions/Repository"
+                _links:
+                    type: array
+                    items:
+                      $ref: "#/definitions/Link"
+          400:
+            description: Request could not be understood, due to malformed syntax.
+            schema:
+              $ref: "#/definitions/Error"
+          404:
+            description: No objects could be found matching the specified parameters.
+          500:
+            description: Internal Server error.
+            schema:
+              $ref: "#/definitions/Error"
+
+  /api/hosts/{host}/projects/{project}/repositories/{repository}/commits:
+    get:
+      description: |
+        Fetches all `Commit` objects for the specified parameters.
+      produces:
+      - application/problem+json
+      - application/x.zalando.commit+json
+      parameters:
+      - name: host
+        in: path
+        description: Hostname of the server of the project/repository
+        required: true
+        type: string
+      - name: project
+        in: path
+        description: Project which may contain multiple repositories
+        required: true
+        type: string
+      - name: repository
+        in: path
+        description: Name of the repository
+        required: true
+        type: string
+      - name: since
+        in: query
+        description: Only commits after this commitId will be returned.
+        required: false
+        type: string
+      - name: until
+        in: query
+        description: Only commits before this commitId will be returned.
+        required: false
+        type: string
+      responses:
+          200:
+            description: Retrieved the objects successfully.
+            schema: 
+              type: object
+              properties:
+                commits:
+                  type: array
+                  items:
+                    $ref: "#/definitions/Commit"
+                _links:
+                    type: array
+                    items:
+                      $ref: "#/definitions/Link"
+          404:
+            description: No objects could be found matching the specified parameters.
+          400:
+            description: Request could not be understood, due to malformed syntax.
+            schema:
+              $ref: "#/definitions/Error"
+          500:
+            description: Internal Server error.
+            schema:
+              $ref: "#/definitions/Error"
+
+  /api/hosts/{host}/projects/{project}/repositories/{repository}/commits/{id}:
+    get:
+      description: |
+        Fetches the `Commit` object for the specified commitId in the specified repository.
+      produces:
+      - application/problem+json
+      - application/x.zalando.commit+json
+      parameters:
+      - name: host
+        in: path
+        description: Host of the server of the project/repository
+        required: true
+        type: string
+      - name: project
+        in: path
+        description: Project which may contain multiple repositories
+        required: true
+        type: string
+      - name: repository
+        in: path
+        description: Name of the repository
+        required: true
+        type: string
+      - name: id
+        in: path
+        description: CommitId of the `Commit` to be fetched
+        required: true
+        type: string
+      responses:
+          200:
+            description: Retrieved the object successfully.
+            schema: 
+              type: object
+              properties:
+                commit:
+                    $ref: "#/definitions/Commit"
+                _links:
+                    type: array
+                    items:
+                      $ref: "#/definitions/Link"
+          301:
+            description: The resources for the specified parameters moved permanently.
+          404:
+            description: No objects could be found matching the specified parameters.
+          400:
+            description: Failed to parse the repositoryUrl.
+          500:
+            description: Internal Server error.
+
+  /api/hosts/{host}/projects/{project}/repositories/{repository}/tickets:
+    get:
+        description: |
+          Fetches all the `Ticket` objects for the specified repository.
+        produces:
+        - application/problem+json
+        - application/x.zalando.ticket+json
+        parameters:
+        - name: host
+          in: path
+          description: Hostname of the server of the project/repository
+          required: true
+          type: string
+        - name: project
+          in: path
+          description: Project which may contain multiple repositories
+          required: true
+          type: string
+        - name: repository
+          in: path
+          description: Name of the repository
+          required: true
+          type: string
+        - name: since
+          in: query
+          description: Return tickets registered after this commitId
+          required: false
+          type: string
+        - name: until
+          in: query
+          description: Return tickets registered until this commitId
+          required: false
+          type: string
+        responses:
+            200:
+              description: Retrieved the objects successfully.
+              schema: 
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      $ref: "#/definitions/Ticket"
+                  _links:
+                      type: array
+                      items:
+                        $ref: "#/definitions/Link"
+            404:
+              description: No objects could be found for the specified parameters.
+            400:
+              description: Failed to parse the repositoryUrl.
+            500:
+              description: Internal Server error.
+
+  /api/hosts/{host}/projects/{project}/repositories/{repository}/diff/{source}...{target}:
+    get:
+      description: |
+        Fetches the diff, as a redirect, between the two commitId's on the same repository.
+      produces:
+      - application/problem+json
+      parameters:
+      - name: host
+        in: path
+        description: Hostname of the server of the project/repository
+        required: true
+        type: string
+      - name: project
+        in: path
+        description: Project which may contain multiple repositories
+        required: true
+        type: string
+      - name: repository
+        in: path
+        description: Name of the repository
+        required: true
+        type: string
+      - name: source
+        in: path
+        type: string
+        required: true
+        description: Source from where to compare from
+      - name: target
+        in: path
+        type: string
+        required: true
+        description: Target to where to compare to
+      responses:
+          301:
+            description: The diff can be found at the specified `Location`.
+          404:
+            description: No objects could be found matching the specified parameters.
+          400:
+            description: Failed to parse the repositoryUrl.
+            schema:
+              $ref: "#/definitions/Error"
+          500:
+            description: Internal Server error.
+            schema:
+              $ref: "#/definitions/Error"
+
+definitions:
+  Link:
+    properties:
+      rel:
+        type: string
+        description: Link relation that describes how this link relates to the previous call.
+      method: 
+        type: string
+        description:  The HTTP method required for the related call.
+      type:
+        type: string
+        description: The predefined relation type
+      href: 
+        type: string
+        format: uri
+        description: URI which is needed for the specified action
+  Error:
+    properties:
+      type: 
+        type: string
+        format: uri
+        description: URL pointing to the error description
+      status:
+        type: integer
+        description: HTTP status code
+      detail:
+        type: string
+        description: A detailed error description
+  Author:
+    properties:
+      name:
+        type: string
+      email:
+        type: string
+      links:
+        type: array
+        items:
+          $ref: "#/definitions/Link"
+  Commit:
+    properties:
+      id:
+        type: string
+      message:
+        type: string
+      valid:
+        type: boolean
+      author:
+        $ref: "#/definitions/Author"
+      parentId:
+        type: string
+      links:
+        type: array
+        items:
+          $ref: "#/definitions/Link"
+  Ticket:
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      href: 
+        type: string
+        format: uri
+        description: URI which is needed for the specified action
+  Repository:
+    properties:
+      uri:
+        type: string
+        format: uri
+      host:
+        type: string
+      project:
+        type: string
+      repository:
+        type: string
+      commits:
+        type: array
+        items:
+          $ref: "#/definitions/Commit"
+      links:
+        type: array
+        items:
+          $ref: "#/definitions/Link"

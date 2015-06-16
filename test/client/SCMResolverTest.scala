@@ -13,15 +13,14 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.ws.WSRequestHolder
 import play.api.libs.ws.WSResponse
 import play.api.test.FakeApplication
-import test.util.MockitoUtils.createClient
-import test.util.MockitoUtils.mockSuccessfullParsableFutureWSResponse
+import test.util.MockitoUtils
 
 /**
  * This tests make sure that the configurations for the client are being
  * read from properties in the application.conf file.
  * If you change the file, this test should fail.
  */
-class SCMResolverTest extends PlaySpec with OneAppPerSuite with MockitoSugar {
+class SCMResolverTest extends PlaySpec with OneAppPerSuite with MockitoSugar with MockitoUtils{
 
   // Override app if you need a FakeApplication with other than non-default parameters.
   implicit override lazy val app: FakeApplication = FakeApplication()

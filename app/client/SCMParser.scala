@@ -10,6 +10,7 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Reads
 import model.Author
 import model.Commit
+import model.Link
 
 /**
  * Json deserializer for converting external json types, from the SCM,
@@ -75,13 +76,19 @@ object GithubToJsonParser extends SCMParser {
 
   private implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
-    (JsPath \ "email").read[String])(Author.apply _)
+    (JsPath \ "email").read[String] and
+    Reads.pure(null) //
+    )(Author.apply _)
 
   implicit val commitReader: Reads[Commit] = (
-    (JsPath \ "sha").read[String]
-    and (JsPath \ "commit" \ "message").read[String]
-    and Reads.pure(None)
-    and (JsPath \ "commit" \ "committer").read[Author])(Commit.apply _)
+    (JsPath \ "sha").read[String] // id
+    and (JsPath \ "commit" \ "message").read[String] // message
+    //    and (JsPath  \ "sha").read[List[String]] //parentId
+    and Reads.pure(null) // links
+    and (JsPath \ "commit" \ "committer").read[Author]
+    and Reads.pure(None) // valid
+    and Reads.pure(null) // links
+    )(Commit.apply _)
 }
 
 /**
@@ -92,7 +99,7 @@ object StashToJsonParser extends SCMParser {
 
   def domains = StashResolver.hosts
 
-  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) =>  extract((value \ "values").validate[List[Commit]]) 
+  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => extract((value \ "values").validate[List[Commit]])
 
   val authorToModel: Parser[JsValue, Either[String, List[Author]]] = {
     (author) => extract(author.validate[List[Author]])
@@ -100,12 +107,18 @@ object StashToJsonParser extends SCMParser {
 
   private implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
-    (JsPath \ "emailAddress").read[String])(Author.apply _)
+    (JsPath \ "emailAddress").read[String] and
+    Reads.pure(null) //
+    )(Author.apply _)
 
   implicit val commitReader: Reads[Commit] = (
-    (JsPath \ "id").read[String]
-    and (JsPath \ "message").read[String]
-    and Reads.pure(None)
-    and (JsPath \ "author").read[Author])(Commit.apply _)
+    (JsPath \ "id").read[String] //id
+    and (JsPath \ "message").read[String] //message
+    //    and (JsPath \ "parents" \ "id").read[List[String]] //parentId
+    and Reads.pure(null) // parentId
+    and (JsPath \ "author").read[Author] // author
+    and Reads.pure(None) // valid
+    and Reads.pure(null) // links
+    )(Commit.apply _)
 
 }

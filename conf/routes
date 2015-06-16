@@ -3,23 +3,22 @@
 # ~~~~
 
 #################### SWAGGER ####################
-GET    /swagger                                                       controllers.Application.swagger
-GET    /api-docs                                                      controllers.ApiHelpController.getResources
+GET    /swagger                                                                             controllers.Application.swagger
+GET    /api-docs                                                                            controllers.ApiHelpController.getResources
 
 #################### Mapping to endpoints ####################
-GET    /api-docs/api/repos                                            controllers.ApiHelpController.getResource(path="/api/repos") 
+GET    /api-docs/api/repos                                                                  controllers.ApiHelpController.getResource(path="/api/repos") 
 
 # Map static scm from the /public folder to the /assets URL path
-GET    /assets/*file                                                  controllers.Assets.at(path="/public", file)
-GET    /status                                                        controllers.Application.status
+GET    /assets/*file                                                                        controllers.Assets.at(path="/public", file)
+GET    /status                                                                              controllers.Application.status
 
 #################### ENDPOINTS ####################
-GET    /api/repos/:repo_url/commits                                   @endpoint.RepoWS.commitsByUrl(repo_url: String) 
-GET    /api/repos/:repo_url/tickets/:from_commit_id...:to_commit_id   @endpoint.RepoWS.ticketsByUrl(repo_url: String, from_commit_id:String, to_commit_id:String) 
-HEAD   /api/repos/:repo_url                                           @endpoint.RepoWS.normalize(repo_url: String)
-GET    /api/repos/:repo_url/diffLink/:from_commit_id/:to_commit_id    @endpoint.RepoWS.diffLink(repo_url: String, from_commit_id:String, to_commit_id:String)
+HEAD   /api/repos/:repositoryUrl                                                            @endpoint.RepoWS.normalize(repositoryUrl: String)
+GET    /api/repos/:repositoryUrl                                                            @endpoint.RepoWS.byUrl(repositoryUrl: String)
 
+GET    /api/hosts/:host/projects/:project/repos/:repository/commits                  @endpoint.CommitWS.commits(host: String, project: String, repository: String) 
+GET    /api/hosts/:host/projects/:project/repos/:repository/commits/:id              @endpoint.CommitWS.byId(host: String, project: String, repository: String, id:String)
+GET    /api/hosts/:host/projects/:project/repos/:repository/diff/:source...:target   @endpoint.CommitWS.diff(host: String, project: String, repository: String, source:String, target:String)
+GET    /api/hosts/:host/projects/:project/repos/:repository/tickets                  @endpoint.TicketWS.tickets(host: String, project: String, repository: String, since:Option[String]=None, until:Option[String]=None)
 
-# TODO: Implementation comes in a later stage 
-GET    /api/repos/:repo_url                                           @endpoint.RepoWS.get(repo_url: String)
-GET    /api/repos/:host/:project/:repo/commits                        @endpoint.RepoWS.commits(host:String, project:String, repo:String) 

@@ -3,42 +3,118 @@ package model
 import play.api.libs.functional.syntax.functionalCanBuildApplicative
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.functional.syntax.unlift
-import play.api.libs.json.JsPath
 import play.api.libs.json.Reads
 import play.api.libs.json.Writes
-
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 /**
  * The models
  *
  */
 
-
-case class Author(name: String, email: String)
-case class Commit(id: String, message: String, valid: Option[Boolean], author: Author)
+case class Error(detail: String, status: Int, errorType: String)
+case class Link(href: String, method: String, rel: String, relType: String)
+case class Author(name: String, email: String, links: List[Link])
+case class Commit(id: String, message: String, parentId: List[String], author: Author, valid: Option[Boolean], links: List[Link])
+case class Repository(href: String, project: String, host: String, repository: String, commits: List[Commit], links: List[Link])
+case class Ticket(name: String, description: String, href: String, links: List[Link])
 
 //TODO: Evaluate Moving the readers in this parser(KontrollettiToJsonParser) into Companion objects
 // And overriding those companion objects in the SCM Parser
 
 object KontrollettiToJsonParser {
+
+  implicit val errorReader: Reads[Error] = (
+    (__ \ "detail").read[String] and
+    (__ \ "status").read[Int] and
+    (__ \ "errorType").read[String] //
+    )(Error.apply _)
+
+  implicit val linkReader: Reads[Link] = (
+    (__ \ "href").read[String] and
+    (__ \ "method").read[String] and
+    (__ \ "rel").read[String] and
+    (__ \ "relType").read[String] //
+    )(Link.apply _)
+
   implicit val authorReader: Reads[Author] = (
-    (JsPath \ "name").read[String] and
-    (JsPath \ "email").read[String])(Author.apply _)
+    (__ \ "name").read[String] and
+    (__ \ "email").read[String] and
+    (__ \ "links").read[List[Link]] //
+    )(Author.apply _)
 
   implicit val commitReader: Reads[Commit] = (
-    (JsPath \ "id").read[String]
-    and (JsPath \ "message").read[String]
-    and Reads.pure(None)
-    and (JsPath \ "author").read[Author])(Commit.apply _)
+    (__ \ "id").read[String] and
+    (__ \ "message").read[String] and
+    (__ \ "parentId").read[List[String]] and
+    (__ \ "author").read[Author] and
+    Reads.pure(None) and
+    (__ \ "links").read[List[Link]] //
+    )(Commit.apply _)
+
+  implicit val repositoryReader: Reads[Repository] = (
+    (__ \ "href").read[String] and
+    (__ \ "host").read[String] and
+    (__ \ "project").read[String] and
+    (__ \ "repository").read[String] and
+    (__ \ "commits").read[List[Commit]] and
+    (__ \ "links").read[List[Link]] //
+    )(Repository.apply _)
+
+  implicit val ticketReader: Reads[Ticket] = (
+    (__ \ "name").read[String] and
+    (__ \ "description").read[String] and
+    (__ \ "href").read[String] and
+    (__ \ "links").read[List[Link]] //
+    )(Ticket.apply _)
+
+}
+object KontrollettiToModelParser {
+
+  implicit val errorWriter: Writes[Error] = (
+    (__ \ "detail").write[String] and
+    (__ \ "status").write[Int] and
+    (__ \ "errorType").write[String] //
+    )(unlift(Error.unapply))
+
+  implicit val linkWriter: Writes[Link] = (
+    (__ \ "href").write[String] and
+    (__ \ "method").write[String] and
+    (__ \ "rel").write[String] and
+    (__ \ "relType").write[String] //
+    )(unlift(Link.unapply))
 
   implicit val authorWriter: Writes[Author] = (
-    (JsPath \ "name").write[String] and
-    (JsPath \ "email").write[String])(unlift(Author.unapply))
+    (__ \ "name").write[String] and
+    (__ \ "email").write[String] and
+    (__ \ "links").write[List[Link]] //
+    )(unlift(Author.unapply))
 
   implicit val commitWriter: Writes[Commit] = (
-    (JsPath \ "id").write[String]
-    and (JsPath \ "message").write[String]
-    and (JsPath \ "valid").writeNullable[Boolean]
-    and (JsPath \ "author").write[Author])(unlift(Commit.unapply))
+    (__ \ "id").write[String] and
+    (__ \ "message").write[String] and
+    (__ \ "parentId").write[List[String]] and
+    (__ \ "author").write[Author] and
+    (__ \ "valid").writeNullable[Boolean] and
+    (__ \ "links").write[List[Link]] //
+    )(unlift(Commit.unapply))
+
+  implicit val repositoryWriter: Writes[Repository] = (
+    (__ \ "href").write[String] and
+    (__ \ "host").write[String] and
+    (__ \ "project").write[String] and
+    (__ \ "repository").write[String] and
+    (__ \ "commits").write[List[Commit]] and
+    (__ \ "links").write[List[Link]] //
+    )(unlift(Repository.unapply))
+
+  implicit val ticketWriter: Writes[Ticket] = (
+    (__ \ "name").write[String] and
+    (__ \ "description").write[String] and
+    (__ \ "href").write[String] and
+    (__ \ "links").write[List[Link]] //
+    )(unlift(Ticket.unapply))
+
 }
 
 
