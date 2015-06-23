@@ -68,7 +68,7 @@ class TicketWSTest extends PlaySpec with OneAppPerSuite with MockitoSugar with M
     val client = mock[SCM]
     val response = mockSuccessfullParsableFutureWSResponse(true, returnHttpCode)
     // record
-    when(client.normalize(host, project, repo)).thenReturn(defaultUrl)
+    when(client.url(host, project, repo)).thenReturn(defaultUrl)
     when(client.repoExists(host, project, repo)).thenReturn(response)
 
     withFakeApplication(new FakeGlobal(client)) {
@@ -77,7 +77,7 @@ class TicketWSTest extends PlaySpec with OneAppPerSuite with MockitoSugar with M
       status(result) mustEqual expectedHttpCode
       header(LOCATION, result) mustBe empty
       contentAsString(result) mustBe empty
-      verify(client, times(1)).normalize(anyString, anyString, anyString)
+      verify(client, times(1)).url(anyString, anyString, anyString)
       verify(client, times(1)).repoExists(anyString, anyString, anyString)
     }
   }

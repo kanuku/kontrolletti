@@ -17,8 +17,8 @@ GET    /status                                                                  
 HEAD   /api/repos/:repositoryUrl                                                            @endpoint.RepoWS.normalize(repositoryUrl: String)
 GET    /api/repos/:repositoryUrl                                                            @endpoint.RepoWS.byUrl(repositoryUrl: String)
 
-GET    /api/hosts/:host/projects/:project/repos/:repository/commits                  @endpoint.CommitWS.commits(host: String, project: String, repository: String) 
-GET    /api/hosts/:host/projects/:project/repos/:repository/commits/:id              @endpoint.CommitWS.byId(host: String, project: String, repository: String, id:String)
-GET    /api/hosts/:host/projects/:project/repos/:repository/diff/:source...:target   @endpoint.CommitWS.diff(host: String, project: String, repository: String, source:String, target:String)
-GET    /api/hosts/:host/projects/:project/repos/:repository/tickets                  @endpoint.TicketWS.tickets(host: String, project: String, repository: String, since:Option[String]=None, until:Option[String]=None)
+#GET    /api/hosts/:host/projects/:project/repos/:repository/commits                  @endpoint.CommitWS.commits(host: String, project: String, repository: String) 
+#GET    /api/hosts/:host/projects/:project/repos/:repository/commits/:id              @endpoint.CommitWS.byId(host: String, project: String, repository: String, id:String)
+#GET    /api/hosts/:host/projects/:project/repos/:repository/diff/:source...:target   @endpoint.CommitWS.diff(host: String, project: String, repository: String, source:String, target:String)
+#GET    /api/hosts/:host/projects/:project/repos/:repository/tickets                  @endpoint.TicketWS.tickets(host: String, project: String, repository: String, since:Option[String]=None, until:Option[String]=None)
 

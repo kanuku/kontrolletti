@@ -151,7 +151,7 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Moc
     assert(either.left.get == "Could not resolve the client for null")
   }
   "normalize" should "normalize github anonymous git-clone-url" in {
-    assert(search.normalizeURL("github.com","zalando","kontrolletti") === "https://github.com/zalando/kontrolletti")
+    assert(search.normalize("github.com","zalando","kontrolletti") === "/projects/zalando/repos/kontrolletti")
   }
    
   

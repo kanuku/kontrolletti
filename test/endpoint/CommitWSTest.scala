@@ -1,8 +1,7 @@
 package endpoint
 import scala.concurrent._
 import play.api.test.FakeApplication
-import org.specs2.mutable._
-import org.junit.runner.Computer
+import org.specs2.mutable._ 
 import play.api.test._
 import play.api.test.Helpers._
 import org.scalatestplus.play.PlaySpec
@@ -39,6 +38,7 @@ class CommitWSTest extends PlaySpec with OneAppPerSuite with MockitoSugar with M
         val Some(result) = route(FakeRequest(GET, s"/api/hosts/$host/projects/$project/repos/$repo/commits"))
         status(result) mustEqual OK
         contentType(result) mustEqual Some("application/x.zalando.commit+json")
+        
         import model.KontrollettiToModelParser._
         contentAsString(result) mustEqual Json.prettyPrint(Json.toJson(commits))
 
@@ -67,5 +67,7 @@ class CommitWSTest extends PlaySpec with OneAppPerSuite with MockitoSugar with M
       }
     }
   }
+  
+  
 
 }

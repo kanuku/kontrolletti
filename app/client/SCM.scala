@@ -14,7 +14,7 @@ sealed trait SCM {
 
   def commits(host: String, project: String, repo: String): Future[WSResponse]
 
-  def normalize(host: String, project: String, repo: String): String
+  def url(host: String, project: String, repo: String): String
 
   /**
    * Checks if a repository exists with a HTTP Head request to the repository url.
@@ -53,9 +53,9 @@ class SCMImpl extends SCM {
     request(HEAD, url, res.accessTokenKey, res.accessTokenValue)
   }
 
-  def normalize(host: String, project: String, repo: String): String = {
+  def url(host: String, project: String, repo: String): String = {
     val res: SCMResolver = resolver(host).get
-    res.normalize(host, project, repo)
+    res.url(host, project, repo)
   }
 
   def request(call: Call, url: String, accessTokenKey: String, accessTokenValue: String): Future[WSResponse] = {

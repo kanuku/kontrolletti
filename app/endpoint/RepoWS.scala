@@ -24,12 +24,9 @@ import scala.concurrent.Future
 @Api(value = "/api/repos", description = "Access repository information.")
 @Singleton
 class RepoWS @Inject() (searchService: Search) extends Controller {
-  
-  val NORMALIZED_REQUEST_PARAMETER = "Normalized-Repository-Identifier"
 
   import model.KontrollettiToModelParser._
   val logger: Logger = Logger { this.getClass }
-
 
   @ApiOperation(
     notes = "Not normalized repository-url's will result in a redirect(301) to the normalized one" //
@@ -45,40 +42,57 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
   @ApiImplicitParams(Array( //
     new ApiImplicitParam(name = "repositoryUrl", value = "normalized url of the repository", required = true, dataType = "string", paramType = "path")))
   def normalize(repositoryUrl: String) = Action.async {
+    val url = UriEncoding.decodePath(repositoryUrl, "UTF-8")
+    logger.info(s"Request: $url")
 
-    val repository = UriEncoding.decodePath(repositoryUrl, "UTF-8")
+    searchService.parse(url) match {
+      case Left(error) =>
+        logger.info("Result: 400:" + error)
+        Future.successful(BadRequest)
 
-    logger.info(s"Request: $repository")
-
-    searchService.parse(repository) match {
-      
-      case Left(error) => Future.successful(BadRequest)
-      
       case Right((host, project, repo)) =>
-        val normalizedUrl = searchService.normalizeURL(host, project, repo)
-        if (repository.equals(normalizedUrl)) {
-          val acceptableCodes = List(200, 301)
-          searchService.repoExists(host, project, repo).map {
-            case Right(result) if acceptableCodes.contains(result) =>
-              logger.info(s"Result>>: 200 $normalizedUrl")
-              Ok
-            case Right(result) if result == 500 =>
-              logger.info(s"Result: 500 $normalizedUrl")
-              InternalServerError
+        val normalizedUrl = searchService.normalize(host, project, repo)
 
-            case Right(result) =>
-              logger.info(s"Result: 404 $normalizedUrl")
-              NotFound
-          }
-        } else {
-          logger.info(s"Result: 301 $normalizedUrl")
-          Future.successful(MovedPermanently(routes.RepoWS.byUrl(URLEncoder.encode(normalizedUrl, "UTF-8")).url) //
-            .withHeaders(NORMALIZED_REQUEST_PARAMETER -> normalizedUrl))
+        searchService.repoExists(host, project, repo).map {
+          case Right(result) if result =>
+
+            logger.info(s"Result: 301 $normalizedUrl")
+            MovedPermanently(routes.RepoWS.byUrl(URLEncoder.encode(normalizedUrl, "UTF-8")).url)
+
+          case Left(error) =>
+            logger.warn(s"Result: 500 $normalizedUrl")
+            InternalServerError
+
+          case Right(result) =>
+            logger.info(s"Result: 404 $normalizedUrl")
+            NotFound
         }
     }
   }
 
- 
-  def byUrl(repositoryUrl: String) = Action{NotImplemented}
+  def byUrl(repositoryUrl: String) = Action.async {
+    val url = UriEncoding.decodePath(repositoryUrl, "UTF-8")
+    logger.info(s"Request: $url")
+
+    searchService.parse(url) match {
+      case Right((host, project, repo)) =>
+        searchService.repos(host, project, repo).map {
+          case Right(result) if result.isEmpty =>
+            logger.info(s"Result: 404 ")
+            NotFound
+          case Right(result) =>
+            logger.info(s"Result: 200 ")
+            Ok(Json.toJson(result(0))).as("application/x.zalando.repository+json")
+          case Left(error) =>
+            logger.info(s"Result: 500 ")
+            logger.warn(error)
+            InternalServerError
+        }
+      case Left(error) =>
+        logger.info(s"Result: 404 $error")
+        Future.successful(BadRequest(error))
+    }
+
+  }
 
 }

@@ -1,29 +1,32 @@
 package test.util
 
+import scala.concurrent.Future
+
+import org.mockito.Matchers._
+import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.FlatSpec
-import org.mockito.ArgumentCaptor
-import org.mockito.Mockito._
-import org.mockito.Matchers._
 import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
-import scala.concurrent.Future
+
+import com.google.inject.AbstractModule
+import com.google.inject.Guice
+
+import client.SCM
+import client.SCMImpl
+import model.Commit
+import model.Link
+import model.Repository
+import play.api.Application
+import play.api.GlobalSettings
 import play.api.libs.json.JsResult
 import play.api.libs.json.JsSuccess
-import play.api.libs.json.JsError
 import play.api.libs.json.JsValue
+import play.api.libs.ws.WSRequestHolder
 import play.api.libs.ws.WSResponse
-import play.api.Application
 import play.api.test.FakeApplication
 import play.api.test.Helpers._
-import play.api.libs.ws.WSRequestHolder
-import client.SCMImpl
-import play.api.libs.json.JsString
 import service.Search
-import play.api.GlobalSettings
-import com.google.inject.AbstractModule
-import client.SCM
-import com.google.inject.Guice
 import service.SearchImpl
 
 trait MockitoUtils extends MockitoSugar {
@@ -64,8 +67,7 @@ trait MockitoUtils extends MockitoSugar {
     }
   }
 
-  
-  class FakeGlobalWithSearchService(service:Search) extends play.api.GlobalSettings {
+  class FakeGlobalWithSearchService(service: Search) extends play.api.GlobalSettings {
     private lazy val injector = Guice.createInjector(new AbstractModule {
       def configure() {
         bind(classOf[Search]).toInstance(service)
@@ -89,4 +91,7 @@ trait MockitoUtils extends MockitoSugar {
 
   }
 
+  def createRepository(href: String="href", project: String="project", host: String="host", repository: String="repo", commits: List[Commit]=List(), links: List[Link]=List()):Repository = {
+   new Repository(href, project, host, repository, commits, links)
+  }
 }
