@@ -28,7 +28,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
                 repository: String = repo, source: String, target: String) = s"/api/hosts/$host/projects/$project/repos/$repository/diff/$source...$target"
 
   "GET /api/hosts/{host}/projects/{project}/repos/{repository}/diff/{source}...{target}" should {
-    "Redirect (301) to the right scm GUI " in {
+    "Redirect (303) to the right scm GUI " in {
       val source = "commitId1"
       val target = "commitId2"
       val url = diffRoute(source = source, target = target)
@@ -41,7 +41,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, url))
-        status(result) mustEqual MOVED_PERMANENTLY
+        status(result) mustEqual SEE_OTHER
         header(LOCATION, result).get === (LOCATION -> URLEncoder.encode(link.href, "UTF-8"))
         contentAsString(result) mustBe empty
       }
