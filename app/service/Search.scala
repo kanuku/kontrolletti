@@ -20,11 +20,12 @@ import client.SCMParser
 import client.SCMResolver
 import utility.UrlParser
 import model.Repository
+import model.Link
 
 trait Search {
 
   /**
-   * Returns repositories fetched(cached) from the given repository in the project on the given host.
+   * Returns committers from the given repository in the project on the given host.
    * @param host DNS/IP of the SCM server <br/>
    * @param project name of the project
    * @param repo name of the repository
@@ -32,7 +33,7 @@ trait Search {
    */
   def committers(host: String, project: String, repo: String): Future[Either[String, List[Author]]]
   /**
-   * Returns commits fetched(cached) from the given repository in the project on the given host.
+   * Returns commits from the given repository in the project on the given host.
    * @param host DNS/IP of the SCM server <br/>
    * @param project name of the project
    * @param repo name of the repository
@@ -40,6 +41,13 @@ trait Search {
    */
   def commits(host: String, project: String, repo: String): Future[Either[String, List[Commit]]]
 
+  /**
+   * Returns repositories from the given repository in the project on the given host.
+   * @param host DNS/IP of the SCM server <br/>
+   * @param project name of the project
+   * @param repo name of the repository
+   * @return a future containing either the error(left) or list of commits(right)
+   */
   def repos(host: String, project: String, repo: String): Future[Either[String, List[Repository]]]
 
   /**
@@ -60,14 +68,24 @@ trait Search {
   def normalize(host: String, project: String, repo: String): String
 
   /**
-   * Validates if the repository exists by sending a HEAD request to the original repository link.
+   * Validates the repository by sending a HEAD request to the original repository link.
    * @param host DNS/IP of the SCM server
    * @param project name of the project
    * @param repo name of the repository
-   * @return Either an error(left) or a Right, true if the HTTP-CODE is 200/301 and false otherwise.
+   * @return  Either an Left with an error or a Right, true if the HTTP-CODE returned is 200/301 and false otherwise.
    */
-
   def repoExists(host: String, project: String, repo: String): Future[Either[String, Boolean]]
+  
+  /**
+   * Validates the diff by sending a HEAD request to the original diff link.
+   * @param host DNS/IP of the SCM server
+   * @param project name of the project
+   * @param repo name of the repository
+   * @param sourceId commit-id from where to compare from
+   * @param targetId commit-id from where to compare to
+   * @return Either an Left with an error or a Right with a link if the returned HTTP-CODE is 200/301 or a None otherwise.
+   */
+  def diffExists(host: String, project: String, repo: String, sourceId:String, targetId:String): Future[Either[String, Option[Link]]]
 }
 
 /**
@@ -102,7 +120,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
         handleResponse(client.commits(host, project, repo), List(200))(parser.commitToModel)
     }
   }
-  
+
   def repos(host: String, project: String, repo: String): Future[Either[String, List[Repository]]] = ???
 
   def repoExists(host: String, project: String, repo: String): Future[Either[String, Boolean]] = {
@@ -118,8 +136,10 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   }
 
+  def diffExists(host: String, project: String, repo: String, sourceId:String, targetId:String): Future[Either[String, Option[Link]]]= ???
+
   def normalize(host: String, project: String, repo: String): String = {
-    s"/projects/$project/repos/$repo"
+    client.url(host, project, repo)
   }
 
   def handleResponse[A](futureResponse: Future[WSResponse], httpCodes: List[Int])(implicit parser: Parser[JsValue, Either[String, A]]): Future[Either[String, A]] = {

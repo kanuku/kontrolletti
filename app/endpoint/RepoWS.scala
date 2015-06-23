@@ -34,10 +34,9 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
     , httpMethod = "HEAD" //
     )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, message = "URI is correct and can be accessed if necessary.") //
-    , new ApiResponse(code = 301, message = "Moved permanently!") //
-    , new ApiResponse(code = 404, message = "Did not find the resource.") //
-    , new ApiResponse(code = 400, message = "Bad request.") //
+     new ApiResponse(code = 301, message = "The `repoUrl` is not normalized, follow the redirect for to its normalized URI.") //
+     , new ApiResponse(code = 400, message = "Request could not be understood, due to malformed syntax.") //
+    , new ApiResponse(code = 404, message = "The 'repoUrl' is normalized, but its resource cannot be found.") //
     , new ApiResponse(code = 500, message = "Internal Server Error.")))
   @ApiImplicitParams(Array( //
     new ApiImplicitParam(name = "repositoryUrl", value = "normalized url of the repository", required = true, dataType = "string", paramType = "path")))
@@ -69,7 +68,18 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
         }
     }
   }
-
+  @ApiOperation(
+    notes = "Fetches the Repository object for the specified URI." //
+    , value = "Fetches the Repository object for the specified URI." //
+    , httpMethod = "GET" //
+    )
+  @ApiResponses(Array(
+    new ApiResponse(code = 200, message = "Retrieved the object successfully.") //
+    , new ApiResponse(code = 404, message = "No objects could be found matching the specified parameters.") //
+    , new ApiResponse(code = 400, message = "Request could not be understood, due to malformed syntax.") //
+    , new ApiResponse(code = 500, message = "Internal Server Error.")))
+  @ApiImplicitParams(Array( //
+    new ApiImplicitParam(name = "repositoryUrl", value = "normalized url of the repository", required = true, dataType = "string", paramType = "path")))
   def byUrl(repositoryUrl: String) = Action.async {
     val url = UriEncoding.decodePath(repositoryUrl, "UTF-8")
     logger.info(s"Request: $url")

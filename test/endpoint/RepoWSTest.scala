@@ -66,7 +66,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl"))
         status(result) mustEqual MOVED_PERMANENTLY
-        header(LOCATION, result).get === (LOCATION -> reposRoute + encodedDefaultUrl)
+        header(LOCATION, result).get === (LOCATION -> s"$reposRoute$encodedAlternativeUrl")
         contentAsString(result) mustBe empty
       }
 
@@ -137,7 +137,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         status(result) mustEqual OK
         import model.KontrollettiToModelParser._
         contentAsString(result) mustEqual Json.stringify(Json.toJson(repository))
-         contentType(result) mustEqual Some("application/x.zalando.repository+json")
+        contentType(result) mustEqual Some("application/x.zalando.repository+json")
       }
 
       verify(search, times(1)).parse(defaultUrl)
@@ -169,6 +169,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         val Some(result) = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl"))
         status(result) mustEqual NOT_FOUND
         contentAsString(result) mustBe empty
+
       }
       verify(search, times(1)).parse(defaultUrl)
     }
@@ -176,7 +177,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
     "Return 500 when it results in an error" in {
       val search = mock[Search]
       val parsedResponse = Right((host, project, repoName))
-      val error =Left("someError")
+      val error = Left("someError")
       val repoResponse = Future.successful(error)
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
       when(search.repos(host, project, repoName)).thenReturn(repoResponse)
@@ -184,7 +185,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl"))
         status(result) mustEqual INTERNAL_SERVER_ERROR
-          contentAsString(result) mustBe empty
+        contentAsString(result) mustBe empty
       }
       verify(search, times(1)).parse(defaultUrl)
     }
