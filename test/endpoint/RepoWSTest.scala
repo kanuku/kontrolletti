@@ -155,7 +155,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         status(result) mustEqual BAD_REQUEST
         contentAsString(result) mustEqual parsedResponse.left.get
       }
-      verify(search, times(1)).parse(defaultUrl)
+      verify(search, times(1)).parse(erraneousUrl)
     }
 
     "Return 404 when it results in a empty list" in {
@@ -167,7 +167,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl"))
-        status(result) mustEqual NO_CONTENT
+        status(result) mustEqual NOT_FOUND
         contentAsString(result) mustBe empty
       }
       verify(search, times(1)).parse(defaultUrl)
@@ -176,14 +176,15 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
     "Return 500 when it results in an error" in {
       val search = mock[Search]
       val parsedResponse = Right((host, project, repoName))
-      val repoResponse = Future.successful(Right(List()))
+      val error =Left("someError")
+      val repoResponse = Future.successful(error)
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
       when(search.repos(host, project, repoName)).thenReturn(repoResponse)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl"))
         status(result) mustEqual INTERNAL_SERVER_ERROR
-        contentAsString(result) mustEqual parsedResponse.left.get
+          contentAsString(result) mustBe empty
       }
       verify(search, times(1)).parse(defaultUrl)
     }

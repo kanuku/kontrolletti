@@ -89,7 +89,7 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
             InternalServerError
         }
       case Left(error) =>
-        logger.info(s"Result: 404 $error")
+        logger.info(s"Result: 400 $error")
         Future.successful(BadRequest(error))
     }
 
