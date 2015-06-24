@@ -1,17 +1,14 @@
 package test.util
 
 import scala.concurrent.Future
-
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.FlatSpec
 import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
-
 import com.google.inject.AbstractModule
 import com.google.inject.Guice
-
 import client.SCM
 import client.SCMImpl
 import model.Commit
@@ -28,6 +25,7 @@ import play.api.test.FakeApplication
 import play.api.test.Helpers._
 import service.Search
 import service.SearchImpl
+import model.Ticket
 
 trait MockitoUtils extends MockitoSugar {
 
@@ -91,7 +89,8 @@ trait MockitoUtils extends MockitoSugar {
 
   }
 
-  def createRepository(href: String="href", project: String="project", host: String="host", repository: String="repo", commits: List[Commit]=List(), links: List[Link]=List()):Repository = {
+  def createRepository(href: String="href", project: String="project", host: String="host", repository: String="repo", commits: List[Commit]=List(), links: List[Link]=List()):Repository = 
    new Repository(href, project, host, repository, commits, links)
-  }
+  
+  def createTicket(name: String ="name", description: String="description", href: String="href", links: List[Link]=List()) = new Ticket(name, description, href, links)
 }

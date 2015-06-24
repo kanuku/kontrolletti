@@ -23,7 +23,7 @@ class CommitWS @Inject() (searchService: Search) extends Controller {
     searchService.diffExists(host, project, repository, sourceId, targetId).map {
       case Left(error) =>
         logger.info("Result 500: " + error)
-        InternalServerError
+        InternalServerError.as("application/problem+json")
       case Right(None) =>
         logger.info("Result 404")
         NotFound
@@ -32,5 +32,5 @@ class CommitWS @Inject() (searchService: Search) extends Controller {
         Redirect(URLEncoder.encode(link.href, "UTF-8"))
     }
   }
-
 }
+

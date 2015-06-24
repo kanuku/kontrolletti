@@ -84,6 +84,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         status(result) mustEqual INTERNAL_SERVER_ERROR
         header(LOCATION, result) mustBe empty
         contentAsString(result) mustBe empty
+        contentType(result) mustEqual Some("application/problem+json")
       }
       verify(search, times(1)).diffExists(host, project, repo, source, target)
     }

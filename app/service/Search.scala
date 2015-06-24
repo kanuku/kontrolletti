@@ -21,6 +21,7 @@ import client.SCMResolver
 import utility.UrlParser
 import model.Repository
 import model.Link
+import model.Ticket
 
 trait Search {
 
@@ -86,6 +87,17 @@ trait Search {
    * @return Either an Left with an error or a Right with a link if the returned HTTP-CODE is 200/301 or a None otherwise.
    */
   def diffExists(host: String, project: String, repo: String, sourceId:String, targetId:String): Future[Either[String, Option[Link]]]
+
+  /**
+   * Fetches the tickets from.
+   * @param host DNS/IP of the SCM server
+   * @param project name of the project
+   * @param repo name of the repository
+   * @param sinceId Includes tickets from this commit
+   * @param untilId Until tickets from this commit 
+   * @return Either an Left with an error or a Right with list of found tickets.
+   */  
+  def tickets(host: String, project: String, repo: String, sinceId:String, untilId:String): Future[Either[String, Option[List[Ticket]]]]
 }
 
 /**
@@ -138,6 +150,8 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   def diffExists(host: String, project: String, repo: String, sourceId:String, targetId:String): Future[Either[String, Option[Link]]]= ???
 
+  def tickets(host: String, project: String, repo: String, sinceId:String, untilId:String): Future[Either[String, Option[List[Ticket]]]] = ???
+  
   def normalize(host: String, project: String, repo: String): String = {
     client.url(host, project, repo)
   }
