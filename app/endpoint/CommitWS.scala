@@ -30,7 +30,6 @@ class CommitWS @Inject() (searchService: Search) extends Controller {
       case Right(Some(link)) =>
         logger.info("Result 301: " + link.href)
         Redirect(URLEncoder.encode(link.href, "UTF-8"))
-
     }
   }
 
