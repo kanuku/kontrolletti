@@ -17,8 +17,8 @@ GET    /status                                                                  
 #################### ENDPOINTS ####################
 
 # REPOS
-HEAD   /api/repos/:repository-url                                                     @endpoint.RepoWS.normalize(repository-url: String)
-GET    /api/repos/:repository-url                                                     @endpoint.RepoWS.byUrl(repository-url: String)
+HEAD   /api/repos/:repositoryUrl                                                     @endpoint.RepoWS.normalize(repositoryUrl: String)
+GET    /api/repos/:repositoryUrl                                                     @endpoint.RepoWS.byUrl(repositoryUrl: String)
 
 # COMMITS 
 GET    /api/hosts/:host/projects/:project/repos/:repository/commits/:id              @endpoint.CommitWS.byId(host: String, project: String, repository: String, id: String)

@@ -48,8 +48,7 @@ class CommitWS @Inject() (search: Search) extends Controller {
         NotFound
       case Right(Some(result)) =>
         logger.info("Result 200")
-        val response = new CommitsResult(List(), result)
-        Ok(Json.toJson(response)).as("application/x.zalando.commit+json")
+        Ok(Json.toJson(new CommitsResult(List(), result))).as("application/x.zalando.commit+json")
     }
   }
 
@@ -63,9 +62,8 @@ class CommitWS @Inject() (search: Search) extends Controller {
         logger.info("Result 404")
         NotFound
       case Right(Some(result)) =>
-        logger.info("Result 200")
-        val response = new CommitResult(List(), result)
-        Ok(Json.toJson(response)).as("application/x.zalando.commit+json")
+        logger.info("Result 200") 
+        Ok(Json.toJson(new CommitResult(List(), result))).as("application/x.zalando.commit+json")
     }
 
   }

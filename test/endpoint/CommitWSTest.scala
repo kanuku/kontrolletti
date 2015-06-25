@@ -173,14 +173,14 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
     	val search = mock[Search]
     			val commitId = "commitId"
     			val commit = createCommit(id = commitId)
-    			val commitResult = Future.successful(Right(Some(commit)))
+    			val commitResult = Future.successful(Right(None))
     			val url = singleCommitRoute(commitId = commitId)
     			val response = new CommitResult(List(), commit)
     	when(search.commit(host, project, repository, commitId)).thenReturn(commitResult)
     	withFakeApplication(new FakeGlobalWithSearchService(search)) {
     		val Some(result) = route(FakeRequest(GET, url))
     				status(result) mustEqual NOT_FOUND
-    				contentAsString(result) mustEqual Json.stringify(Json.toJson(response))
+    				contentAsString(result) mustBe empty
     	}
     }
     
@@ -188,9 +188,9 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
     	val search = mock[Search]
     			val commitId = "commitId"
     			val commit = createCommit(id = commitId)
-    			val commitResult = Future.successful(Right(Some(commit)))
+    			val commitResult = Future.successful(Left("error"))
     			val url = singleCommitRoute(commitId = commitId)
-    			val response = new CommitResult(List(), commit)
+    			val response = new Error("An error occurred, please check the logs", 500, "undefined")
     	when(search.commit(host, project, repository, commitId)).thenReturn(commitResult)
     	withFakeApplication(new FakeGlobalWithSearchService(search)) {
     		val Some(result) = route(FakeRequest(GET, url))
