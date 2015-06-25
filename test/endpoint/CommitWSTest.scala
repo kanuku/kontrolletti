@@ -1,31 +1,46 @@
 package endpoint
+
+import java.net.URLEncoder
 import scala.concurrent._
-import play.api.test.FakeApplication
-import org.specs2.mutable._
+import scala.concurrent.Future
+import org.mockito.Mockito._
+import org.scalatest.mock.MockitoSugar
+import org.scalatestplus.play.OneAppPerSuite
+import org.scalatestplus.play.PlaySpec
+import model.Commit
+import model.CommitsResult
+import model.Link
+import model.Error
 import play.api.test._
 import play.api.test.Helpers._
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.OneAppPerSuite
-import org.scalatest.mock.MockitoSugar
-import test.util.MockitoUtils
-import model.Commit
-import model.Author
-import model.Link
-import org.mockito.Matchers._
-import org.mockito.Mockito._
+import play.api.libs.json.Reads
+import play.api.libs.json.Writes
+import play.api.libs.json._
 import service.Search
-import scala.concurrent.Future
-import org.scalatest.concurrent.ScalaFutures
-import scala.concurrent.duration.Duration
-import play.api.libs.json.Json
-import java.net.URLEncoder
-
+import test.util.MockitoUtils
+import model.KontrollettiToModelParser._
+import model.CommitResult
 class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
   val host = "github.com"
   val project = "zalando"
-  val repo = "kontrolletti"
-  def diffRoute(host: String = host, project: String = project, //
-                repository: String = repo, source: String, target: String) = s"/api/hosts/$host/projects/$project/repos/$repository/diff/$source...$target"
+  val repository = "kontrolletti"
+  val sinceId = Some("sinceId")
+  val untilId = Some("untilId")
+
+  def diffRoute(host: String = host, project: String = project, repository: String = repository, source: String, target: String) = s"/api/hosts/$host/projects/$project/repos/$repository/diff/$source...$target"
+  def commitsRoute(host: String = host, project: String = project, repository: String = repository, sinceId: Option[String] = None, untilId: Option[String] = None) = {
+    val since = if (sinceId.isDefined) sinceId.get else None
+    val until = if (untilId.isDefined) untilId.get else None
+    s"/api/hosts/github.com/projects/zalando/repos/kontrolletti/commits?since=$since&until=$until"
+  }
+  def singleCommitRoute(host: String = host, project: String = project, repository: String = repository, commitId: String = "commitId") = {
+
+    s"/api/hosts/$host/projects/$project/repos/$repository/commits/$commitId"
+  }
+
+  /**
+   * Tests for Diffs starts here
+   */
 
   "GET /api/hosts/{host}/projects/{project}/repos/{repository}/diff/{source}...{target}" should {
     "Redirect (303) to the right scm GUI " in {
@@ -37,7 +52,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       val search = mock[Search]
 
-      when(search.diffExists(host, project, repo, source, target)).thenReturn(diffExistsResult)
+      when(search.diffExists(host, project, repository, source, target)).thenReturn(diffExistsResult)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, url))
@@ -46,9 +61,10 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         contentAsString(result) mustBe empty
       }
 
-      verify(search, times(1)).diffExists(host, project, repo, source, target)
+      verify(search, times(1)).diffExists(host, project, repository, source, target)
 
     }
+
     "Return 404 if the diff cannot be found" in {
       val source = "commitId1"
       val target = "commitId2"
@@ -58,7 +74,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       val search = mock[Search]
 
-      when(search.diffExists(host, project, repo, source, target)).thenReturn(diffExistsResult)
+      when(search.diffExists(host, project, repository, source, target)).thenReturn(diffExistsResult)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, url))
@@ -66,8 +82,9 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         header(LOCATION, result) mustBe empty
         contentAsString(result) mustBe empty
       }
-      verify(search, times(1)).diffExists(host, project, repo, source, target)
+      verify(search, times(1)).diffExists(host, project, repository, source, target)
     }
+
     "Return 500 if the (301) to the right scm GUI " in {
       val source = "commitId1"
       val target = "commitId2"
@@ -77,7 +94,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       val search = mock[Search]
 
-      when(search.diffExists(host, project, repo, source, target)).thenReturn(diffExistsResult)
+      when(search.diffExists(host, project, repository, source, target)).thenReturn(diffExistsResult)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, url))
@@ -86,8 +103,103 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         contentAsString(result) mustBe empty
         contentType(result) mustEqual Some("application/problem+json")
       }
-      verify(search, times(1)).diffExists(host, project, repo, source, target)
+      verify(search, times(1)).diffExists(host, project, repository, source, target)
     }
+  }
+
+  /**
+   * Tests for Commits starts here
+   */
+  "GET /api/hosts/{host}/projects/{project}/repos/{repository}/commits" should {
+    "Return 200 when objects are found" in {
+      val search = mock[Search]
+      val commit = createCommit()
+      val commits = List(commit)
+      val response = new CommitsResult(List(), commits)
+      val commitResult = Future.successful(Right(Some(commits)))
+      val url = commitsRoute(sinceId = sinceId, untilId = untilId)
+      when(search.commits(host, project, repository, sinceId, untilId)).thenReturn(commitResult)
+      withFakeApplication(new FakeGlobalWithSearchService(search)) {
+        val Some(result) = route(FakeRequest(GET, url))
+        status(result) mustEqual OK
+        contentType(result) mustEqual Some("application/x.zalando.commit+json")
+        contentAsString(result) mustEqual Json.stringify(Json.toJson(response))
+      }
+    }
+
+    "Return 404 when objects are not found" in {
+      val search = mock[Search]
+      val commitResult = Future.successful(Right(None))
+      val url = commitsRoute(sinceId = sinceId, untilId = untilId)
+      when(search.commits(host, project, repository, sinceId, untilId)).thenReturn(commitResult)
+      withFakeApplication(new FakeGlobalWithSearchService(search)) {
+        val Some(result) = route(FakeRequest(GET, url))
+        status(result) mustEqual NOT_FOUND
+      }
+    }
+
+    "Return 500 when an error occurs" in {
+      val search = mock[Search]
+      val response = new Error("An error occurred, please check the logs", 500, "undefined")
+      val commitResult = Future.successful(Left("error"))
+      val url = commitsRoute(sinceId = sinceId, untilId = untilId)
+      when(search.commits(host, project, repository, sinceId, untilId)).thenReturn(commitResult)
+      withFakeApplication(new FakeGlobalWithSearchService(search)) {
+        val Some(result) = route(FakeRequest(GET, url))
+        status(result) mustEqual INTERNAL_SERVER_ERROR
+        contentType(result) mustEqual Some("application/problem+json")
+        contentAsString(result) mustEqual Json.stringify(Json.toJson(response))
+      }
+    }
+  }
+  "GET /api/hosts/{host}/projects/{project}/repos/{repository}/commits/{id}" should {
+    "Return 200 when the object is found" in {
+      val search = mock[Search]
+      val commitId = "commitId"
+      val commit = createCommit(id = commitId)
+      val commitResult = Future.successful(Right(Some(commit)))
+      val url = singleCommitRoute(commitId = commitId)
+      val response = new CommitResult(List(), commit)
+      when(search.commit(host, project, repository, commitId)).thenReturn(commitResult)
+      withFakeApplication(new FakeGlobalWithSearchService(search)) {
+        val Some(result) = route(FakeRequest(GET, url))
+        status(result) mustEqual OK
+        contentType(result) mustEqual Some("application/x.zalando.commit+json")
+        contentAsString(result) mustEqual Json.stringify(Json.toJson(response))
+      }
+    }
+    
+    "Return 404 when the object is not found" in {
+    	val search = mock[Search]
+    			val commitId = "commitId"
+    			val commit = createCommit(id = commitId)
+    			val commitResult = Future.successful(Right(Some(commit)))
+    			val url = singleCommitRoute(commitId = commitId)
+    			val response = new CommitResult(List(), commit)
+    	when(search.commit(host, project, repository, commitId)).thenReturn(commitResult)
+    	withFakeApplication(new FakeGlobalWithSearchService(search)) {
+    		val Some(result) = route(FakeRequest(GET, url))
+    				status(result) mustEqual NOT_FOUND
+    				contentAsString(result) mustEqual Json.stringify(Json.toJson(response))
+    	}
+    }
+    
+    "Return 500 when an unexpected error occures" in {
+    	val search = mock[Search]
+    			val commitId = "commitId"
+    			val commit = createCommit(id = commitId)
+    			val commitResult = Future.successful(Right(Some(commit)))
+    			val url = singleCommitRoute(commitId = commitId)
+    			val response = new CommitResult(List(), commit)
+    	when(search.commit(host, project, repository, commitId)).thenReturn(commitResult)
+    	withFakeApplication(new FakeGlobalWithSearchService(search)) {
+    		val Some(result) = route(FakeRequest(GET, url))
+    				status(result) mustEqual INTERNAL_SERVER_ERROR
+            contentType(result) mustEqual Some("application/problem+json")
+    				contentAsString(result) mustEqual Json.stringify(Json.toJson(response))
+    	}
+    }
+    
 
   }
 

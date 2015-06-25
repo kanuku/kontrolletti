@@ -1,26 +1,30 @@
 package endpoint
 
+import java.net.URLEncoder
+import scala.concurrent.Future
 import com.wordnik.swagger.annotations.Api
 import javax.inject._
+import model.KontrollettiToModelParser._
+import model.Error
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.mvc._
 import play.api.mvc.Action
 import play.api.mvc.Controller
-import play.utils.UriEncoding
 import service.Search
-import java.net.URLEncoder
+import model.CommitResult
+import model.CommitsResult
 
 @Api(value = "/api/hosts", description = "Committer information")
 @Singleton
-class CommitWS @Inject() (searchService: Search) extends Controller {
-
+class CommitWS @Inject() (search: Search) extends Controller {
+  private val defaultErrorResponse = Json.toJson(new Error("An error occurred, please check the logs", 500, "undefined"))
   import model.KontrollettiToModelParser._
   val logger: Logger = Logger { this.getClass }
 
   def diff(host: String, project: String, repository: String, sourceId: String, targetId: String) = Action.async {
-    searchService.diffExists(host, project, repository, sourceId, targetId).map {
+    search.diffExists(host, project, repository, sourceId, targetId).map {
       case Left(error) =>
         logger.info("Result 500: " + error)
         InternalServerError.as("application/problem+json")
@@ -31,6 +35,39 @@ class CommitWS @Inject() (searchService: Search) extends Controller {
         logger.info("Result 301: " + link.href)
         Redirect(URLEncoder.encode(link.href, "UTF-8"))
     }
+  }
+
+  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]) = Action.async {
+    logger.info("host:$host, project:$project, repository:$repository, since:$since, until:$until")
+    search.commits(host, project, repository, since, until).map {
+      case Left(error) =>
+        logger.info("Result 500: " + error)
+        InternalServerError(defaultErrorResponse).as("application/problem+json")
+      case Right(None) =>
+        logger.info("Result 404")
+        NotFound
+      case Right(Some(result)) =>
+        logger.info("Result 200")
+        val response = new CommitsResult(List(), result)
+        Ok(Json.toJson(response)).as("application/x.zalando.commit+json")
+    }
+  }
+
+  def byId(host: String, project: String, repository: String, id: String) = Action.async {
+    logger.info("host:$host, project:$project, repository:$repository, since:$since, until:$until")
+    search.commit(host, project, repository, id).map {
+      case Left(error) =>
+        logger.info("Result 500: " + error)
+        InternalServerError(defaultErrorResponse).as("application/problem+json")
+      case Right(None) =>
+        logger.info("Result 404")
+        NotFound
+      case Right(Some(result)) =>
+        logger.info("Result 200")
+        val response = new CommitResult(List(), result)
+        Ok(Json.toJson(response)).as("application/x.zalando.commit+json")
+    }
+
   }
 }
 

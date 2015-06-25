@@ -11,11 +11,8 @@ import org.scalatest.Matchers
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import client.SCM
-import service.SearchImpl
 import play.api.Logger
 import service.Search
-import com.google.inject.AbstractModule
-import com.google.inject.Guice
 import org.mockito.Matchers._
 import scala.concurrent.Future
 import model.Repository
@@ -111,8 +108,8 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         val Some(result) = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl"))
         status(result) mustEqual INTERNAL_SERVER_ERROR
         header(LOCATION, result) mustBe empty
-
         contentAsString(result) mustBe empty
+        contentType(result) mustEqual Some("application/problem+json")
       }
 
       verify(search, times(1)).parse(alternativeUrl)
@@ -154,6 +151,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         val Some(result) = route(FakeRequest(GET, s"$reposRoute$erraneousUrl"))
         status(result) mustEqual BAD_REQUEST
         contentAsString(result) mustEqual parsedResponse.left.get
+        contentType(result) mustEqual Some("application/problem+json")
       }
       verify(search, times(1)).parse(erraneousUrl)
     }
@@ -186,6 +184,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         val Some(result) = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl"))
         status(result) mustEqual INTERNAL_SERVER_ERROR
         contentAsString(result) mustBe empty
+        contentType(result) mustEqual Some("application/problem+json")
       }
       verify(search, times(1)).parse(defaultUrl)
     }

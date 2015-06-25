@@ -31,7 +31,7 @@ class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Moc
   import test.util.TestUtils._
 
   val client = mock[SCM]
-  val searchWithMockClient: Search = new SearchImpl(client)
+  val searchWithMockClient: OldSearch = new OldSearchImpl(client)
   val search: Search = new SearchImpl(new SCMImpl())
   val users = List(Author("name", "email", null))
 

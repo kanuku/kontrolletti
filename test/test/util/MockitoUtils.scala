@@ -26,6 +26,9 @@ import play.api.test.Helpers._
 import service.Search
 import service.SearchImpl
 import model.Ticket
+import model.Author
+import model.Author
+import model.CommitsResult
 
 trait MockitoUtils extends MockitoSugar {
 
@@ -88,9 +91,14 @@ trait MockitoUtils extends MockitoSugar {
     }
 
   }
-
-  def createRepository(href: String="href", project: String="project", host: String="host", repository: String="repo", commits: List[Commit]=List(), links: List[Link]=List()):Repository = 
-   new Repository(href, project, host, repository, commits, links)
   
-  def createTicket(name: String ="name", description: String="description", href: String="href", links: List[Link]=List()) = new Ticket(name, description, href, links)
+  def createCommitsResult(links: List[Link] = List(), commits: List[Commit] = List(createCommit())): CommitsResult = new CommitsResult(links, commits)
+  
+  def createRepository(href: String = "href", project: String = "project", host: String = "host", repository: String = "repo", commits: List[Commit] = List(), links: List[Link] = List()): Repository = new Repository(href, project, host, repository, commits, links)
+  
+  def createTicket(name: String = "name", description: String = "description", href: String = "href", links: List[Link] = List()) = new Ticket(name, description, href, links)
+  
+  def createCommit(id: String = "id", message: String = "message", parentId: List[String] = List(), author: Author = createAuthor(), valid: Option[Boolean] = None, links: List[Link] = List()): Commit = new Commit(id, message, parentId, author, valid, links)
+  
+  def createAuthor(name: String = "name", email: String = "email", links: List[Link] = List()): Author = new Author(name, email, links)
 }

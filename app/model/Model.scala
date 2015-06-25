@@ -19,6 +19,13 @@ case class Commit(id: String, message: String, parentId: List[String], author: A
 case class Repository(href: String, project: String, host: String, repository: String, commits: List[Commit], links: List[Link])
 case class Ticket(name: String, description: String, href: String, links: List[Link])
 
+class Default(_links: List[Link])
+case class RepositoryResult(_links: List[Link], result: Repository) extends Default(_links)
+case class RepositoriesResult(_links: List[Link], result: List[Repository]) extends Default(_links)
+case class TicketResult(_links: List[Link], result: List[Ticket]) extends Default(_links)
+case class CommitResult(_links: List[Link], result: Commit) extends Default(_links)
+case class CommitsResult(_links: List[Link], result: List[Commit]) extends Default(_links)
+
 //TODO: Evaluate Moving the readers in this parser(KontrollettiToJsonParser) into Companion objects
 // And overriding those companion objects in the SCM Parser
 
@@ -68,6 +75,14 @@ object KontrollettiToJsonParser {
     (__ \ "links").read[List[Link]] //
     )(Ticket.apply _)
 
+  implicit val commitsResultReader: Reads[CommitsResult] = (
+    (__ \ "_links").read[List[Link]] and
+    (__ \ "result").read[List[Commit]])(CommitsResult.apply _)
+
+  implicit val commitResultReader: Reads[CommitResult] = (
+    (__ \ "_links").read[List[Link]] and
+    (__ \ "result").read[Commit])(CommitResult.apply _)
+
 }
 object KontrollettiToModelParser {
 
@@ -114,6 +129,14 @@ object KontrollettiToModelParser {
     (__ \ "href").write[String] and
     (__ \ "links").write[List[Link]] //
     )(unlift(Ticket.unapply))
+
+  implicit val commitsResultWriter: Writes[CommitsResult] = (
+    (__ \ "links").write[List[Link]] and //
+    (__ \ "result").write[List[Commit]])(unlift(CommitsResult.unapply))
+
+  implicit val commitResultWriter: Writes[CommitResult] = (
+    (__ \ "links").write[List[Link]] and //
+    (__ \ "result").write[Commit])(unlift(CommitResult.unapply))
 
 }
 

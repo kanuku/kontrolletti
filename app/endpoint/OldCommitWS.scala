@@ -1,6 +1,5 @@
 package endpoint
 
-import scala.concurrent.Future
 import com.wordnik.swagger.annotations.Api
 import com.wordnik.swagger.annotations.ApiImplicitParam
 import com.wordnik.swagger.annotations.ApiImplicitParams
@@ -8,14 +7,14 @@ import com.wordnik.swagger.annotations.ApiOperation
 import com.wordnik.swagger.annotations.ApiResponse
 import com.wordnik.swagger.annotations.ApiResponses
 import javax.inject._
+import model._
+import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc.Action
 import play.api.mvc.Controller
-import model._
-import play.api.Logger
-import service.Search
-import play.api.libs.json.Json
 import play.api.mvc.Result
+import service.Search
+import scala.concurrent.Future
 
 @Api(value = "/api/hosts", description = "Committer information")
 @Singleton
@@ -70,17 +69,21 @@ class OldCommitWS @Inject() (searchService: Search) extends Controller {
    * @param repo - name of the repository
    * @return Future with the result[List of commits for the given repo]
    */
-  private def getCommits(host: String, project: String, repo: String) = Future.firstCompletedOf(Seq(searchService.commits(host, project, repo))).map {
-    case Left(error) =>
-      logger.warn(error)
-      InternalServerError(error)
-    case Right(response) if (response == null || response.isEmpty) =>
-      logger.info("Result: NotFound(404)")
-      asJsonCommmitType(NotFound)
-    case Right(response) =>
-      logger.info("Result: OK")
-      asJsonCommmitType(Ok(Json.prettyPrint(Json.toJson(response))))
-  }
+  private def getCommits(host: String, project: String, repo: String) = {
+    Future.successful(NotImplemented)
+  } 
+    
+//    Future.firstCompletedOf(Seq(searchService.commits(host, project, repo))).map {
+//    case Left(error) =>
+//      logger.warn(error)
+//      InternalServerError(error)
+//    case Right(response) if (response == null || response.isEmpty) =>
+//      logger.info("Result: NotFound(404)")
+//      asJsonCommmitType(NotFound)
+//    case Right(response) =>
+//      logger.info("Result: OK")
+//      asJsonCommmitType(Ok(Json.prettyPrint(Json.toJson(response))))
+//  }
 
   private def asJsonCommmitType(result: Result) = result.as("application/x.zalando.commit+json")
 }

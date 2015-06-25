@@ -60,11 +60,11 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
 
           case Left(error) =>
             logger.warn(s"Result: 500 $normalizedUrl")
-            InternalServerError
+            InternalServerError.as("application/problem+json")
 
           case Right(result) =>
             logger.info(s"Result: 404 $normalizedUrl")
-            NotFound
+            NotFound.as("application/problem+json")
         }
     }
   }
@@ -95,12 +95,11 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
             Ok(Json.toJson(result(0))).as("application/x.zalando.repository+json")
           case Left(error) =>
             logger.info(s"Result: 500 ")
-            logger.warn(error)
-            InternalServerError
+            InternalServerError.as("application/problem+json")
         }
       case Left(error) =>
         logger.info(s"Result: 400 $error")
-        Future.successful(BadRequest(error))
+        Future.successful(BadRequest(error).as("application/problem+json"))
     }
 
   }
