@@ -35,6 +35,7 @@ trait Search {
    * @return a future containing either the error(left) or list of commits(right)
    */
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Commit]]]]
+  
   /**
    * Returns a single commit from the given repository in the project on the given host.
    * @param host DNS/IP of the SCM server <br/>

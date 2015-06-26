@@ -1,12 +1,6 @@
 package endpoint
 
 import scala.concurrent.Future
-import com.wordnik.swagger.annotations.Api
-import com.wordnik.swagger.annotations.ApiImplicitParam
-import com.wordnik.swagger.annotations.ApiImplicitParams
-import com.wordnik.swagger.annotations.ApiOperation
-import com.wordnik.swagger.annotations.ApiResponse
-import com.wordnik.swagger.annotations.ApiResponses
 import javax.inject._
 import model.Commit
 import play.api.Logger
@@ -20,26 +14,14 @@ import service.Search
 import java.net.URLEncoder
 import scala.concurrent.future
 import scala.concurrent.Future
+import model.RepositoryResult
 
-@Api(value = "/api/repos", description = "Access repository information.")
 @Singleton
 class RepoWS @Inject() (searchService: Search) extends Controller {
 
   import model.KontrollettiToModelParser._
   val logger: Logger = Logger { this.getClass }
 
-  @ApiOperation(
-    notes = "Not normalized repository-url's will result in a redirect(301) to the normalized one" //
-    , value = "Access repository's meta information" //
-    , httpMethod = "HEAD" //
-    )
-  @ApiResponses(Array(
-     new ApiResponse(code = 301, message = "The `repoUrl` is not normalized, follow the redirect for to its normalized URI.") //
-     , new ApiResponse(code = 400, message = "Request could not be understood, due to malformed syntax.") //
-    , new ApiResponse(code = 404, message = "The 'repoUrl' is normalized, but its resource cannot be found.") //
-    , new ApiResponse(code = 500, message = "Internal Server Error.")))
-  @ApiImplicitParams(Array( //
-    new ApiImplicitParam(name = "repositoryUrl", value = "normalized url of the repository", required = true, dataType = "string", paramType = "path")))
   def normalize(repositoryUrl: String) = Action.async {
     val url = UriEncoding.decodePath(repositoryUrl, "UTF-8")
     logger.info(s"Request: $url")
@@ -53,33 +35,23 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
         val normalizedUrl = searchService.normalize(host, project, repo)
 
         searchService.repoExists(host, project, repo).map {
+          case Right(result) if (result && normalizedUrl.equals(url)) =>             
+             logger.info(s"Result: 200 $normalizedUrl")
+              Ok
           case Right(result) if result =>
-
-            logger.info(s"Result: 301 $normalizedUrl")
-            MovedPermanently(routes.RepoWS.byUrl(URLEncoder.encode(normalizedUrl, "UTF-8")).url)
-
+              logger.info(s"Result: 301 $normalizedUrl")
+              MovedPermanently(routes.RepoWS.byUrl(URLEncoder.encode(normalizedUrl, "UTF-8")).url)
           case Left(error) =>
             logger.warn(s"Result: 500 $normalizedUrl")
             InternalServerError.as("application/problem+json")
-
           case Right(result) =>
             logger.info(s"Result: 404 $normalizedUrl")
-            NotFound.as("application/problem+json")
+            NotFound
         }
+        
     }
   }
-  @ApiOperation(
-    notes = "Fetches the Repository object for the specified URI." //
-    , value = "Fetches the Repository object for the specified URI." //
-    , httpMethod = "GET" //
-    )
-  @ApiResponses(Array(
-    new ApiResponse(code = 200, message = "Retrieved the object successfully.") //
-    , new ApiResponse(code = 404, message = "No objects could be found matching the specified parameters.") //
-    , new ApiResponse(code = 400, message = "Request could not be understood, due to malformed syntax.") //
-    , new ApiResponse(code = 500, message = "Internal Server Error.")))
-  @ApiImplicitParams(Array( //
-    new ApiImplicitParam(name = "repositoryUrl", value = "normalized url of the repository", required = true, dataType = "string", paramType = "path")))
+
   def byUrl(repositoryUrl: String) = Action.async {
     val url = UriEncoding.decodePath(repositoryUrl, "UTF-8")
     logger.info(s"Request: $url")

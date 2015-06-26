@@ -20,17 +20,40 @@ import test.util.MockitoUtils
 import play.api.libs.json.Json
 
 class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
+  private val X_NORMALIZED_REPOSITORY_URL_HEADER = "X-Normalized-Repository-URL"
+  private val alternativeUrl = "git@github.com:zalando/kontrolletti.git"
+  private val reposRoute = "/api/repos/"
+  private val defaultUrl = "https://github.com/zalando/kontrolletti"
+  private val encodedDefaultUrl = URLEncoder.encode(defaultUrl, "UTF-8")
+  private val erraneousUrl = "asdfj-com"
+  private val encodedAlternativeUrl = URLEncoder.encode(alternativeUrl, "UTF-8");
+  private val host = "github.com"
+  private val project = "zalando"
+  private val repoName = "kontrolletti"
 
-  val reposRoute = "/api/repos/"
-  val defaultUrl = "https://github.com/zalando/kontrolletti"
-  val encodedDefaultUrl = URLEncoder.encode(defaultUrl, "UTF-8")
-  val alternativeUrl = "git@github.com:zalando/kontrolletti.git"
-  val encodedAlternativeUrl = URLEncoder.encode(alternativeUrl, "UTF-8");
-  val erraneousUrl = "asdfj-com"
-  val host = "github.com"
-  val project = "zalando"
-  val repoName = "kontrolletti"
   "HEAD /api/repos" should {
+
+    "Return 200 when the repository-parameter is normalized and the resource can be found" in {
+      val search = mock[Search]
+      val response = Right((host, project, repoName))
+      val url = reposRoute + encodedDefaultUrl
+
+      withFakeApplication(new FakeGlobalWithSearchService(search)) {
+        when(search.parse(defaultUrl)).thenReturn(response)
+        when(search.normalize(host, project, repoName)).thenReturn(defaultUrl)
+        when(search.repoExists(host, project, repoName)).thenReturn(Future.successful(Right(true)))
+
+        val Some(result) = route(FakeRequest(HEAD, url))
+        status(result) mustEqual OK
+        header(LOCATION, result) mustBe empty
+        header(X_NORMALIZED_REPOSITORY_URL_HEADER, result) === Some(X_NORMALIZED_REPOSITORY_URL_HEADER -> defaultUrl)
+        contentAsString(result) mustBe empty
+      }
+
+      verify(search, times(1)).parse(defaultUrl)
+      verify(search, times(1)).normalize(host, project, repoName)
+      verify(search, times(1)).repoExists(host, project, repoName)
+    }
 
     "Return 400 (Bad Request) on invalid(not parsable) URI" in {
       val search = mock[Search]
@@ -38,7 +61,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       val url = reposRoute + erraneousUrl
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        when(search.parse(anyString)).thenReturn(response)
+        when(search.parse(erraneousUrl)).thenReturn(response)
         //Let Guice return mocked searchService
 
         val Some(result) = route(FakeRequest(HEAD, url))
@@ -63,7 +86,8 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl"))
         status(result) mustEqual MOVED_PERMANENTLY
-        header(LOCATION, result).get === (LOCATION -> s"$reposRoute$encodedAlternativeUrl")
+        header(X_NORMALIZED_REPOSITORY_URL_HEADER, result) === Some(X_NORMALIZED_REPOSITORY_URL_HEADER -> defaultUrl)
+        header(LOCATION, result) === Some(LOCATION -> s"$reposRoute$encodedAlternativeUrl")
         contentAsString(result) mustBe empty
       }
 

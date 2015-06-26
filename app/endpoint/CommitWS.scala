@@ -2,7 +2,6 @@ package endpoint
 
 import java.net.URLEncoder
 import scala.concurrent.Future
-import com.wordnik.swagger.annotations.Api
 import javax.inject._
 import model.KontrollettiToModelParser._
 import model.Error
@@ -14,16 +13,15 @@ import play.api.mvc.Action
 import play.api.mvc.Controller
 import service.Search
 import model.CommitResult
-import model.CommitsResult
+import model.CommitsResult 
 
-@Api(value = "/api/hosts", description = "Committer information")
 @Singleton
 class CommitWS @Inject() (search: Search) extends Controller {
   private val defaultErrorResponse = Json.toJson(new Error("An error occurred, please check the logs", 500, "undefined"))
   import model.KontrollettiToModelParser._
   val logger: Logger = Logger { this.getClass }
 
-  def diff(host: String, project: String, repository: String, sourceId: String, targetId: String) = Action.async {
+ def diff(host: String, project: String, repository: String, sourceId: String, targetId: String) = Action.async {
     search.diffExists(host, project, repository, sourceId, targetId).map {
       case Left(error) =>
         logger.info("Result 500: " + error)

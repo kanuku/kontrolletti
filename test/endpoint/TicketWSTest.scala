@@ -87,7 +87,4 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       verify(search, times(1)).tickets(host, project, repo, sinceId, untilId)
     }
   }
-  
- 
-
 }

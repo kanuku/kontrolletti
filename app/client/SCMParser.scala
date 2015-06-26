@@ -86,7 +86,7 @@ object GithubToJsonParser extends SCMParser {
     //    and (JsPath  \ "sha").read[List[String]] //parentId
     and Reads.pure(null) // links
     and (JsPath \ "commit" \ "committer").read[Author]
-    and Reads.pure(None) // valid
+//    and Reads.pure(None) // valid
     and Reads.pure(null) // links
     )(Commit.apply _)
 }
@@ -117,7 +117,7 @@ object StashToJsonParser extends SCMParser {
     //    and (JsPath \ "parents" \ "id").read[List[String]] //parentId
     and Reads.pure(null) // parentId
     and (JsPath \ "author").read[Author] // author
-    and Reads.pure(None) // valid
+//    and Reads.pure(None) // valid
     and Reads.pure(null) // links
     )(Commit.apply _)
 

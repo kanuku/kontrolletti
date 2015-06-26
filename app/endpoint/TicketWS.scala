@@ -16,7 +16,7 @@ import play.api.Logger
 import service.Search
 import play.api.libs.json.Json
 
-@Api(value = "/api/hosts", description = "Committer information")
+
 @Singleton
 class TicketWS @Inject() (searchService: Search) extends Controller {
 
@@ -24,18 +24,6 @@ class TicketWS @Inject() (searchService: Search) extends Controller {
 
   private val logger: Logger = Logger(this.getClass())
   
-  @ApiOperation(
-    nickname = "get",
-    value = "Fetches all the Ticket objects for the specified repository.",
-    notes = "A committer represents an entity that pushed changes to repository.",
-    httpMethod = "GET",
-    //responseContainer = "List",
-    response = classOf[Author])
-  @ApiResponses(Array(
-    new ApiResponse(code = 200, message = "Operation succeeded!"),
-    new ApiResponse(code = 404, message = "Did not find any resources!")))
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "repo", value = "Url of the repository", required = false, dataType = "string", paramType = "query")))
   def tickets(host: String, project: String, repository: String, sinceId: Option[String], untilId: Option[String]) = Action.async {
     
     logger.info(s"host: $host, project: $project repository: $repository, sinceId: $sinceId, untilId: $untilId")
