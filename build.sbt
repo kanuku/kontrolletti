@@ -16,7 +16,6 @@ ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages:= "<empty>;views.*;Rev
 
 libraryDependencies ++= Seq(
   ws,
-  "com.wordnik" 			%% "swagger-play2" 	% "1.3.12" 		withSources() withJavadoc(),
   "com.google.inject"  		% "guice" 			% "3.0" 		withSources() withJavadoc(),
   "javax.inject" 			% "javax.inject" 	% "1" 			withSources() withJavadoc(),
   "org.scalatest"			% "scalatest_2.11"  % "2.2.4"  		% "test" withSources() withJavadoc(),

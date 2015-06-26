@@ -27,7 +27,7 @@
         url = decodeURIComponent(url[1]);
       } else {
         //url = "http://localhost:9000/api-docs";
-        url = window.location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '') + '/api-docs';
+        url = window.location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '') + '/specs';
       }
       window.swaggerUi = new SwaggerUi({
         url: url,
