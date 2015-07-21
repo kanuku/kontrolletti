@@ -34,13 +34,13 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
       case Right((host, project, repo)) =>
         val normalizedUrl = searchService.normalize(host, project, repo)
 
-        searchService.repoExists(host, project, repo).map {
-          case Right(result) if (result && normalizedUrl.equals(url)) =>             
-             logger.info(s"Result: 200 $normalizedUrl")
-              Ok
+        searchService.isRepo(host, project, repo).map {
+          case Right(result) if (result && normalizedUrl.equals(url)) =>
+            logger.info(s"Result: 200 $normalizedUrl")
+            Ok
           case Right(result) if result =>
-              logger.info(s"Result: 301 $normalizedUrl")
-              MovedPermanently(routes.RepoWS.byUrl(URLEncoder.encode(normalizedUrl, "UTF-8")).url)
+            logger.info(s"Result: 301 $normalizedUrl")
+            MovedPermanently(routes.RepoWS.byUrl(URLEncoder.encode(normalizedUrl, "UTF-8")).url)
           case Left(error) =>
             logger.warn(s"Result: 500 $normalizedUrl")
             InternalServerError.as("application/problem+json")
@@ -48,7 +48,7 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
             logger.info(s"Result: 404 $normalizedUrl")
             NotFound
         }
-        
+
     }
   }
 

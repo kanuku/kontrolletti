@@ -1,11 +1,5 @@
 package endpoint
 
-import com.wordnik.swagger.annotations.Api
-import com.wordnik.swagger.annotations.ApiImplicitParam
-import com.wordnik.swagger.annotations.ApiImplicitParams
-import com.wordnik.swagger.annotations.ApiOperation
-import com.wordnik.swagger.annotations.ApiResponse
-import com.wordnik.swagger.annotations.ApiResponses
 import javax.inject._
 import model._
 import play.api.Logger
@@ -16,7 +10,7 @@ import play.api.mvc.Result
 import service.Search
 import scala.concurrent.Future
 
-@Api(value = "/api/hosts", description = "Committer information")
+
 @Singleton
 class OldCommitWS @Inject() (searchService: Search) extends Controller {
 
@@ -30,28 +24,6 @@ class OldCommitWS @Inject() (searchService: Search) extends Controller {
    * @param repo - name of the repository
    * @return Action with the content(list of commits for the given repo)
    */
-  @ApiOperation(
-    notes = "On a github-server, a project is a username/organization. On stash-server a project is a project", //
-    value = "Get all commits from the specified host, project and repository" //
-    , httpMethod = "GET" //
-    , response = classOf[Commit] //
-    , responseContainer = "List" //
-    )
-  @ApiResponses(Array(
-    new ApiResponse(code = 200, message = "Operation succeeded.") //
-    , new ApiResponse(code = 301, message = "Moved permanently!") //
-    , new ApiResponse(code = 404, message = "Did not find the resource.") //
-    , new ApiResponse(code = 400, message = "Bad Request."), //
-    new ApiResponse(code = 500, message = "Internal Server Error.") //
-    ))
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "host", value = "hostname where the repository is hosted", required = true //
-    , dataType = "string", paramType = "path") //
-    , new ApiImplicitParam(name = "project", value = "project where the repository is grouped" //
-    , required = true, dataType = "string", paramType = "path") //
-    , new ApiImplicitParam(name = "repository", value = "name of the repository" //
-    , required = true, dataType = "string", paramType = "path") //
-    ))
   def commits(host: String, project: String, repo: String) = Action.async {
     getCommits(host, project, repo)
   }

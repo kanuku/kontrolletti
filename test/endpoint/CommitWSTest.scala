@@ -52,7 +52,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       val search = mock[Search]
 
-      when(search.diffExists(host, project, repository, source, target)).thenReturn(diffExistsResult)
+      when(search.diff(host, project, repository, source, target)).thenReturn(diffExistsResult)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, url))
@@ -61,7 +61,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         contentAsString(result) mustBe empty
       }
 
-      verify(search, times(1)).diffExists(host, project, repository, source, target)
+      verify(search, times(1)).diff(host, project, repository, source, target)
 
     }
 
@@ -74,7 +74,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       val search = mock[Search]
 
-      when(search.diffExists(host, project, repository, source, target)).thenReturn(diffExistsResult)
+      when(search.diff(host, project, repository, source, target)).thenReturn(diffExistsResult)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, url))
@@ -82,7 +82,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         header(LOCATION, result) mustBe empty
         contentAsString(result) mustBe empty
       }
-      verify(search, times(1)).diffExists(host, project, repository, source, target)
+      verify(search, times(1)).diff(host, project, repository, source, target)
     }
 
     "Return 500 if the (301) to the right scm GUI " in {
@@ -94,7 +94,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       val search = mock[Search]
 
-      when(search.diffExists(host, project, repository, source, target)).thenReturn(diffExistsResult)
+      when(search.diff(host, project, repository, source, target)).thenReturn(diffExistsResult)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, url))
@@ -103,7 +103,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         contentAsString(result) mustBe empty
         contentType(result) mustEqual Some("application/problem+json")
       }
-      verify(search, times(1)).diffExists(host, project, repository, source, target)
+      verify(search, times(1)).diff(host, project, repository, source, target)
     }
   }
 

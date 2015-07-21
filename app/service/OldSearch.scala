@@ -7,7 +7,7 @@ import play.api.Logger
 import play.api.libs.json._
 import play.api.libs.json._
 import play.api.libs.json.Reads._
-import client.SCM
+import client.OldSCM
 import model.Author
 import scala.concurrent.Future
 import scala.util.{ Success, Failure }
@@ -106,7 +106,7 @@ trait OldSearch {
  *
  */
 @Singleton
-class OldSearchImpl @Inject() (client: SCM) extends OldSearch with UrlParser {
+class OldSearchImpl @Inject() (client: OldSCM) extends OldSearch with UrlParser {
 
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
   import scala.concurrent._

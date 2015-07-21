@@ -41,7 +41,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         when(search.parse(defaultUrl)).thenReturn(response)
         when(search.normalize(host, project, repoName)).thenReturn(defaultUrl)
-        when(search.repoExists(host, project, repoName)).thenReturn(Future.successful(Right(true)))
+        when(search.isRepo(host, project, repoName)).thenReturn(Future.successful(Right(true)))
 
         val Some(result) = route(FakeRequest(HEAD, url))
         status(result) mustEqual OK
@@ -52,7 +52,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       verify(search, times(1)).parse(defaultUrl)
       verify(search, times(1)).normalize(host, project, repoName)
-      verify(search, times(1)).repoExists(host, project, repoName)
+      verify(search, times(1)).isRepo(host, project, repoName)
     }
 
     "Return 400 (Bad Request) on invalid(not parsable) URI" in {
@@ -81,7 +81,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       when(search.parse(alternativeUrl)).thenReturn(parsedResponse)
       when(search.normalize(host, project, repoName)).thenReturn(s"/projects/$project/repos/$repoName")
-      when(search.repoExists(host, project, repoName)).thenReturn(existsResponse)
+      when(search.isRepo(host, project, repoName)).thenReturn(existsResponse)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl"))
@@ -93,7 +93,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       verify(search, times(1)).parse(alternativeUrl)
       verify(search, times(1)).normalize(host, project, repoName)
-      verify(search, times(1)).repoExists(host, project, repoName)
+      verify(search, times(1)).isRepo(host, project, repoName)
     }
 
     "Return 404 on a URI that is normalized but does not exist" in {
@@ -104,7 +104,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       when(search.parse(alternativeUrl)).thenReturn(parsedResponse)
       when(search.normalize(host, project, repoName)).thenReturn(s"/projects/$project/repos/$repoName")
-      when(search.repoExists(host, project, repoName)).thenReturn(existsResponse)
+      when(search.isRepo(host, project, repoName)).thenReturn(existsResponse)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl"))
@@ -116,7 +116,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       verify(search, times(1)).parse(alternativeUrl)
       verify(search, times(1)).normalize(host, project, repoName)
-      verify(search, times(1)).repoExists(host, project, repoName)
+      verify(search, times(1)).isRepo(host, project, repoName)
     }
 
     "Return 500 on a URI when the Service returns 500" in {
@@ -126,7 +126,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       when(search.parse(alternativeUrl)).thenReturn(parsedResponse)
       when(search.normalize(host, project, repoName)).thenReturn(s"/projects/$project/repos/$repoName")
-      when(search.repoExists(host, project, repoName)).thenReturn(existsResponse)
+      when(search.isRepo(host, project, repoName)).thenReturn(existsResponse)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl"))
@@ -138,7 +138,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       verify(search, times(1)).parse(alternativeUrl)
       verify(search, times(1)).normalize(host, project, repoName)
-      verify(search, times(1)).repoExists(host, project, repoName)
+      verify(search, times(1)).isRepo(host, project, repoName)
     }
   }
 

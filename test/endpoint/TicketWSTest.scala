@@ -20,7 +20,7 @@ import scala.concurrent.duration.Duration
 import play.api.libs.json.Json
 import java.net.URLEncoder
 
-class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
+class SpecificationWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
   val reposRoute = "/api/repos/"
   val host = "github.com"
   val project = "zalando"

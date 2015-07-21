@@ -35,7 +35,7 @@ trait Search {
    * @return a future containing either the error(left) or list of commits(right)
    */
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Commit]]]]
-  
+
   /**
    * Returns a single commit from the given repository in the project on the given host.
    * @param host DNS/IP of the SCM server <br/>
@@ -74,24 +74,24 @@ trait Search {
   def normalize(host: String, project: String, repository: String): String
 
   /**
-   * Validates the repository by sending a HEAD request to the original repository link.
+   * Checks if the repository exists by sending a HEAD request to the original repository link.
    * @param host DNS/IP of the SCM server
    * @param project name of the project
    * @param repository name of the repository
-   * @return  Either an Left with an error or a Right, true if the HTTP-CODE returned is 200/301 and false otherwise.
+   * @return  Either an Left with an error or a Right(true) if the HTTP-CODE returned is 200/301 and Right(false) if (404).
    */
-  def repoExists(host: String, project: String, repository: String): Future[Either[String, Boolean]]
+  def isRepo(host: String, project: String, repository: String): Future[Either[String, Boolean]]
 
   /**
-   * Validates the diff by sending a HEAD request to the original diff link.
+   * Checks if the diff exists by sending a HEAD request to the SCM server.
    * @param host DNS/IP of the SCM server
    * @param project name of the project
    * @param repository name of the repository
    * @param source commit-id from where to compare from
    * @param target commit-id from where to compare to
-   * @return Either an Left with an error or a Right with a link if the returned HTTP-CODE is 200/301 or a None otherwise.
+   * @return  Either an Left with an error or a Right(true) if the HTTP-CODE returned is 200/301 and Right(false) if (404).
    */
-  def diffExists(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]]
+  def diff(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]]
 
   /**
    * Fetches the tickets from.
@@ -114,7 +114,7 @@ trait Search {
 class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Commit]]]] = ???
-  
+
   def commit(host: String, project: String, repository: String, id: String): Future[Either[String, Option[Commit]]] = ???
 
   def repos(host: String, project: String, repository: String): Future[Either[String, List[Repository]]] = ???
@@ -123,9 +123,9 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   def normalize(host: String, project: String, repository: String): String = ???
 
-  def repoExists(host: String, project: String, repository: String): Future[Either[String, Boolean]] = ???
+  def isRepo(host: String, project: String, repository: String): Future[Either[String, Boolean]] = ???
 
-  def diffExists(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]] = ???
+  def diff(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]] = ???
 
   def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Ticket]]]] = ???
 

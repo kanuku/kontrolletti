@@ -33,7 +33,7 @@ import model.CommitsResult
 trait MockitoUtils extends MockitoSugar {
 
   /**
-   * Creates a successfull/failed mocked WSResponse
+   * Creates a mocked WSResponse
    */
   def mockSuccessfullParsableFutureWSResponse[T](result: T, httpCode: Int): Future[WSResponse] = {
     val wsResponse = mock[WSResponse]
@@ -54,7 +54,7 @@ trait MockitoUtils extends MockitoSugar {
    *
    */
   def createClient(requestParam: ((String) => WSRequestHolder)) = new SCMImpl {
-    override def requestHolder = requestParam
+//    override def requestHolder = requestParam
   }
 
   def withFakeApplication(block: => Unit): Unit = {

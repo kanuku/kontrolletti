@@ -1,90 +1,70 @@
 package client
 
-import java.util.ServiceConfigurationError
-
 import scala.concurrent.Future
 
 import play.api.Logger
-import play.api.Play.current
-import play.api.libs.ws._
+import play.api.libs.ws.WSResponse
 
 sealed trait SCM {
 
-  def committers(host: String, project: String, repo: String): Future[WSResponse]
-
-  def commits(host: String, project: String, repo: String): Future[WSResponse]
-
-  def url(host: String, project: String, repo: String): String
+  /**
+   * Issues a GET call against the repository-endpoint on the SCM.
+   * @param host DNS/IP of the SCM server <br/>
+   * @param project name of the project
+   * @param repo name of the repository
+   * @return The future with the response of the call
+   */
+  def commits(host: String, project: String, repo: String, since: Option[String], until: Option[String]): Future[WSResponse]
 
   /**
-   * Checks if a repository exists with a HTTP Head request to the repository url.
+   * Issues a GET call against the repository-endpoint on the SCM.
+   * @param host DNS/IP of the SCM server <br/>
+   * @param project name of the project
+   * @param repo name of the repository
+   * @return The future with the response of the call
+   */
+  def repos(host: String, project: String, repo: String): Future[WSResponse]
+
+  /**
+   * Issues a HEAD call against the repository-URL on the SCM.
    * @param host DNS/IP of the SCM server <br/>
    * @param project name of the project
    * @param repo name of the repository
    * @return The future with the response of the call
    *
    */
-  def repoExists(host: String, project: String, repo: String): Future[WSResponse]
+  def isRepo(host: String, project: String, repo: String): Future[WSResponse]
+
+  /**
+   * Issues a HEAD call against the diff-URL on the SCM.
+   * @param host DNS/IP of the SCM server <br/>
+   * @param project name of the project
+   * @param repo name of the repository
+   * @return The future with the response of the call
+   *
+   */
+  def isDiff(host: String, project: String, repo: String): Future[WSResponse]
+
+  /**
+   * Issues a GET call against the ticket/issue-endpoint on the SCM.
+   * @param host DNS/IP of the SCM server <br/>
+   * @param project name of the project
+   * @param repo name of the repository
+   * @return The future with the response of the call
+   */
+  def ticket(host: String, project: String, repo: String, since: Option[String], untill: Option[String]): Future[WSResponse]
 
 }
 
 class SCMImpl extends SCM {
   private val logger: Logger = Logger(this.getClass())
   
-  type Call = (WSRequestHolder) => Future[WSResponse]
-  
-  val GET: Call = { requestHolder => requestHolder.get() }
-  val HEAD: Call = { requestHolder => requestHolder.head() }
-
-  def committers(host: String, project: String, repo: String): Future[WSResponse] = {
-    val res: SCMResolver = resolver(host).get
-    val url: String = res.contributors(host, project, repo)
-    request(GET, url, res.accessTokenKey, res.accessTokenValue)
-  }
-
-  def commits(host: String, project: String, repo: String): Future[WSResponse] = {
-    val res: SCMResolver = resolver(host).get
-    val url: String = res.commits(host, project, repo)
-    request(GET, url, res.accessTokenKey, res.accessTokenValue)
-  }
-  def repoExists(host: String, project: String, repo: String): Future[WSResponse] = {
-    val res: SCMResolver = resolver(host).get
-    val url: String = res.repo(host, project, repo)
-    request(HEAD, url, res.accessTokenKey, res.accessTokenValue)
-  }
-
-  def url(host: String, project: String, repo: String): String = {
-    val res: SCMResolver = resolver(host).get
-    res.url(host, project, repo)
-  }
-
-  def request(call: Call, url: String, accessTokenKey: String, accessTokenValue: String): Future[WSResponse] = {
-    val request = requestHolder(url)
-    if (accessTokenValue == null || accessTokenValue.isEmpty()) {
-      logger.info(s"$url without access-token ");
-      call(request)
-    } else {
-      logger.info(s"$url with access-token");
-      call(request.withHeaders(accessTokenKey -> accessTokenValue))
-    }
-  }
-
-  def resolver(host: String) = {
-    var result = GithubResolver.resolve(host)
-    if (result.isDefined)
-      result
-    else {
-      result = StashResolver.resolve(host)
-      if (result.isDefined)
-        result
-      else
-        throw new IllegalStateException(s"Could not resolve SCM context for $host")
-    }
-  }
-
-  def requestHolder: (String) => WSRequestHolder = {
-    (url) => WS.url(url)
-  }
+  def commits(host: String, project: String, repo: String, since: Option[String], until: Option[String]): Future[WSResponse] = ???
+  def repos(host: String, project: String, repo: String): Future[WSResponse] = ???
+  def committers(host: String, project: String, repo: String): Future[WSResponse] = ???
+  def isRepo(host: String, project: String, repo: String): Future[WSResponse] = ???
+  def isDiff(host: String, project: String, repo: String): Future[WSResponse] = ???
+  def ticket(host: String, project: String, repo: String, since: Option[String], untill: Option[String]): Future[WSResponse] = ???
 
 }
 

@@ -22,7 +22,7 @@ class CommitWS @Inject() (search: Search) extends Controller {
   val logger: Logger = Logger { this.getClass }
 
  def diff(host: String, project: String, repository: String, sourceId: String, targetId: String) = Action.async {
-    search.diffExists(host, project, repository, sourceId, targetId).map {
+    search.diff(host, project, repository, sourceId, targetId).map {
       case Left(error) =>
         logger.info("Result 500: " + error)
         InternalServerError.as("application/problem+json")

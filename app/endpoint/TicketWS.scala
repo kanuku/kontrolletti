@@ -1,12 +1,6 @@
 package endpoint
 
-import scala.concurrent.Future
-import com.wordnik.swagger.annotations.Api
-import com.wordnik.swagger.annotations.ApiImplicitParam
-import com.wordnik.swagger.annotations.ApiImplicitParams
-import com.wordnik.swagger.annotations.ApiOperation
-import com.wordnik.swagger.annotations.ApiResponse
-import com.wordnik.swagger.annotations.ApiResponses
+import scala.concurrent.Future 
 import javax.inject._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc.Action

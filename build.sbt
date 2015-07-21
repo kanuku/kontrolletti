@@ -26,7 +26,7 @@ libraryDependencies ++= Seq(
 // -------------Docker configuration-------------
 maintainer in Docker := "fernando.benjamin@zalando.de"
 
-daemonUser in Docker := "root"
+//daemonUser in Docker := "root"
  
 // Add this to let Jenkins overwrite your 
 dockerRepository :=  Some("pierone.stups.zalan.do/cd") 
@@ -47,5 +47,7 @@ mappings in Universal += {
   file( "./scm-source.json") -> "../../scm-source.json" 
 }
 
-dockerCommands +=  ExecCmd("ADD", "/scm-source.json", "/scm-source.json")
+dockerCommands ++=  Seq(
+  Cmd("ADD", "/scm-source.json" + " /scm-source.json")  
+)
 
