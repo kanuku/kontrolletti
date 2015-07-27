@@ -147,7 +147,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       val parsedResponse = Right((host, project, repoName))
       val repository = createRepository()
-      val repoResponse = Future.successful(Right(List(repository)))
+      val repoResponse = Future.successful(Right(Some(List(repository))))
       val search = mock[Search]
 
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
@@ -180,10 +180,10 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       verify(search, times(1)).parse(erraneousUrl)
     }
 
-    "Return 404 when it results in a empty list" in {
+    "Return 404 when it results in a None" in {
       val search = mock[Search]
       val parsedResponse = Right((host, project, repoName))
-      val repoResponse = Future.successful(Right(List()))
+      val repoResponse = Future.successful(Right(None))
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
       when(search.repos(host, project, repoName)).thenReturn(repoResponse)
 

@@ -157,7 +157,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       val search = mock[Search]
       val commitId = "commitId"
       val commit = createCommit(id = commitId)
-      val commitResult = Future.successful(Right(Some(commit)))
+      val commitResult = Future.successful(Right(Some(List(commit))))
       val url = singleCommitRoute(commitId = commitId)
       val response = new CommitResult(List(), commit)
       when(search.commit(host, project, repository, commitId)).thenReturn(commitResult)

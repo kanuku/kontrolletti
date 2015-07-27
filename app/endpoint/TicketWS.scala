@@ -27,7 +27,7 @@ class TicketWS @Inject() (searchService: Search) extends Controller {
       case Right(None) =>
         logger.info(s"Result: 404 ")
         NotFound
-      case Right(result) =>
+      case Right(Some(result)) =>
         logger.info(s"Result: 200 ")
         Ok(Json.toJson(result)).as("application/x.zalando.ticket+json")
       case Left(error) =>
