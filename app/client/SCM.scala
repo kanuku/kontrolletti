@@ -84,7 +84,23 @@ class SCMImpl extends SCM {
   def isRepo(host: String, project: String, repository: String): Future[WSResponse] = ???
   def isDiff(host: String, project: String, repository: String): Future[WSResponse] = ???
   def tickets(host: String, project: String, repository: String, since: Option[String], untill: Option[String]): Future[WSResponse] = ???
-  def url(host: String, project: String, repository: String): String = ???
+  def url(host: String, project: String, repository: String): String = {
+    val res: SCMResolver = resolver(host).get
+    res.url(host, project, repository)
+  }
 
+  
+   def resolver(host: String) = {
+    var result = GithubResolver.resolve(host)
+    if (result.isDefined)
+      result
+    else {
+      result = StashResolver.resolve(host)
+      if (result.isDefined)
+        result
+      else
+        throw new IllegalStateException(s"Could not resolve SCM context for $host")
+    }
+  }
 }
 

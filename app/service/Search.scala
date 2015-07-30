@@ -122,21 +122,24 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
   private val ACCEPTABLE_CODES = List(200)
 
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Commit]]]] =
-    Future {
-      lazy val call = client.commits(host, project, repository, since, until)
-      resolveParser(host).right.flatMap(parser => handleRequest(parser.commitToModel, call))
+
+    resolveParser(host) match {
+      case Right(scmParser) => handleRequest(scmParser.commitToModel, client.commits(host, project, repository, since, until))
+      case Left(error)      => Future.successful(Left(error))
+
     }
 
   def commit(host: String, project: String, repository: String, id: String): Future[Either[String, Option[List[Commit]]]] =
-    Future {
-      lazy val call = client.commit(host, project, repository, id)
-      resolveParser(host).right.flatMap(parser => handleRequest(parser.commitToModel, call))
+    resolveParser(host) match {
+      case Right(scmParser) => handleRequest(scmParser.commitToModel, client.commit(host, project, repository, id))
+      case Left(error)      => Future.successful(Left(error))
+
     }
 
   def repos(host: String, project: String, repository: String): Future[Either[String, Option[List[Repository]]]] =
-    Future {
-      lazy val call = client.repos(host, project, repository)
-      resolveParser(host).right.flatMap(parser => handleRequest(parser.repoToModel, call))
+    resolveParser(host) match {
+      case Right(scmParser) => handleRequest(scmParser.repoToModel, client.repos(host, project, repository))
+      case Left(error)      => Future.successful(Left(error))
 
     }
 
@@ -144,39 +147,36 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   def normalize(host: String, project: String, repository: String): String = client.url(host, project, repository)
 
-  def isRepo(host: String, project: String, repository: String): Future[Either[String, Boolean]] = Future { ??? }
+  def isRepo(host: String, project: String, repository: String): Future[Either[String, Boolean]] =
+    resolveParser(host) match {
+      case Right(scmParser) => executeCall(client.isRepo(host, project, repository)) match {
+        case Right(result) =>
+          result.map { response =>
+            Right(ACCEPTABLE_CODES.contains(response.status))
+          }
+        case Left(error) => Future.successful(Left(error))
+      }
+      case Left(error) => Future.successful(Left(error))
+
+    }
 
   def diff(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]] = Future { ??? }
 
-  def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Ticket]]]] = {
-      lazy val call = client.tickets(host, project, repository, since, until)
-      resolveParser(host) match {
-      case Right(scmParser) => handleRequest(scmParser.ticketToModel, call)
+  def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Ticket]]]] =
+    resolveParser(host) match {
+      case Right(scmParser) => handleRequest(scmParser.ticketToModel, client.tickets(host, project, repository, since, until))
       case Left(error)      => Future.successful(Left(error))
 
-    } 
-  }
+    }
 
   /**
-   * Handles calls to the client parses the jsonObject from the Response if neccessary.
+   * Handles calls to the client parses the jsonObject from the Response if necessary.
    * @param clientCall(param-by-name) the call to be executed in order to get the response.
    * @param parser the parser that transforms the jsonObjects(response) into the internal Model.
    * @return Either an Error-message(left) or the parsed Model(right).
    *
    */
-  //  private def handleRequest[A](parser: Parser[JsValue, Either[String, A]], clientCall: => Future[WSResponse]): Either[String, Option[A]] = {
-  //    executeCall(clientCall).right.flatMap { fResponse =>
-  //      val result = unwrapResponse(fResponse)
-  //      result.flatMap { wsResponse =>
-  //        wsResponse.right match {
-  //          case None           => Right(None) //In case is 404 return None 
-  //          case Some(response) => Right(parser(response.json).right.toOption)
-  //        }
-  //      }
-  //    }
-  //  }
-
-  def handleRequest[A](parser: Parser[JsValue, Either[String, A]], clientCall: => Future[WSResponse]): Future[Either[String, Option[A]]] = {
+  private def handleRequest[A](parser: Parser[JsValue, Either[String, A]], clientCall: => Future[WSResponse]): Future[Either[String, Option[A]]] = {
     executeCall(clientCall) match {
       case Left(error) => Future.successful(Left(error))
       case Right(futureResponse) => unwrapResponse(futureResponse).map { unwrappedResponse =>
@@ -191,18 +191,15 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
     }
   }
   /**
-   * Unwraps the response and transforms it, based on their http-status-codes, to a usable response in this service.
-   * For now we are interested in responses that have parseable payload and return successfull http-status-codes.
+   * Unwraps the response and transforms it, based on their http-status-codes.
+   * Kontrolletti is interested only in responses that have parseable payload and return successfull http-status-codes.
    * @param futureResponse Future of the WSResponse
    * @return Either a Left with an error or a Right containing an Optional(Response=Success, None=404).
    *
    */
   def unwrapResponse(futureResponse: Future[WSResponse]): Future[Either[String, Option[WSResponse]]] = {
-    futureResponse onComplete {
-      case Success(response) => logger.info("Call succeed ")
-      case Failure(t)        => logger.error("Error while calling SCM " + t.getMessage)
-    }
-    var result: Either[String, Option[WSResponse]] = Left("OMG!! This should never happen!!")
+
+    registerOnComplete(futureResponse)
     futureResponse.map { response =>
       logger.info("Response with http-status-code: " + response.status)
       response.status match {
@@ -216,6 +213,13 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
           logger.warn(s"Status $status was not hanled!")
           Left("Unexpected SCM response: " + response.status)
       }
+    }
+  }
+
+  def registerOnComplete(futureResponse: Future[WSResponse]) {
+    futureResponse onComplete {
+      case Success(response) => logger.info("Call succeed ")
+      case Failure(t)        => logger.error("Error while calling SCM " + t.getMessage)
     }
   }
 
