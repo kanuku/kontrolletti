@@ -11,6 +11,7 @@ import client.SCM
 import model.Author
 import scala.concurrent.Future
 import scala.util.{ Success, Failure }
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WSResponse
 import client.GithubToJsonParser
 import client.StashToJsonParser
@@ -22,6 +23,7 @@ import utility.UrlParser
 import model.Repository
 import model.Link
 import model.Ticket
+import scala.util.Try
 
 trait Search {
 
@@ -112,8 +114,6 @@ trait Search {
  */
 @Singleton
 class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
-  import play.api.libs.concurrent.Execution.Implicits.defaultContext
-  import scala.concurrent._
 
   type Parser[JsValue, B] = JsValue => B
 
@@ -121,84 +121,102 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
   private val defaultError = Left("Something went wrong, check the logs!")
   private val ACCEPTABLE_CODES = List(200)
 
-  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Commit]]]] = {
-    
-    Future.successful(resolveParser(host).right.flatMap(parser => handleRequest(parser.commitToModel, client.commits(host, project, repository, since, until))))
-  }
+  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Commit]]]] =
+    Future {
+      lazy val call = client.commits(host, project, repository, since, until)
+      resolveParser(host).right.flatMap(parser => handleRequest(parser.commitToModel, call))
+    }
 
-  def commit(host: String, project: String, repository: String, id: String): Future[Either[String, Option[List[Commit]]]] = {
-    Future.successful(resolveParser(host).right.flatMap(parser => handleRequest(parser.commitToModel, client.commit(host, project, repository, id))))
-  }
-  def repos(host: String, project: String, repository: String): Future[Either[String, Option[List[Repository]]]] = {
-    Future.successful(resolveParser(host).right.flatMap(parser => handleRequest(parser.repoToModel, client.repos(host, project, repository))))
-  }
+  def commit(host: String, project: String, repository: String, id: String): Future[Either[String, Option[List[Commit]]]] =
+    Future {
+      lazy val call = client.commit(host, project, repository, id)
+      resolveParser(host).right.flatMap(parser => handleRequest(parser.commitToModel, call))
+    }
 
-  def parse(url: String): Either[String, (String, String, String)] = ???
+  def repos(host: String, project: String, repository: String): Future[Either[String, Option[List[Repository]]]] =
+    Future {
+      lazy val call = client.repos(host, project, repository)
+      resolveParser(host).right.flatMap(parser => handleRequest(parser.repoToModel, call))
 
-  def normalize(host: String, project: String, repository: String): String = ???
+    }
 
-  def isRepo(host: String, project: String, repository: String): Future[Either[String, Boolean]] = ???
+  def parse(url: String): Either[String, (String, String, String)] = extract(url)
 
-  def diff(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]] = ???
+  def normalize(host: String, project: String, repository: String): String = client.url(host, project, repository)
+
+  def isRepo(host: String, project: String, repository: String): Future[Either[String, Boolean]] = Future { ??? }
+
+  def diff(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]] = Future { ??? }
 
   def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Ticket]]]] = {
-    Future.successful(resolveParser(host).right.flatMap { scmParser =>
-      handleRequest(scmParser.ticketToModel, client.tickets(host, project, repository, since, until))
-    })
+      lazy val call = client.tickets(host, project, repository, since, until)
+      resolveParser(host) match {
+      case Right(scmParser) => handleRequest(scmParser.ticketToModel, call)
+      case Left(error)      => Future.successful(Left(error))
+
+    } 
   }
 
   /**
-   * Handles the call to the client and the parsing of the jsonObject from the Response.
+   * Handles calls to the client parses the jsonObject from the Response if neccessary.
    * @param clientCall(param-by-name) the call to be executed in order to get the response.
    * @param parser the parser that transforms the jsonObjects(response) into the internal Model.
    * @return Either an Error-message(left) or the parsed Model(right).
    *
    */
-  private def handleRequest[A](parser: Parser[JsValue, Either[String, A]], clientCall: => Future[WSResponse]): Either[String, Option[A]] = {
-    executeCall(clientCall).right.flatMap { fResponse =>
-      unwrapResponse(fResponse).right.flatMap { wsResponse =>
-        wsResponse match {
-          case None           => Right(None) //In case is 404 return None 
-          case Some(response) => Right(parser(response.json).right.toOption)
+  //  private def handleRequest[A](parser: Parser[JsValue, Either[String, A]], clientCall: => Future[WSResponse]): Either[String, Option[A]] = {
+  //    executeCall(clientCall).right.flatMap { fResponse =>
+  //      val result = unwrapResponse(fResponse)
+  //      result.flatMap { wsResponse =>
+  //        wsResponse.right match {
+  //          case None           => Right(None) //In case is 404 return None 
+  //          case Some(response) => Right(parser(response.json).right.toOption)
+  //        }
+  //      }
+  //    }
+  //  }
+
+  def handleRequest[A](parser: Parser[JsValue, Either[String, A]], clientCall: => Future[WSResponse]): Future[Either[String, Option[A]]] = {
+    executeCall(clientCall) match {
+      case Left(error) => Future.successful(Left(error))
+      case Right(futureResponse) => unwrapResponse(futureResponse).map { unwrappedResponse =>
+        unwrappedResponse match {
+          case Right(response) => response match {
+            case None           => Right(None)
+            case Some(response) => Right(parser(response.json).right.toOption)
+          }
+          case Left(error) => Left(error)
         }
       }
     }
   }
-
   /**
-   * Unwraps the WSResponse from the Future and act based on HTTP-Codes on the responses.
-   * By default we are only interested in responses that have parseable payload and return successfull http-status-codes.
-   * However, this method allows us to define which HTTP-codes should result in a None.
+   * Unwraps the response and transforms it, based on their http-status-codes, to a usable response in this service.
+   * For now we are interested in responses that have parseable payload and return successfull http-status-codes.
    * @param futureResponse Future of the WSResponse
-   *
    * @return Either a Left with an error or a Right containing an Optional(Response=Success, None=404).
    *
    */
-  def unwrapResponse(futureResponse: Future[WSResponse]): Either[String, Option[WSResponse]] = {
+  def unwrapResponse(futureResponse: Future[WSResponse]): Future[Either[String, Option[WSResponse]]] = {
     futureResponse onComplete {
-      case Success(response) =>
-      case Failure(t) =>
-        logger.error("Error while calling SCM " + t.getMessage)
+      case Success(response) => logger.info("Call succeed ")
+      case Failure(t)        => logger.error("Error while calling SCM " + t.getMessage)
     }
-    var result: Either[String, Option[WSResponse]] = null //Left("OMG!! This should never happen!!")
-    futureResponse map { response =>
+    var result: Either[String, Option[WSResponse]] = Left("OMG!! This should never happen!!")
+    futureResponse.map { response =>
       logger.info("Response with http-status-code: " + response.status)
       response.status match {
-        case 404 => result = Right(None)
+        case 404 =>
+          logger.info("Http code 404 (Does not exist)")
+          Right(None)
         case status if (ACCEPTABLE_CODES.contains(status)) =>
-
-          result = Right(Some(response))
+          logger.info("Http code succefful does exist")
+          Right(Some(response))
         case status =>
-          result = Left("Unexpected SCM response: " + response.status)
           logger.warn(s"Status $status was not hanled!")
+          Left("Unexpected SCM response: " + response.status)
       }
-    } recover {
-      case e =>
-        logger.error(e.getMessage)
-        result = defaultError
     }
-    logger.info(""+result)
-    result
   }
 
   /**
@@ -207,10 +225,9 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
    * @return EIther an error-message(left) or the Future-of-the–response(right) of the call.
    */
   def executeCall(call: => Future[WSResponse]): Either[String, Future[WSResponse]] = {
-    try {
-      Right(call)
-    } catch {
-      case ex: Throwable =>
+    Try(call) match {
+      case Success(result) => Right(result)
+      case Failure(ex) =>
         logger.error(ex.getMessage)
         defaultError
     }

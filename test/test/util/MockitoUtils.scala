@@ -29,6 +29,7 @@ import model.Ticket
 import model.Author
 import model.Author
 import model.CommitsResult
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 trait MockitoUtils extends MockitoSugar {
 
@@ -36,14 +37,16 @@ trait MockitoUtils extends MockitoSugar {
    * Creates a mocked WSResponse
    */
   def mockSuccessfullParsableFutureWSResponse[T](result: T, httpCode: Int): Future[WSResponse] = {
-    val wsResponse = mock[WSResponse]
-    val jsValue = mock[JsValue]
-    val jsResult: JsResult[T] = new JsSuccess(result, null)
+    Future.successful {
+      val wsResponse = mock[WSResponse]
+      val jsValue = mock[JsValue]
+      val jsResult: JsResult[T] = new JsSuccess(result, null)
 
-    when(jsValue.validate[T](anyObject())).thenReturn(jsResult)
-    when(wsResponse.status).thenReturn(httpCode)
-    when(wsResponse.json).thenReturn(jsValue)
-    Future.successful(wsResponse)
+      when(jsValue.validate[T](anyObject())).thenReturn(jsResult)
+      when(wsResponse.status).thenReturn(httpCode)
+      when(wsResponse.json).thenReturn(jsValue)
+      wsResponse
+    }
   }
 
   /**
@@ -54,7 +57,7 @@ trait MockitoUtils extends MockitoSugar {
    *
    */
   def createClient(requestParam: ((String) => WSRequestHolder)) = new SCMImpl {
-//    override def requestHolder = requestParam
+    //    override def requestHolder = requestParam
   }
 
   def withFakeApplication(block: => Unit): Unit = {
@@ -81,7 +84,7 @@ trait MockitoUtils extends MockitoSugar {
   }
 
   class FakeGlobalWithFakeClient(client: SCM) extends play.api.GlobalSettings {
-    private lazy val injector = Guice.createInjector(new AbstractModule {
+    lazy val injector = Guice.createInjector(new AbstractModule {
       def configure() {
         bind(classOf[Search]).toInstance(new SearchImpl(client))
       }
@@ -89,17 +92,17 @@ trait MockitoUtils extends MockitoSugar {
     override def getControllerInstance[A](clazz: Class[A]) = {
       injector.getInstance(clazz)
     }
-
+    
   }
-  
+
   def createCommitsResult(links: List[Link] = List(), commits: List[Commit] = List(createCommit())): CommitsResult = new CommitsResult(links, commits)
-  
+
   def createRepository(href: String = "href", project: String = "project", host: String = "host", repository: String = "repo", commits: List[Commit] = List(), links: List[Link] = List()): Repository = new Repository(href, project, host, repository, commits, links)
-  
+
   def createTicket(name: String = "name", description: String = "description", href: String = "href", links: List[Link] = List()) = new Ticket(name, description, href, links)
-  
-  def createCommit(id: String = "id", message: String = "message", parentId: List[String] = List(), author: Author = createAuthor(), valid: Option[Boolean] = None, links: List[Link] = List()): Commit = new Commit(id, message, parentId, author//, valid
-      , links)
-  
+
+  def createCommit(id: String = "id", message: String = "message", parentId: List[String] = List(), author: Author = createAuthor(), valid: Option[Boolean] = None, links: List[Link] = List()): Commit = new Commit(id, message, parentId, author //, valid
+  , links)
+
   def createAuthor(name: String = "name", email: String = "email", links: List[Link] = List()): Author = new Author(name, email, links)
 }
