@@ -48,6 +48,7 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
     assert(result == mockedResponse)
     verify(mockedDispatcher, times(1)).requestHolder(url)
   }
+  
   it should "return commits from stash API" in {
     val url = s"https://$stash/repos/$project/$repository/commits"
     when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
@@ -59,7 +60,9 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
   "SCM#commit" should "return a single commit from github API" in {
     val url = s"https://api.$github/repos/$project/$repository/commit/$id"
     when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
-
+    val result = client.commit(github, project, repository, id)
+    assert(result == mockedResponse)
+    verify(mockedDispatcher, times(1)).requestHolder(url)
   }
 
   "SCM#repos" should "" in {
