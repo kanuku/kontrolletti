@@ -55,7 +55,7 @@ class OldSCMImpl extends OldSCM {
 
   def url(host: String, project: String, repo: String): String = {
     val res: SCMResolver = resolver(host).get
-    res.url(host, project, repo)
+    res.repoUrl(host, project, repo)
   }
 
   def request(call: Call, url: String, accessTokenKey: String, accessTokenValue: String): Future[WSResponse] = {
