@@ -25,7 +25,7 @@ trait Search {
    * @param host DNS/IP of the SCM server <br/>
    * @param project name of the project
    * @param repository name of the repository
-   * @param id commitId to be returned
+   * @param id commit-id to be returned
    *
    * @return a future containing either the error(left) or list of commits(right)
    */

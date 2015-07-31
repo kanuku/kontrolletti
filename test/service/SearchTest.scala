@@ -40,7 +40,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     reset(client)
   }
 
-  "commits" should "return commits when the result is 200 and body is not empty" in {
+  "Search#commits" should "return commits when the result is 200 and body is not empty" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
     when(client.commits(host, project, repository, None, None)).thenReturn(response)
     val result = Await.result(search.commits(host, project, repository, None, None), Duration("5 seconds"))
@@ -67,7 +67,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     verify(client, times(1)).commits(host, project, repository, None, None)
   }
 
-  "repos" should " return repositories when the result is 200 and body is not empty" in {
+  "Search#repos" should " return repositories when the result is 200 and body is not empty" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
     when(client.repos(host, project, repository)).thenReturn(response)
     val result = Await.result(search.repos(host, project, repository), Duration("5 seconds"))
@@ -94,19 +94,19 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     verify(client, times(1)).repos(host, project, repository)
   }
 
-  "parse" should "just parse :D " in {
+  "Search#parse" should "just parse :D " in {
     val result = search.parse(url)
     assert(result.isRight)
     assert(result.right.get == (host, project, repository))
   }
 
-  "normalize" should "normalize the URL" in {
+  "Search#normalize" should "normalize the URL" in {
     val client = new SCMImpl()
     val search = new SearchImpl(client)
     assert(search.normalize(host, project, repository) == url)
   }
 
-  "isRepo" should "return true when receiving a 200 response" in {
+  "Search#isRepo" should "return true when receiving a 200 response" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("", 200)
     when(client.repoUrl(host, project, repository)).thenReturn(url)
     when(client.head(url)).thenReturn(response)
@@ -139,7 +139,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     verify(client, times(1)).head(url)
   }
 
-  "diff" should "return true when receiving a 200 Response" in {
+  "Search#diff" should "return true when receiving a 200 Response" in {
     val diffLink = "https://github.com/zalando/kontrolletti/compare/sourceId...targetId"
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("", 200)
     when(client.diffUrl(host, project, repository, sourceId, targetId)).thenReturn(diffLink)
@@ -175,7 +175,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     verify(client, times(1)).diffUrl(host, project, repository, sourceId, targetId)
     verify(client, times(1)).head(url)
   }
-  "ticket" should " return repositories when the result is not Empty" in {
+  "Search#tickets" should " return repositories when the result is not Empty" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
     when(client.tickets(host, project, repository, None, None)).thenReturn(response)
     val result = Await.result(search.tickets(host, project, repository, None, None), Duration("5 seconds"))

@@ -4,7 +4,7 @@ import scala.concurrent.Future
 
 import play.api.Logger
 import play.api.libs.ws.WSResponse
-
+import javax.inject._
 sealed trait SCM {
 
   /**
@@ -71,9 +71,11 @@ sealed trait SCM {
    */
   def head(url: String): Future[WSResponse] = ???
 
-}
+  def resolver(host: String): Option[SCMResolver]
 
-class SCMImpl extends SCM {
+}
+@Singleton
+class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
   private val logger: Logger = Logger(this.getClass())
 
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[WSResponse] = ???
@@ -89,8 +91,6 @@ class SCMImpl extends SCM {
     val res: SCMResolver = resolver(host).get
     res.diffUrl(host, project, repository, source, target)
   }
-
-
 
   def resolver(host: String) = {
     var result = GithubResolver.resolve(host)
