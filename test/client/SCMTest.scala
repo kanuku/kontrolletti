@@ -60,7 +60,7 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
   }
 
   "SCM#repo" should "request a single repository from github API" in {
-    val url = s"https://api.$github/repos/$project/$repository/commit/$id"
+    val url = s"https://api.$github/repos/$project/$repository"
     testUrlCall(url, client.repo(github, project, repository))
   }
   it should "request a single repository from stash API" in {

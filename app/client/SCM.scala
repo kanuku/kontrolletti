@@ -83,9 +83,16 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
     val url = res.commits(host, project, repository)
     get(url)
   }
-  def commit(host: String, project: String, repository: String, id: String): Future[WSResponse] =
-    get(resolver(host).get.commit(host, project, repository, id))
-  def repo(host: String, project: String, repository: String): Future[WSResponse] = ???
+  def commit(host: String, project: String, repository: String, id: String): Future[WSResponse] = {
+    val res: SCMResolver = resolver(host).get
+    get(res.commit(host, project, repository, id))
+  }
+  def repo(host: String, project: String, repository: String): Future[WSResponse] = {
+    val res: SCMResolver = resolver(host).get
+    val url = res.repo(host, project, repository)
+    get(url)
+  }
+
   def committers(host: String, project: String, repository: String): Future[WSResponse] = ???
   def tickets(host: String, project: String, repository: String): Future[WSResponse] = ???
   def repoUrl(host: String, project: String, repository: String): String = {
@@ -98,11 +105,9 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
   }
 
   def get(url: String): Future[WSResponse] = {
-    logger.info("dispatcher" + dispatcher)
+
     val result = dispatcher.requestHolder(url)
-    logger.info("result" + result)
     val response = result.get()
-    logger.info("response" + response)
     response
 
   }
