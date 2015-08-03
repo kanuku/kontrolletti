@@ -52,7 +52,7 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
 
   "SCM#commit" should "request a single commit from github API" in {
     val url = s"https://api.$github/repos/$project/$repository/commits/$id"
-     testUrlCall(url, client.commit(github, project, repository, id))
+    testUrlCall(url, client.commit(github, project, repository, id))
   }
   it should "request a single commit from stash API" in {
     val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits/$id"
@@ -78,22 +78,14 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
   }
 
   "SCM#repoUrl" should "return a repository-url for github API" in {
-    val url = s"https://api.$github/$project/$repository"
-    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.get()).thenReturn(mockedResponse)
-
+    val url = s"https://$github/$project/$repository"
     val result = client.repoUrl(github, project, repository)
-    assert(result == mockedResponse)
-    verify(mockedDispatcher, times(1)).requestHolder(url)
+    assert(result == url)
   }
   it should "return a repository-url for stash API" in {
     val url = s"https://$stash/projects/$project/repos/$repository/browse"
-    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.get()).thenReturn(mockedResponse)
-
-    val result = client.repoUrl(github, project, repository)
-    assert(result == mockedResponse)
-    verify(mockedDispatcher, times(1)).requestHolder(url)
+    val result = client.repoUrl(stash, project, repository)
+    assert(result == url)
   }
 
   "SCM#diffUrl" should "return a diffUrl for github frontend" in {
