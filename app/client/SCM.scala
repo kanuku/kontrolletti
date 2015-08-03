@@ -97,7 +97,7 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
     val res: SCMResolver = resolver(host).get
     val url = res.tickets(host, project, repository)
     get(url)
-    
+
   }
   def repoUrl(host: String, project: String, repository: String): String = {
     val res: SCMResolver = resolver(host).get
@@ -109,13 +109,18 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
   }
 
   def get(url: String): Future[WSResponse] = {
-
+    logger.info(s"Issuing a GET on $url")
     val result = dispatcher.requestHolder(url)
     val response = result.get()
     response
 
   }
-  def head(url: String): Future[WSResponse] = dispatcher.requestHolder(url).head()
+  def head(url: String): Future[WSResponse] = {
+	logger.info(s"Issuing a HEAD on $url")
+    val result = dispatcher.requestHolder(url)
+    val response = result.head()
+    response 
+}
 
   def resolver(host: String) = {
     var result = GithubResolver.resolve(host)

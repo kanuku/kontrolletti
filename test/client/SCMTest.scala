@@ -45,38 +45,38 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
 
   "SCM#commits" should "request commits from github API" in {
     val url = s"https://api.$github/repos/$project/$repository/commits"
-    testUrlCall(url, client.commits(github, project, repository, since, until))
+    testGET(url, client.commits(github, project, repository, since, until))
   }
   it should "request commits from stash API" in {
     val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits"
-    testUrlCall(url, client.commits(stash, project, repository, since, until))
+    testGET(url, client.commits(stash, project, repository, since, until))
   }
 
   "SCM#commit" should "request a single commit from github API" in {
     val url = s"https://api.$github/repos/$project/$repository/commits/$id"
-    testUrlCall(url, client.commit(github, project, repository, id))
+    testGET(url, client.commit(github, project, repository, id))
   }
   it should "request a single commit from stash API" in {
     val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits/$id"
-    testUrlCall(url, client.commit(stash, project, repository, id))
+    testGET(url, client.commit(stash, project, repository, id))
   }
 
   "SCM#repo" should "request a single repository from github API" in {
     val url = s"https://api.$github/repos/$project/$repository"
-    testUrlCall(url, client.repo(github, project, repository))
+    testGET(url, client.repo(github, project, repository))
   }
   it should "request a single repository from stash API" in {
     val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository"
-    testUrlCall(url, client.repo(stash, project, repository))
+    testGET(url, client.repo(stash, project, repository))
   }
 
   "SCM#tickets" should "request a commit from github API" in {
     val url = s"https://api.$github/repos/$project/$repository/commits"
-    testUrlCall(url, client.tickets(github, project, repository))
+    testGET(url, client.tickets(github, project, repository))
   }
   it should "request a commit from stash API " in {
     val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits"
-    testUrlCall(url, client.tickets(stash, project, repository))
+    testGET(url, client.tickets(stash, project, repository))
   }
 
   "SCM#repoUrl" should "return a repository-url for github API" in {
@@ -103,10 +103,16 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
 
   "SCM#head" should "" in {
     val url = s"Test"
-    testUrlCall(url, client.head(url))
+    when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.head()).thenReturn(mockedResponse)
+    val result = client.head(url)
+    assert(result == mockedResponse)
+    val urlCap = ArgumentCaptor.forClass(classOf[String])
+    verify(mockedDispatcher, times(1)).requestHolder(urlCap.capture())
+    assert(url == urlCap.getValue)
   }
 
-  def testUrlCall(url: String, call: => Future[WSResponse]) = {
+  def testGET(url: String, call: => Future[WSResponse]) = {
     when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.get()).thenReturn(mockedResponse)
     val result = call
