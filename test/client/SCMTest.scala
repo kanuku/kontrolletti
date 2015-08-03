@@ -34,6 +34,8 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
   val since = Some("since")
   val until = Some("until")
   val id = "id"
+  val source = "source"
+  val target = "target"
 
   before {
     reset(mockedRequestHolder)
@@ -89,22 +91,14 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
   }
 
   "SCM#diffUrl" should "return a diffUrl for github frontend" in {
-    val url = s"https://$stash/projects/$project/repos/$repository/browse"
-    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.get()).thenReturn(mockedResponse)
-
-    val result = client.repoUrl(github, project, repository)
-    assert(result == mockedResponse)
-    verify(mockedDispatcher, times(1)).requestHolder(url)
+    val url = s"http://$github/$project/$repository/compare/$source...$target"
+    val result = client.diffUrl(github, project, repository, source, target)
+    assert(result == url)
   }
   it should "return a diffUrl for stash frontend" in {
-    val url = s"https://$stash/projects/$project/repos/$repository/browse"
-    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.get()).thenReturn(mockedResponse)
-
-    val result = client.repoUrl(github, project, repository)
-    assert(result == mockedResponse)
-    verify(mockedDispatcher, times(1)).requestHolder(url)
+    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
+    val result = client.diffUrl(stash, project, repository, source, target)
+    assert(result == url)
   }
 
   "SCM#head" should "" in {

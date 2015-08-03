@@ -40,8 +40,6 @@ sealed trait SCMResolver {
     !hosts.find { x => x == host }.isEmpty
   }
 
-  
-
   /**
    *  Url for listing commits of a repository in the given `project` at the given `host`.
    * @param repo repository
@@ -137,7 +135,8 @@ object GithubResolver extends SCMResolver {
 
   def repo(host: String, project: String, repository: String) = s"$antecedent$host/repos/$project/$repository"
   def repoUrl(host: String, project: String, repository: String) = s"https://$host/$project/$repository"
-  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = ""
+  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"http://$host/$project/$repository/compare/$source...$target"
+
   // Authorization variables
   def accessTokenKey = "access_token"
 }
@@ -152,7 +151,7 @@ object StashResolver extends SCMResolver {
   def repo(host: String, project: String, repository: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository"
   def repoUrl(host: String, project: String, repository: String) = s"https://$host/projects/$project/repos/$repository/browse"
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
-  
+
   // Authorization variables
   def accessTokenKey = "X-Auth-Token"
 
