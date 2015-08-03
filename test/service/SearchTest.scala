@@ -176,32 +176,32 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
   }
   "Search#tickets" should " return repositories when the result is not Empty" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
-    when(client.tickets(host, project, repository, None, None)).thenReturn(response)
+    when(client.tickets(host, project, repository)).thenReturn(response)
     val result = Await.result(search.tickets(host, project, repository, None, None), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
     assert(result.right.get != null)
     assert(!result.right.get.isEmpty, "Result must not be empty")
-    verify(client, times(1)).tickets(host, project, repository, None, None)
+    verify(client, times(1)).tickets(host, project, repository)
   }
   it should " return empty List when the result is 404" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 404)
-    when(client.tickets(host, project, repository, None, None)).thenReturn(response)
+    when(client.tickets(host, project, repository)).thenReturn(response)
     val result = Await.result(search.tickets(host, project, repository, None, None), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
     assert(result.right.get != null)
     assert(result.right.get.isEmpty, "Result must be empty")
-    verify(client, times(1)).tickets(host, project, repository, None, None)
+    verify(client, times(1)).tickets(host, project, repository)
   }
   it should " return error when an exception occurs" in {
-    when(client.tickets(host, project, repository, None, None)).thenThrow(new RuntimeException())
+    when(client.tickets(host, project, repository)).thenThrow(new RuntimeException())
     val result = Await.result(search.tickets(host, project, repository, None, None), Duration("5 seconds"))
     assertEitherIsLeft(result)
     assertEitherIsNotNull(result)
     assert(result.isLeft)
     assert(result.left.get == defaultError, f"Result should be [$defaultError]")
-    verify(client, times(1)).tickets(host, project, repository, None, None)
+    verify(client, times(1)).tickets(host, project, repository)
   }
 
 }

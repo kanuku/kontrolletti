@@ -1,10 +1,10 @@
 package client
 
 import scala.concurrent.Future
-
 import play.api.Logger
 import play.api.libs.ws.WSResponse
 import javax.inject._
+import play.api.libs.ws.WSRequestHolder
 sealed trait SCM {
 
   /**
@@ -78,7 +78,11 @@ sealed trait SCM {
 class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
   private val logger: Logger = Logger(this.getClass())
 
-  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[WSResponse] = ???
+  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[WSResponse] = {
+    val res: SCMResolver = resolver(host).get
+    val url = res.commits(host, project, repository)
+    get(url)
+  }
   def commit(host: String, project: String, repository: String, id: String): Future[WSResponse] = ???
   def repo(host: String, project: String, repository: String): Future[WSResponse] = ???
   def committers(host: String, project: String, repository: String): Future[WSResponse] = ???
@@ -92,7 +96,16 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
     res.diffUrl(host, project, repository, source, target)
   }
 
-  def head(url: String): Future[WSResponse] = ???
+  def get(url: String): Future[WSResponse] = {
+    logger.info("dispatcher" + dispatcher)
+    val result = dispatcher.requestHolder(url)
+    logger.info("result" + result)
+    val response = result.get()
+    logger.info("response" + response)
+    response
+
+  }
+  def head(url: String): Future[WSResponse] = dispatcher.requestHolder(url).head()
 
   def resolver(host: String) = {
     var result = GithubResolver.resolve(host)
@@ -107,4 +120,3 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
     }
   }
 }
-
