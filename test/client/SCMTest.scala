@@ -46,65 +46,35 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
     testUrlCall(url, client.commits(github, project, repository, since, until))
   }
   it should "request commits from stash API" in {
-    val url = s"https://$stash/repos/$project/$repository/commits"
+    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits"
     testUrlCall(url, client.commits(stash, project, repository, since, until))
   }
 
   "SCM#commit" should "request a single commit from github API" in {
     val url = s"https://api.$github/repos/$project/$repository/commit/$id"
-    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.get()).thenReturn(mockedResponse)
-    val result = client.commit(github, project, repository, id)
-    assert(result == mockedResponse)
-    verify(mockedDispatcher, times(1)).requestHolder(url)
+     testUrlCall(url, client.commit(github, project, repository, id))
   }
   it should "request a single commit from stash API" in {
     val url = s"https://$stash//rest/api/1.0/projects/$project/repos/$repository/commits/$id"
-    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.get()).thenReturn(mockedResponse)
-    val result = client.commit(github, project, repository, id)
-    assert(result == mockedResponse)
-    verify(mockedDispatcher, times(1)).requestHolder(url)
+    testUrlCall(url, client.commit(stash, project, repository, id))
   }
 
   "SCM#repo" should "request a single repository from github API" in {
     val url = s"https://api.$github/repos/$project/$repository/commit/$id"
-    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.get()).thenReturn(mockedResponse)
-
-    val result = client.repo(github, project, repository)
-    assert(result == mockedResponse)
-    verify(mockedDispatcher, times(1)).requestHolder(url)
+    testUrlCall(url, client.repo(github, project, repository))
   }
   it should "request a single repository from stash API" in {
     val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository"
-    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.get()).thenReturn(mockedResponse)
-
-    val result = client.repo(github, project, repository)
-    assert(result == mockedResponse)
-    verify(mockedDispatcher, times(1)).requestHolder(url)
+    testUrlCall(url, client.repo(stash, project, repository))
   }
 
   "SCM#tickets" should "request a commit from github API" in {
     val url = s"https://api.$github/repos/$project/$repository/commits"
-    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.get()).thenReturn(mockedResponse)
-
-    val result = client.tickets(github, project, repository)
-    assert(result == mockedResponse)
-    verify(mockedDispatcher, times(1)).requestHolder(url)
-
+    testUrlCall(url, client.tickets(github, project, repository))
   }
   it should "request a commit from stash API " in {
     val url = s"https://$stash/repos/$project/$repository/commits"
-    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.get()).thenReturn(mockedResponse)
-
-    val result = client.tickets(github, project, repository)
-    assert(result == mockedResponse)
-    verify(mockedDispatcher, times(1)).requestHolder(url)
-
+    testUrlCall(url, client.tickets(stash, project, repository))
   }
 
   "SCM#repoUrl" should "return a repository-url for github API" in {
@@ -147,17 +117,11 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
 
   "SCM#head" should "" in {
     val url = s"Test"
-    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.get()).thenReturn(mockedResponse)
-
-    val result = client.head(url)
-    assert(result == mockedResponse)
-    verify(mockedDispatcher, times(1)).requestHolder(url)
-
+    testUrlCall(url, client.head(url))
   }
 
   def testUrlCall(url: String, call: => Future[WSResponse]) = {
-    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
+    when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.get()).thenReturn(mockedResponse)
     val result = call
     assert(result == mockedResponse)

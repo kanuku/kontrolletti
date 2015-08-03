@@ -36,11 +36,12 @@ class OldSCMImpl extends OldSCM {
   val GET: Call = { requestHolder => requestHolder.get() }
   val HEAD: Call = { requestHolder => requestHolder.head() }
 
-  def committers(host: String, project: String, repo: String): Future[WSResponse] = {
-    val res: SCMResolver = resolver(host).get
-    val url: String = res.contributors(host, project, repo)
-    request(GET, url, res.accessTokenKey, res.accessTokenValue)
-  }
+  def committers(host: String, project: String, repo: String): Future[WSResponse] = ??? 
+//  {
+//    val res: SCMResolver = resolver(host).get
+//    val url: String = res.contributors(host, project, repo)
+//    request(GET, url, res.accessTokenKey, res.accessTokenValue)
+//  }
 
   def commits(host: String, project: String, repo: String): Future[WSResponse] = {
     val res: SCMResolver = resolver(host).get

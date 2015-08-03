@@ -40,14 +40,7 @@ sealed trait SCMResolver {
     !hosts.find { x => x == host }.isEmpty
   }
 
-  /**
-   * Url for listing contributors of a repository in the given `project` at the given `host`.
-   * @param repository repository
-   * @param host host of the SCM server
-   * @param project project where the repository belongs to
-   * @return The url
-   */
-  def contributors(host: String, project: String, repository: String): String
+  
 
   /**
    *  Url for listing commits of a repository in the given `project` at the given `host`.
@@ -138,7 +131,6 @@ sealed trait SCMResolver {
 object GithubResolver extends SCMResolver {
   def name = "github"
   private val antecedent = "https://api."
-  def contributors(host: String, project: String, repository: String) = s"$antecedent$host/repos/$project/$repository/contributors"
   def commits(host: String, project: String, repository: String) = s"$antecedent$host/repos/$project/$repository/commits"
   def commit(host: String, project: String, repository: String, id: String): String = s"$antecedent$host/repos/$project/$repository/commits/$id"
   def tickets(host: String, project: String, repository: String): String = s"$antecedent$host/repos/$project/$repository/commits"
@@ -153,8 +145,6 @@ object GithubResolver extends SCMResolver {
 object StashResolver extends SCMResolver {
   def name = "stash"
   private val antecedent = "https://"
-
-  def contributors(host: String, project: String, repository: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/contributors"
   def commits(host: String, project: String, repository: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits"
   def commit(host: String, project: String, repository: String, id: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits/$id"
   def tickets(host: String, project: String, repository: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits"
