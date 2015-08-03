@@ -31,7 +31,7 @@ sealed trait SCM {
    * @param repo name of the repository
    * @return The future with the response of the call
    */
-  def repos(host: String, project: String, repository: String): Future[WSResponse]
+  def repo(host: String, project: String, repository: String): Future[WSResponse]
 
   /**
    * Issues a GET call against the ticket/issue-endpoint on the SCM.
@@ -40,7 +40,7 @@ sealed trait SCM {
    * @param repo name of the repository
    * @return The future with the response of the call
    */
-  def tickets(host: String, project: String, repository: String, since: Option[String], untill: Option[String]): Future[WSResponse]
+  def tickets(host: String, project: String, repository: String): Future[WSResponse]
 
   /**
    * Composes an URL of the give repository based on the SCM configured with the matching host.
@@ -69,7 +69,7 @@ sealed trait SCM {
    * @return The future with the response of the call
    *
    */
-  def head(url: String): Future[WSResponse] = ???
+  def head(url: String): Future[WSResponse]
 
   def resolver(host: String): Option[SCMResolver]
 
@@ -80,9 +80,9 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
 
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[WSResponse] = ???
   def commit(host: String, project: String, repository: String, id: String): Future[WSResponse] = ???
-  def repos(host: String, project: String, repository: String): Future[WSResponse] = ???
+  def repo(host: String, project: String, repository: String): Future[WSResponse] = ???
   def committers(host: String, project: String, repository: String): Future[WSResponse] = ???
-  def tickets(host: String, project: String, repository: String, since: Option[String], untill: Option[String]): Future[WSResponse] = ???
+  def tickets(host: String, project: String, repository: String): Future[WSResponse] = ???
   def repoUrl(host: String, project: String, repository: String): String = {
     val res: SCMResolver = resolver(host).get
     res.repoUrl(host, project, repository)
@@ -91,6 +91,8 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
     val res: SCMResolver = resolver(host).get
     res.diffUrl(host, project, repository, source, target)
   }
+
+  def head(url: String): Future[WSResponse] = ???
 
   def resolver(host: String) = {
     var result = GithubResolver.resolve(host)

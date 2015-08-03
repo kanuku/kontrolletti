@@ -49,17 +49,6 @@ trait MockitoUtils extends MockitoSugar {
     }
   }
 
-  /**
-   *
-   * Creates an implementation of the SCMCClient
-   * where the method requestHolder is overridden to always return the passed `WSRequestHolder`,
-   * which can be mocked.
-   *
-   */
-  def createClient(requestParam: ((String) => WSRequestHolder)) = new SCMImpl {
-    //    override def requestHolder = requestParam
-  }
-
   def withFakeApplication(block: => Unit): Unit = {
     running(FakeApplication()) {
       block

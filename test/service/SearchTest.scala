@@ -3,7 +3,6 @@ package service
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
-
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.FlatSpec
@@ -11,7 +10,6 @@ import org.scalatest.FunSpec
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneAppPerTest
 import org.scalatestplus.play.PlaySpec
-
 import client.SCM
 import client.SCMImpl
 import client.SCMImpl
@@ -19,6 +17,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSResponse
 import test.util.MockitoUtils
+import client.RequestDispatcherImpl
 /**
  * This class tests the interaction between the Service and the Client(mock).
  */
@@ -69,29 +68,29 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
 
   "Search#repos" should " return repositories when the result is 200 and body is not empty" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
-    when(client.repos(host, project, repository)).thenReturn(response)
+    when(client.repo(host, project, repository)).thenReturn(response)
     val result = Await.result(search.repos(host, project, repository), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
     assert(!result.right.get.isEmpty, "Result must not be empty")
-    verify(client, times(1)).repos(host, project, repository)
+    verify(client, times(1)).repo(host, project, repository)
   }
   it should " return empty list when the result is 404" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse(null, 404)
-    when(client.repos(host, project, repository)).thenReturn(response)
+    when(client.repo(host, project, repository)).thenReturn(response)
     val result = Await.result(search.repos(host, project, repository), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
     assert(result.right.get.isEmpty, "Result should be empty")
-    verify(client, times(1)).repos(host, project, repository)
+    verify(client, times(1)).repo(host, project, repository)
   }
   it should " return an error when client throws an exception" in {
-    when(client.repos(host, project, repository)).thenThrow(new RuntimeException())
+    when(client.repo(host, project, repository)).thenThrow(new RuntimeException())
     val result = Await.result(search.repos(host, project, repository), Duration("5 seconds"))
     assertEitherIsLeft(result)
     assertEitherIsNotNull(result)
     assert(result.left.get == defaultError, f"Result should be [$defaultError]")
-    verify(client, times(1)).repos(host, project, repository)
+    verify(client, times(1)).repo(host, project, repository)
   }
 
   "Search#parse" should "just parse :D " in {
@@ -101,7 +100,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
   }
 
   "Search#normalize" should "normalize the URL" in {
-    val client = new SCMImpl()
+    val client = new SCMImpl(new RequestDispatcherImpl())
     val search = new SearchImpl(client)
     assert(search.normalize(host, project, repository) == url)
   }

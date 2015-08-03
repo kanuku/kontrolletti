@@ -69,13 +69,22 @@ sealed trait SCMResolver {
   def commit(host: String, project: String, repository: String, id: String): String
 
   /**
-   *  Url for the repository in the given user namespace at the given `host`.
-   * @param repository repository
-   * @param host host of the SCM server
-   * @param project project where the repository belongs to
-   * @return The url
+   *  Url for the `repository` in the given user `project` at the given `host`.
+   * @param repository repository.
+   * @param host host of the SCM server.
+   * @param project project where the repository belongs to.
+   * @return The url.
    */
   def repo(host: String, project: String, repository: String): String
+
+  /**
+   *  Url for the tickets at the `repository` in the given `project` at the given `host`.
+   * @param repository repository.
+   * @param host host of the SCM server.
+   * @param project project where the repository belongs to.
+   * @return The url.
+   */
+  def tickets(host: String, project: String, repository: String): String
 
   /**
    * Resolves to itself if the host matches to any of the configured `hosts`
@@ -132,6 +141,7 @@ object GithubResolver extends SCMResolver {
   def contributors(host: String, project: String, repository: String) = s"$antecedent$host/repos/$project/$repository/contributors"
   def commits(host: String, project: String, repository: String) = s"$antecedent$host/repos/$project/$repository/commits"
   def commit(host: String, project: String, repository: String, id: String): String = s"$antecedent$host/repos/$project/$repository/commits/$id"
+  def tickets(host: String, project: String, repository: String): String = s"$antecedent$host/repos/$project/$repository/commits"
 
   def repo(host: String, project: String, repository: String) = s"$antecedent$host/repos/$project/$repository"
   def repoUrl(host: String, project: String, repository: String) = s"https://$host/$project/$repository"
@@ -147,10 +157,12 @@ object StashResolver extends SCMResolver {
   def contributors(host: String, project: String, repository: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/contributors"
   def commits(host: String, project: String, repository: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits"
   def commit(host: String, project: String, repository: String, id: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits/$id"
+  def tickets(host: String, project: String, repository: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits"
 
   def repo(host: String, project: String, repository: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository"
   def repoUrl(host: String, project: String, repository: String) = s"https://$host/projects/$project/repos/$repository/browse"
-  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = ""
+  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
+  
   // Authorization variables
   def accessTokenKey = "X-Auth-Token"
 

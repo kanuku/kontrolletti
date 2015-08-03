@@ -20,6 +20,7 @@ import org.scalatestplus.play.PlaySpec
 import org.scalatest.FunSpec
 import client.SCMImpl
 import org.scalatest._
+import client.OldSCMImpl
 
 /**
  * This class tests the interaction between the Service and the Client.
@@ -35,7 +36,7 @@ class OldSearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with 
 
   val client = mock[OldSCM]
   val searchWithMockClient: OldSearch = new OldSearchImpl(client)
-  val search: Search = new SearchImpl(new SCMImpl())
+  val search: OldSearch = new OldSearchImpl(new OldSCMImpl())
   val users = List(Author("name", "email", null))
 
   before {
