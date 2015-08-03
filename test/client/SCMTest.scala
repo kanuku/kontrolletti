@@ -73,7 +73,7 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
     testUrlCall(url, client.tickets(github, project, repository))
   }
   it should "request a commit from stash API " in {
-    val url = s"https://$stash/repos/$project/$repository/commits"
+    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits"
     testUrlCall(url, client.tickets(stash, project, repository))
   }
 

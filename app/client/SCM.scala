@@ -93,8 +93,12 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
     get(url)
   }
 
-  def committers(host: String, project: String, repository: String): Future[WSResponse] = ???
-  def tickets(host: String, project: String, repository: String): Future[WSResponse] = ???
+  def tickets(host: String, project: String, repository: String): Future[WSResponse] = {
+    val res: SCMResolver = resolver(host).get
+    val url = res.tickets(host, project, repository)
+    get(url)
+    
+  }
   def repoUrl(host: String, project: String, repository: String): String = {
     val res: SCMResolver = resolver(host).get
     res.repoUrl(host, project, repository)
