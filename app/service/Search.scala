@@ -11,7 +11,7 @@ trait Search {
 
   /**
    * Returns commits from the given repository in the project on the given host, optional ranges can be used to limit the result set.
-   * @param host DNS/IP of the SCM server <br/>
+   * @param host hostname/IP-address-address of the SCM server <br/>
    * @param project name of the project
    * @param repository name of the repository
    * @param since CommitId from where to start looking for commits
@@ -22,7 +22,7 @@ trait Search {
 
   /**
    * Returns a single commit from the given repository in the project on the given host.
-   * @param host DNS/IP of the SCM server <br/>
+   * @param host hostname/IP-address of the SCM server <br/>
    * @param project name of the project
    * @param repository name of the repository
    * @param id commit-id to be returned
@@ -33,7 +33,7 @@ trait Search {
 
   /**
    * Returns repositories from the given repository in the project on the given host.
-   * @param host DNS/IP of the SCM server <br/>
+   * @param host hostname/IP-address of the SCM server <br/>
    * @param project name of the project
    * @param repository name of the repository
    * @return a future containing either the error(left) or list of commits(right)
@@ -50,7 +50,7 @@ trait Search {
 
   /**
    * Parses and returns the normalized URI for a github/stash repository-URL.
-   * @param host DNS/IP of the SCM server <br/>
+   * @param host hostname/IP-address of the SCM server <br/>
    * @param project name of the project
    * @param repository name of the repository
    * @return either an error(left) or the normalized URI (right)
@@ -59,7 +59,7 @@ trait Search {
 
   /**
    * Checks if the repository exists by sending a HEAD request to the original repository link.
-   * @param host DNS/IP of the SCM server
+   * @param host hostname/IP-address of the SCM server
    * @param project name of the project
    * @param repository name of the repository
    * @return  Either an Left with an error or a Right(true) if the HTTP-CODE returned is 200/301 and Right(false) if (404).
@@ -68,7 +68,7 @@ trait Search {
 
   /**
    * Creates a diff-url and checks if the url exists.
-   * @param host DNS/IP of the SCM server
+   * @param host hostname/IP-address of the SCM server
    * @param project name of the project
    * @param repository name of the repository
    * @param source commit-id from where to compare from
@@ -79,7 +79,7 @@ trait Search {
 
   /**
    * Fetches the tickets from.
-   * @param host DNS/IP of the SCM server
+   * @param host hostname/IP-address of the SCM server
    * @param project name of the project
    * @param repository name of the repository
    * @param since Includes tickets from this commit

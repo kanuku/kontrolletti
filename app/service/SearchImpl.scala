@@ -150,8 +150,8 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
   }
 
   /**
-   * Utility method to find the right parser for the right SCM.
-   * @param host DNS/IP of the SCM server
+   * Utility method to find the right parser for the given host (SCM).
+   * @param host hostname/IP-address of the SCM server
    * @return EIther an error-message(left) or the found SCM-parser(right).
    *
    */

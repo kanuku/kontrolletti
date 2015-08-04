@@ -32,6 +32,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
   val url = s"https://github.com/zalando-bus/kontrolletti"
   val sourceId = "sourceId"
   val targetId = "targetId"
+  val commitId = "commitId"
   val client = mock[SCM]
   val search: Search = new SearchImpl(client)
 
@@ -64,6 +65,33 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     assertEitherIsNotNull(result)
     assert(result.left.get == defaultError)
     verify(client, times(1)).commits(host, project, repository, None, None)
+  }
+
+  "Search#commit" should "return a single commit when the result is 200" in {
+    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
+    when(client.commit(host, project, repository, commitId)).thenReturn(response)
+    val result = Await.result(search.commit(host, project, repository, commitId), Duration("5 seconds"))
+    assertEitherIsRight(result)
+    assertEitherIsNotNull(result)
+    assert(!result.right.get.isEmpty, "Result must not be empty")
+    verify(client, times(1)).commit(host, project, repository, commitId)
+  }
+  it should "return None when the result is 404" in {
+    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse(null, 404)
+    when(client.commit(host, project, repository, commitId)).thenReturn(response)
+    val result = Await.result(search.commit(host, project, repository, commitId), Duration("5 seconds"))
+    assertEitherIsRight(result)
+    assertEitherIsNotNull(result)
+    assert(result.right.get.isEmpty, "Result must be None")
+    verify(client, times(1)).commit(host, project, repository, commitId)
+  }
+  it should "return an error when client throws an Exception" in {
+    when(client.commit(host, project, repository, commitId)).thenThrow(new RuntimeException())
+    val result = Await.result(search.commit(host, project, repository, commitId), Duration("5 seconds"))
+    assertEitherIsLeft(result)
+    assertEitherIsNotNull(result)
+    assert(result.left.get == defaultError)
+    verify(client, times(1)).commit(host, project, repository, commitId)
   }
 
   "Search#repos" should " return repositories when the result is 200 and body is not empty" in {
