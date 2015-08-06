@@ -97,7 +97,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
   "Search#repos" should " return repositories when the result is 200 and body is not empty" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
     when(client.repo(host, project, repository)).thenReturn(response)
-    val result = Await.result(search.repos(host, project, repository), Duration("5 seconds"))
+    val result = Await.result(search.repo(host, project, repository), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
     assert(!result.right.get.isEmpty, "Result must not be empty")
@@ -106,7 +106,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
   it should " return empty list when the result is 404" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse(null, 404)
     when(client.repo(host, project, repository)).thenReturn(response)
-    val result = Await.result(search.repos(host, project, repository), Duration("5 seconds"))
+    val result = Await.result(search.repo(host, project, repository), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
     assert(result.right.get.isEmpty, "Result should be empty")
@@ -114,7 +114,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
   }
   it should " return an error when client throws an exception" in {
     when(client.repo(host, project, repository)).thenThrow(new RuntimeException())
-    val result = Await.result(search.repos(host, project, repository), Duration("5 seconds"))
+    val result = Await.result(search.repo(host, project, repository), Duration("5 seconds"))
     assertEitherIsLeft(result)
     assertEitherIsNotNull(result)
     assert(result.left.get == defaultError, f"Result should be [$defaultError]")

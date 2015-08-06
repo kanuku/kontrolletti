@@ -147,11 +147,11 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       val parsedResponse = Right((host, project, repoName))
       val repository = createRepository()
-      val repoResponse = Future.successful(Right(Some(List(repository))))
+      val repoResponse = Future.successful(Right(Some(repository)))
       val search = mock[Search]
 
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
-      when(search.repos(host, project, repoName)).thenReturn(repoResponse)
+      when(search.repo(host, project, repoName)).thenReturn(repoResponse)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl"))
@@ -162,7 +162,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       }
 
       verify(search, times(1)).parse(defaultUrl)
-      verify(search, times(1)).repos(host, project, repoName)
+      verify(search, times(1)).repo(host, project, repoName)
     }
 
     "Return 400 when called with erraneous url" in {
@@ -185,7 +185,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       val parsedResponse = Right((host, project, repoName))
       val repoResponse = Future.successful(Right(None))
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
-      when(search.repos(host, project, repoName)).thenReturn(repoResponse)
+      when(search.repo(host, project, repoName)).thenReturn(repoResponse)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl"))
@@ -202,7 +202,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       val error = Left("someError")
       val repoResponse = Future.successful(error)
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
-      when(search.repos(host, project, repoName)).thenReturn(repoResponse)
+      when(search.repo(host, project, repoName)).thenReturn(repoResponse)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl"))

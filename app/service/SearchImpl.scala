@@ -56,7 +56,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
     }
 
-  def repos(host: String, project: String, repository: String): Future[Either[String, Option[List[Repository]]]] =
+  def repo(host: String, project: String, repository: String): Future[Either[String, Option[Repository]]] =
     resolveParser(host) match {
       case Right(scmParser) => handleRequest(scmParser.repoToModel, client.repo(host, project, repository))
       case Left(error)      => Future.successful(Left(error))

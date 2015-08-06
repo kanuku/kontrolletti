@@ -38,7 +38,7 @@ trait Search {
    * @param repository name of the repository
    * @return a future containing either the error(left) or list of commits(right)
    */
-  def repos(host: String, project: String, repository: String): Future[Either[String, Option[List[Repository]]]]
+  def repo(host: String, project: String, repository: String): Future[Either[String, Option[Repository]]]
 
   /**
    * Parse a url into 3 separate parameters, the `host`, `project` and `repo` from a repository-url of a github or stash project

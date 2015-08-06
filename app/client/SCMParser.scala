@@ -61,7 +61,7 @@ sealed trait SCMParser {
   /**
    * Returns the parser for deserializing a jsonValue to a List of Repositories
    */
-  def repoToModel: Parser[JsValue, Either[String, List[Repository]]]
+  def repoToModel: Parser[JsValue, Either[String, Repository]]
 
   /**
    * Unwraps the result from the JsResult and returns the successfully deserialized
@@ -91,7 +91,7 @@ object GithubToJsonParser extends SCMParser {
   val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => extract(value.validate[List[Commit]])
   val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (author) => extract(author.validate[List[Author]])
   val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => extract(value.validate[List[Ticket]])
-  val repoToModel: Parser[JsValue, Either[String, List[Repository]]] = (value) => extract(value.validate[List[Repository]])
+  val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => extract(value.validate[Repository])
 
   private implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
@@ -124,7 +124,7 @@ object StashToJsonParser extends SCMParser {
 
   val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => extract((value \ "values").validate[List[Commit]])
   val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => extract(value.validate[List[Ticket]])
-  val repoToModel: Parser[JsValue, Either[String, List[Repository]]] = (value) => extract(value.validate[List[Repository]])
+  val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => extract(value.validate[Repository])
   val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (value) => extract(value.validate[List[Author]]) 
 
   private implicit val authorReader: Reads[Author] = (
