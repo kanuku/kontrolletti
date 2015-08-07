@@ -1,81 +1,138 @@
 package client
 
-import org.scalatest._
 import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
-
-import play.api.libs.ws.WSResponse
-import test.util.MockitoUtils._
-import play.api.libs.ws.WS
-import play.api.libs.ws.WSRequestHolder
-
-import org.mockito.ArgumentCaptor
-import org.mockito.Matchers._
-import org.mockito.Mockito._
-
-import test.util.MockitoUtils._
-
 import org.scalatestplus.play.OneAppPerSuite
+import org.mockito.Mockito._
+import org.mockito.Matchers._
+import test.util.MockitoUtils
+import org.scalatest.BeforeAndAfter
+import play.api.libs.ws.WSRequestHolder
+import play.api.libs.ws.WSResponse
+import scala.concurrent.Future
+import org.mockito.ArgumentCaptor
 
+/**
+ * The tests in this class will assure:
+ * 1. The dispatcher is called with the right URL.
+ * 2. The result from the dispatcher call is returned(unchanged) to the caller.
+ *
+ *
+ */
+class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with MockitoUtils with BeforeAndAfter {
 
-class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar {
-  val host = "github.com"
-  val group = "kanuku"
-  val repo = "misc"
+  val mockedRequestHolder = mock[WSRequestHolder]
+  val mockedDispatcher = mock[RequestDispatcher]
+  val mockedWSResponse = mock[WSResponse]
+  val mockedResponse = mockSuccessfullParsableFutureWSResponse(mockedWSResponse, 200)
+  val client = new SCMImpl(mockedDispatcher)
 
-  withFakeApplication {
-  "SCM.commits with github domain" should
-    "use the GithubResolver" in {
+  val github = "github.com"
+  val stash = "stash.zalando.net"
+  val project = "project"
+  val repository = "repository"
+  val since = Some("since")
+  val until = Some("until")
+  val id = "id"
+  val source = "source"
+  val target = "target"
 
-        val method = mock[(String) => WSRequestHolder]
-        val requestHolder = mock[WSRequestHolder]
-        val response = mockSuccessfullParsableFutureWSResponse(mock[WSResponse],200)
-        val client: SCM = createClient(method)
-
-        //Record
-        when(method.apply(anyString())).thenReturn(requestHolder)
-        when(requestHolder.withHeaders(anyString -> "")).thenReturn(requestHolder)
-        when(requestHolder.get).thenReturn(response)
-
-        // Start testing
-        val result = client.committers(host, group, repo)
-
-        val urlCap = ArgumentCaptor.forClass(classOf[String])
-
-        verify(method, times(1)).apply(urlCap.capture())
-
-        //Verfiy
-        assert(urlCap.getValue == GithubResolver.contributors(host, group, repo), "Url is not correct");
-        assert(result == response, "Client should return the mocked response")
-
-      } 
-
-  "SCM.resolver" should "return the github-client when issued with a github domain" in {
-
-    val client = new SCMImpl()
-    val resolver = client.resolver("github.com").get
-    assert(resolver != null)
-    assert(resolver.isCompatible("github.com"))
-
+  before {
+    reset(mockedRequestHolder)
+    reset(mockedDispatcher)
+    reset(mockedWSResponse)
   }
 
-  it should "return the stash-client when issued with a stash domain" in {
-    val client = new SCMImpl()
-    val resolver = client.resolver("stash.zalando.net").get
-    assert(resolver != null)
-    assert(resolver.isCompatible("stash.zalando.net"))
-
+  "SCM#commits" should "request commits from github API" in {
+    val url = s"https://api.$github/repos/$project/$repository/commits"
+    testGET(url, client.commits(github, project, repository, since, until))
+  }
+  it should "request commits from stash API" in {
+    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits"
+    testGET(url, client.commits(stash, project, repository, since, until))
   }
 
-  it should "throw an exception when issued with a unknown domain" in {
-    val client = new SCMImpl()
-    val url = "stash.my.pizza"
-    val thrown = intercept[IllegalStateException] {
-      val resolver = client.resolver(url)
-    }
-    assert(thrown.getMessage === s"Could not resolve SCM context for $url")
-
+  "SCM#commit" should "request a single commit from github API" in {
+    val url = s"https://api.$github/repos/$project/$repository/commits/$id"
+    testGET(url, client.commit(github, project, repository, id))
   }
-}
+  it should "request a single commit from stash API" in {
+    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits/$id"
+    testGET(url, client.commit(stash, project, repository, id))
+  }
 
+  "SCM#repo" should "request a single repository from github API" in {
+    val url = s"https://api.$github/repos/$project/$repository"
+    testGET(url, client.repo(github, project, repository))
+  }
+  it should "request a single repository from stash API" in {
+    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository"
+    testGET(url, client.repo(stash, project, repository))
+  }
+
+  "SCM#tickets" should "request a commit from github API" in {
+    val url = s"https://api.$github/repos/$project/$repository/commits"
+    testGET(url, client.tickets(github, project, repository))
+  }
+  it should "request a commit from stash API " in {
+    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits"
+    testGET(url, client.tickets(stash, project, repository))
+  }
+
+  "SCM#repoUrl" should "return a repository-url for github API" in {
+    val url = s"https://api.$github/repos/$project/$repository"
+    val result = client.repoUrl(github, project, repository)
+    assert(result == url)
+  }
+  it should "return a repository-url for stash API" in {
+    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository"
+    val result = client.repoUrl(stash, project, repository)
+    assert(result == url)
+  }
+
+  "SCM#diffUrl" should "return a diffUrl for github frontend" in {
+    val url = s"http://$github/$project/$repository/compare/$source...$target"
+    val result = client.diffUrl(github, project, repository, source, target)
+    assert(result == url)
+  }
+  it should "return a diffUrl for stash frontend" in {
+    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
+    val result = client.diffUrl(stash, project, repository, source, target)
+    assert(result == url)
+  }
+
+  "SCM#head" should "GET github url" in {
+    val url = s"Test"
+    when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.head()).thenReturn(mockedResponse)
+    val result = client.head(github,url)
+    assert(result == mockedResponse)
+    val urlCap = ArgumentCaptor.forClass(classOf[String])
+    verify(mockedDispatcher, times(1)).requestHolder(urlCap.capture())
+    assert(url == urlCap.getValue)
+  }
+  "SCM#head" should "HEAD stash url" in {
+	  val url = s"Test"
+			  when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
+        when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
+			  when(mockedRequestHolder.get()).thenReturn(mockedResponse)
+			  val result = client.get(stash,url)
+			  assert(result == mockedResponse)
+			  val urlCap = ArgumentCaptor.forClass(classOf[String])
+			  verify(mockedDispatcher, times(1)).requestHolder(urlCap.capture())
+			  assert(url == urlCap.getValue)
+  }
+
+  def testGET(url: String, call: => Future[WSResponse]) = {
+    when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.get()).thenReturn(mockedResponse)
+    val result = call
+    assert(result == mockedResponse)
+    val urlCap = ArgumentCaptor.forClass(classOf[String])
+    val headerCap = ArgumentCaptor.forClass(classOf[String])
+    verify(mockedDispatcher, times(1)).requestHolder(urlCap.capture())
+    assert(url == urlCap.getValue)
+  }
 }

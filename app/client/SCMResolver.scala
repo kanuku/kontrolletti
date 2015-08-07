@@ -7,7 +7,7 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 import play.api.Logger
 
 /**
- * Resolves the communication context for the SCM REST API. <br> Holds configurations like URL's
+ * Resolves the URL's in the communication context with the SCM REST API. <br> Holds configurations like URL's
  * and Headers for communicating with the Rest Interface of a SCM server.
  * The idea of this trait is to minimize the gap between the communication with different SCMs.
  */
@@ -41,44 +41,42 @@ sealed trait SCMResolver {
   }
 
   /**
-   * Url for listing contributors of a repository in the given `project` at the given `host`.
-   * @param repo repository
-   * @param host host of the SCM server
-   * @param project project where the repository belongs to
-   * @return The url
-   */
-  def contributors(host: String, project: String, repo: String): String
-
-  /**
    *  Url for listing commits of a repository in the given `project` at the given `host`.
    * @param repo repository
    * @param host host of the SCM server
    * @param project project where the repository belongs to
    * @return The url
    */
-  def commits(host: String, project: String, repo: String): String
+  def commits(host: String, project: String, repository: String): String
 
   /**
-   *  Url for the repository in the given user namespace at the given `host`.
+   *  Url for fetching the commit information from a repository in the given `project` at the given `host`.
    * @param repo repository
    * @param host host of the SCM server
    * @param project project where the repository belongs to
+   * @param id commit-id to be returned
    * @return The url
    */
-  def repo(host: String, project: String, repo: String): String
-  
-//  /**
-//   * Url for the repository in the given organization namespace at the given `host`.
-//   * @param repo repository
-//   * @param host host of the SCM server
-//   * @param user project where the repository belongs to
-//   * @return The url
-//   */
-//  def organizationRepo(host: String, organization: String, repo: String): String
+  def commit(host: String, project: String, repository: String, id: String): String
 
-  
-  
-  
+  /**
+   *  Url for the `repository` in the given user `project` at the given `host`.
+   * @param repository repository.
+   * @param host host of the SCM server.
+   * @param project project where the repository belongs to.
+   * @return The url.
+   */
+  def repo(host: String, project: String, repository: String): String
+
+  /**
+   *  Url for the tickets at the `repository` in the given `project` at the given `host`.
+   * @param repository repository.
+   * @param host host of the SCM server.
+   * @param project project where the repository belongs to.
+   * @return The url.
+   */
+  def tickets(host: String, project: String, repository: String): String
+
   /**
    * Resolves to itself if the host matches to any of the configured `hosts`
    * Otherwise to an instance of None
@@ -95,7 +93,14 @@ sealed trait SCMResolver {
    * @param url url of the repository
    * @return either an error(left) or the normalized URI (right)
    */
-  def normalize(host: String, project: String, repo: String): String
+  def repoUrl(host: String, project: String, repository: String): String
+
+  /**
+   * Parses and returns the normalized URI for a github/stash repository-URL.
+   * @param url url of the repository
+   * @return either an error(left) or the normalized URI (right)
+   */
+  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String
 
   /**
    * The access-token property for the access-token the rest api of this client.
@@ -124,11 +129,13 @@ sealed trait SCMResolver {
 object GithubResolver extends SCMResolver {
   def name = "github"
   private val antecedent = "https://api."
+  def commits(host: String, project: String, repository: String) = s"$antecedent$host/repos/$project/$repository/commits"
+  def commit(host: String, project: String, repository: String, id: String): String = s"$antecedent$host/repos/$project/$repository/commits/$id"
+  def tickets(host: String, project: String, repository: String): String = s"$antecedent$host/repos/$project/$repository/commits"
 
-  def contributors(host: String, project: String, repo: String) = s"$antecedent$host/repos/$project/$repo/contributors"
-  def commits(host: String, project: String, repo: String) = s"$antecedent$host/repos/$project/$repo/commits"
-  def repo(host: String, project: String, repo: String) = s"$antecedent$host/repos/$project/$repo"
-  def normalize(host: String, project: String, repo: String) = s"https://$host/$project/$repo"
+  def repo(host: String, project: String, repository: String) = s"$antecedent$host/repos/$project/$repository"
+  def repoUrl(host: String, project: String, repository: String) = repo(host,project,repository)
+  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"http://$host/$project/$repository/compare/$source...$target"
 
   // Authorization variables
   def accessTokenKey = "access_token"
@@ -137,14 +144,15 @@ object GithubResolver extends SCMResolver {
 object StashResolver extends SCMResolver {
   def name = "stash"
   private val antecedent = "https://"
+  def commits(host: String, project: String, repository: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits"
+  def commit(host: String, project: String, repository: String, id: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits/$id"
+  def tickets(host: String, project: String, repository: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits"
 
-  def contributors(host: String, project: String, repo: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repo/contributors"
-  def commits(host: String, project: String, repo: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repo/commits"
-  def repo(host: String, project: String, repo: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repo"
-  def normalize(host: String, project: String, repo: String) = s"https://$host/projects/$project/repos/$repo/browse"
+  def repo(host: String, project: String, repository: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository"
+  def repoUrl(host: String, project: String, repository: String) = repo(host,project,repository)
+  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
 
   // Authorization variables
   def accessTokenKey = "X-Auth-Token"
 
 }
-

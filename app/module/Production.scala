@@ -6,6 +6,8 @@ import service.Search
 import client.SCM
 import client.SCMImpl
 import play.api.Logger
+import client.RequestDispatcherImpl
+import client.RequestDispatcher
 
 class Production extends AbstractModule {
   private val logger: Logger = Logger(this.getClass())
@@ -13,6 +15,6 @@ class Production extends AbstractModule {
     logger.info("Configured with a production module")
     bind(classOf[Search]).to(classOf[SearchImpl])
     bind(classOf[SCM]).to(classOf[SCMImpl])
-
+    bind(classOf[RequestDispatcher]).to(classOf[RequestDispatcherImpl])
   }
 }

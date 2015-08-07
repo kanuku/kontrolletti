@@ -3,204 +3,240 @@ package service
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
-import org.mockito.ArgumentCaptor
-import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.FlatSpec
+import org.scalatest.FunSpec
 import org.scalatest.mock.MockitoSugar
+import org.scalatestplus.play.OneAppPerTest
+import org.scalatestplus.play.PlaySpec
+import client.SCM
+import client.SCMImpl
+import client.SCMImpl
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSResponse
-import client.SCM
-import model.Author
-import test.util.MockitoUtils._
-import org.scalatestplus.play.OneAppPerSuite
-import org.scalatestplus.play.PlaySpec
-import org.scalatest.FunSpec
-import client.SCMImpl
-
+import test.util.MockitoUtils
+import client.RequestDispatcherImpl
 /**
- * This class tests the interaction between the Service and the Client.
- * The tests reassure us that the logic in the Service class is well implemented
- * and passed to the client correctly.
- * The client is mocked and therefore not tested here.
+ * This class tests the interaction between the Service and the Client(mock).
  */
-class SearchTest extends FlatSpec with OneAppPerSuite with MockitoSugar with BeforeAndAfter {
+class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with MockitoUtils with BeforeAndAfter {
 
   import test.util.TestUtils._
 
+  val defaultError = "Something went wrong, check the logs!"
+  val host = "github.com"
+  val project = "zalando-bus"
+  val repository = "kontrolletti"
+  val url = s"https://github.com/zalando-bus/kontrolletti"
+  val sourceId = "sourceId"
+  val targetId = "targetId"
+  val commitId = "commitId"
   val client = mock[SCM]
-  val searchWithMockClient: Search = new SearchImpl(client)
-  val search: Search = new SearchImpl(new SCMImpl())
-  val users = List(Author("name", "email"))
+  val search: Search = new SearchImpl(client)
 
   before {
     reset(client)
   }
 
-  def githubFixture = new {
-    val host = "github.com"
-    val project = "zalando-bus"
-    val repo = "kontrolletti"
-    val url = s"https://$host/$project/$repo/"
+  "Search#commits" should "return commits when the result is 200 and body is not empty" in {
+    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
+    when(client.commits(host, project, repository, None, None)).thenReturn(response)
+    val result = Await.result(search.commits(host, project, repository, None, None), Duration("5 seconds"))
+    assertEitherIsRight(result)
+    assertEitherIsNotNull(result)
+    assert(!result.right.get.isEmpty, "Result must not be empty")
+    verify(client, times(1)).commits(host, project, repository, None, None)
+  }
+  it should "return None when the result is 404" in {
+    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse(null, 404)
+    when(client.commits(host, project, repository, None, None)).thenReturn(response)
+    val result = Await.result(search.commits(host, project, repository, None, None), Duration("5 seconds"))
+    assertEitherIsRight(result)
+    assertEitherIsNotNull(result)
+    assert(result.right.get.isEmpty, "Result must be None")
+    verify(client, times(1)).commits(host, project, repository, None, None)
+  }
+  it should "return an error when client throws an Exception" in {
+    when(client.commits(host, project, repository, None, None)).thenThrow(new RuntimeException())
+    val result = Await.result(search.commits(host, project, repository, None, None), Duration("5 seconds"))
+    assertEitherIsLeft(result)
+    assertEitherIsNotNull(result)
+    assert(result.left.get == defaultError)
+    verify(client, times(1)).commits(host, project, repository, None, None)
   }
 
-  def stashFixture = new {
-    val host = "stash.zalando.net"
-    val project = "DOC"
-    val repo = "ci-cd"
-    val url = s"https://stash.zalando.net/projects/$project/repos/$repo"
+  "Search#commit" should "return a single commit when the result is 200" in {
+    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
+    when(client.commit(host, project, repository, commitId)).thenReturn(response)
+    val result = Await.result(search.commit(host, project, repository, commitId), Duration("5 seconds"))
+    assertEitherIsRight(result)
+    assertEitherIsNotNull(result)
+    assert(!result.right.get.isEmpty, "Result must not be empty")
+    verify(client, times(1)).commit(host, project, repository, commitId)
+  }
+  it should "return None when the result is 404" in {
+    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse(null, 404)
+    when(client.commit(host, project, repository, commitId)).thenReturn(response)
+    val result = Await.result(search.commit(host, project, repository, commitId), Duration("5 seconds"))
+    assertEitherIsRight(result)
+    assertEitherIsNotNull(result)
+    assert(result.right.get.isEmpty, "Result must be None")
+    verify(client, times(1)).commit(host, project, repository, commitId)
+  }
+  it should "return an error when client throws an Exception" in {
+    when(client.commit(host, project, repository, commitId)).thenThrow(new RuntimeException())
+    val result = Await.result(search.commit(host, project, repository, commitId), Duration("5 seconds"))
+    assertEitherIsLeft(result)
+    assertEitherIsNotNull(result)
+    assert(result.left.get == defaultError)
+    verify(client, times(1)).commit(host, project, repository, commitId)
   }
 
-  "committers " should "call the client with parsed github Url params" in {
-
-    val clientResult = mockSuccessfullParsableFutureWSResponse(users,200)
-
-    when(client.committers(anyString, anyString, anyString)).thenReturn(clientResult)
-
-    //Start testing
-    val either = Await.result(searchWithMockClient.committers(githubFixture.url), Duration("10 seconds"))
-
-    assertEitherIsNotNull(either)
-    assertEitherIsRight(either)
-    assert(either.right.get == users)
-
-    val hostCap = ArgumentCaptor.forClass(classOf[String])
-    val groupCap = ArgumentCaptor.forClass(classOf[String])
-    val repoCap = ArgumentCaptor.forClass(classOf[String])
-
-    // Verify the
-    verify(client).committers(hostCap.capture(), groupCap.capture(), repoCap.capture());
-
-    assert(hostCap.getValue == githubFixture.host)
-    assert(groupCap.getValue == githubFixture.project)
-    assert(repoCap.getValue == githubFixture.repo)
-
+  "Search#repos" should " return repositories when the result is 200 and body is not empty" in {
+    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
+    when(client.repo(host, project, repository)).thenReturn(response)
+    val result = Await.result(search.repo(host, project, repository), Duration("5 seconds"))
+    assertEitherIsRight(result)
+    assertEitherIsNotNull(result)
+    assert(!result.right.get.isEmpty, "Result must not be empty")
+    verify(client, times(1)).repo(host, project, repository)
+  }
+  it should " return empty list when the result is 404" in {
+    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse(null, 404)
+    when(client.repo(host, project, repository)).thenReturn(response)
+    val result = Await.result(search.repo(host, project, repository), Duration("5 seconds"))
+    assertEitherIsRight(result)
+    assertEitherIsNotNull(result)
+    assert(result.right.get.isEmpty, "Result should be empty")
+    verify(client, times(1)).repo(host, project, repository)
+  }
+  it should " return an error when client throws an exception" in {
+    when(client.repo(host, project, repository)).thenThrow(new RuntimeException())
+    val result = Await.result(search.repo(host, project, repository), Duration("5 seconds"))
+    assertEitherIsLeft(result)
+    assertEitherIsNotNull(result)
+    assert(result.left.get == defaultError, f"Result should be [$defaultError]")
+    verify(client, times(1)).repo(host, project, repository)
   }
 
-  it should "call the client with parsed stash Url params" in {
-
-    val clientResult = mockSuccessfullParsableFutureWSResponse(users,200)
-
-    when(client.committers(anyString, anyString, anyString)).thenReturn(clientResult)
-
-    //Start testing
-    val either = Await.result(searchWithMockClient.committers(stashFixture.url), Duration("10 seconds"))
-
-    assertEitherIsNotNull(either)
-    assertEitherIsRight(either)
-    assert(either.right.get == users)
-
-    val hostCap = ArgumentCaptor.forClass(classOf[String])
-    val groupCap = ArgumentCaptor.forClass(classOf[String])
-    val repoCap = ArgumentCaptor.forClass(classOf[String])
-
-    // Verify the
-    verify(client).committers(hostCap.capture(), groupCap.capture(), repoCap.capture());
-
-    assert(hostCap.getValue == stashFixture.host)
-    assert(groupCap.getValue == stashFixture.project)
-    assert(repoCap.getValue == stashFixture.repo)
-
-  }
-  it should "handle Unexpected client-exceptions gracefully" in {
-
-    val clientResult = Future.failed(new RuntimeException("Something bad happened!"))
-
-    when(client.committers(anyString, anyString, anyString)).thenReturn(clientResult)
-
-    //Start testing
-    val either = Await.result(searchWithMockClient.committers(githubFixture.url), Duration("10 seconds"))
-    val hostCap = ArgumentCaptor.forClass(classOf[String])
-    val groupCap = ArgumentCaptor.forClass(classOf[String])
-    val repoCap = ArgumentCaptor.forClass(classOf[String])
-
-    // Verify the
-    verify(client).committers(hostCap.capture(), groupCap.capture(), repoCap.capture());
-
-    assert(hostCap.getValue == githubFixture.host)
-    assert(groupCap.getValue == githubFixture.project)
-    assert(repoCap.getValue == githubFixture.repo)
-
-    assertEitherIsNotNull(either)
-    assertEitherIsLeft(either)
-    assert(either.left.get == "An internal error occurred!")
-
+  "Search#parse" should "just parse :D " in {
+    val result = search.parse(url)
+    assert(result.isRight)
+    assert(result.right.get == (host, project, repository))
   }
 
-  it should "never call the client when the url is not parsable" in {
-    val url = "asdfasdfasdfaölkajsdf"
-    //Start testing    
-    val either = Await.result(searchWithMockClient.committers(url), Duration("10 seconds"))
-    // Verify the method is never called when
-    verify(client, times(0)).committers(anyObject(), anyObject(), anyObject());
+  "Search#normalize" should "normalize the github URL" in {
+    val url = "https://api.github.com/repos/zalando-bus/kontrolletti"
+    val client = new SCMImpl(new RequestDispatcherImpl())
+    val search = new SearchImpl(client)
+    assert(search.normalize(host, project, repository) == url)
+  }
+  "Search#normalize" should "normalize the stash URL" in {
+	  val url = "https://stash.zalando.net/rest/api/1.0/projects/zalando-bus/repos/kontrolletti"
+			  val client = new SCMImpl(new RequestDispatcherImpl())
+	  val search = new SearchImpl(client)
+	  assert(search.normalize("stash.zalando.net", project, repository) == url)
+  }
 
-    assertEitherIsNotNull(either)
-    assertEitherIsLeft(either)
-    assert(either.left.get == (s"Could not parse $url"))
+  "Search#isRepo" should "return true when receiving a 200 response" in {
+    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("", 200)
+    when(client.repoUrl(host, project, repository)).thenReturn(url)
+    when(client.head(host,url)).thenReturn(response)
+    val result = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
+    assertEitherIsRight(result)
+    assertEitherIsNotNull(result)
+    assert(result.right.get, "Result must be true")
+    verify(client, times(1)).repoUrl(host, project, repository)
+    verify(client, times(1)).head(host,url)
+  }
+  it should "return false when receiving a 404 response" in {
+    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("", 404)
+    when(client.repoUrl(host, project, repository)).thenReturn(url)
+    when(client.head(host, url)).thenReturn(response)
+    val result = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
+    assertEitherIsRight(result)
+    assertEitherIsNotNull(result)
+    assert(!result.right.get, "Result must be false")
+    verify(client, times(1)).repoUrl(host, project, repository)
+    verify(client, times(1)).head(host,url)
+  }
+  it should "return error when client throws exception" in {
+    when(client.repoUrl(host, project, repository)).thenReturn(url)
+    when(client.head(host,url)).thenThrow(new RuntimeException())
+    val result = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
+    assertEitherIsLeft(result)
+    assertEitherIsNotNull(result)
+    assert(result.left.get == defaultError, f"Result should be [$defaultError]")
+    verify(client, times(1)).repoUrl(host, project, repository)
+    verify(client, times(1)).head(host,url)
+  }
 
+  "Search#diff" should "return true when receiving a 200 Response" in {
+    val diffLink = "https://github.com/zalando/kontrolletti/compare/sourceId...targetId"
+    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("", 200)
+    when(client.diffUrl(host, project, repository, sourceId, targetId)).thenReturn(diffLink)
+    when(client.head(host,diffLink)).thenReturn(response)
+    val result = Await.result(search.diff(host, project, repository, sourceId, targetId), Duration("5 seconds"))
+    assertEitherIsRight(result)
+    assertEitherIsNotNull(result)
+    assert(result.right.get.isDefined)
+    assert(result.right.get.get.href == diffLink, "The Link object should have a href")
+    verify(client, times(1)).diffUrl(host, project, repository, sourceId, targetId)
+    verify(client, times(1)).head(host,diffLink)
   }
-  it should "never call the client when the url is empty" in {
-    //Start testing
-    val either = Await.result(searchWithMockClient.committers(""), Duration("10 seconds"))
-    // Verify the method is never called when
-    verify(client, times(0)).committers(anyObject(), anyObject(), anyObject());
+  it should "return false when receiving a 404 response" in {
+    val diffLink = "https://github.com/zalando/kontrolletti/compare/sourceId...targetId"
+    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("", 404)
+    when(client.diffUrl(host, project, repository, sourceId, targetId)).thenReturn(diffLink)
+    when(client.head(host,diffLink)).thenReturn(response)
+    val result = Await.result(search.diff(host, project, repository, sourceId, targetId), Duration("5 seconds"))
+    assertEitherIsRight(result)
+    assertEitherIsNotNull(result)
+    assert(result.isRight)
+    assert(!result.right.get.isDefined, "The result should be None")
+    verify(client, times(1)).diffUrl(host, project, repository, sourceId, targetId)
+    verify(client, times(1)).head(host,diffLink)
+  }
+  it should "return error when client throws exception" in {
+    when(client.diffUrl(host, project, repository, sourceId, targetId)).thenReturn(url)
+    when(client.head(host,url)).thenThrow(new RuntimeException())
+    val result = Await.result(search.diff(host, project, repository, sourceId, targetId), Duration("5 seconds"))
+    assertEitherIsLeft(result)
+    assertEitherIsNotNull(result)
+    assert(result.left.get == defaultError, f"Result should be [$defaultError]")
+    verify(client, times(1)).diffUrl(host, project, repository, sourceId, targetId)
+    verify(client, times(1)).head(host,url)
+  }
+  "Search#tickets" should " return repositories when the result is not Empty" in {
+    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
+    when(client.tickets(host, project, repository)).thenReturn(response)
+    val result = Await.result(search.tickets(host, project, repository, None, None), Duration("5 seconds"))
+    assertEitherIsRight(result)
+    assertEitherIsNotNull(result)
+    assert(result.right.get != null)
+    assert(!result.right.get.isEmpty, "Result must not be empty")
+    verify(client, times(1)).tickets(host, project, repository)
+  }
+  it should " return empty List when the result is 404" in {
+    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 404)
+    when(client.tickets(host, project, repository)).thenReturn(response)
+    val result = Await.result(search.tickets(host, project, repository, None, None), Duration("5 seconds"))
+    assertEitherIsRight(result)
+    assertEitherIsNotNull(result)
+    assert(result.right.get != null)
+    assert(result.right.get.isEmpty, "Result must be empty")
+    verify(client, times(1)).tickets(host, project, repository)
+  }
+  it should " return error when an exception occurs" in {
+    when(client.tickets(host, project, repository)).thenThrow(new RuntimeException())
+    val result = Await.result(search.tickets(host, project, repository, None, None), Duration("5 seconds"))
+    assertEitherIsLeft(result)
+    assertEitherIsNotNull(result)
+    assert(result.isLeft)
+    assert(result.left.get == defaultError, f"Result should be [$defaultError]")
+    verify(client, times(1)).tickets(host, project, repository)
+  }
 
-    assertEitherIsNotNull(either)
-    assertEitherIsLeft(either)
-    assert(either.left.get == "Repository-url should not be empty/null")
-  }
-  it should "never call the client when the url is null" in {
-    //Start testing.
-    val either = Await.result(searchWithMockClient.committers(null), Duration("10 seconds"))
-    // Verify the method is never called when
-    verify(client, times(0)).committers(anyObject(), anyObject(), anyObject());
-
-    assertEitherIsNotNull(either)
-    assertEitherIsLeft(either)
-    assert(either.left.get == "Repository-url should not be empty/null")
-  }
-  "normalize" should "normalize github anonymous git-clone-url" in {
-    val url = "git@github.com:zalando/kontrolletti.git"
-    val either = search.normalizeURL(url)
-    assertEitherIsNotNull(either)
-    assertEitherIsRight(either)
-    assert(either.right.get === "https://github.com/zalando/kontrolletti")
-  }
-  it should "normalize github https-clone-url" in {
-    val url = "https://github.com/zalando/kontrolletti.git"
-    val either = search.normalizeURL(url)
-    assertEitherIsNotNull(either)
-    assertEitherIsRight(either)
-    assert(either.right.get === "https://github.com/zalando/kontrolletti")
-  }
-  it should "normalize stash ssh-clone-url" in {
-    val url = "ssh://git@stash.zalando.net/cd/ansible-playbooks.git"
-    val either = search.normalizeURL(url)
-    assertEitherIsNotNull(either)
-    assertEitherIsRight(either)
-    assert(either.right.get === "https://stash.zalando.net/projects/cd/repos/ansible-playbooks/browse")
-  }
-  it should "normalize stash https-clone-url" in {               
-    val url = "https://kanuku@stash.zalando.net/scm/cd/ansible-playbooks.git"
-    val either = search.normalizeURL(url)
-    assertEitherIsNotNull(either)
-    assertEitherIsRight(either)
-    assert(either.right.get === "https://stash.zalando.net/projects/cd/repos/ansible-playbooks/browse")
-  }
-  it should "Return an error when url is not parsable" in {
-    val url = "why-is-this-url-not-workinggitzalando/.git"
-    val either = search.normalizeURL(url)
-    assertEitherIsNotNull(either)
-    assertEitherIsLeft(either)
-    assert(either.left.get === s"Could not parse $url")
-  }
-  it should "Return an error when url is null" in {
-    val url = null
-    val either = search.normalizeURL(url)
-    assertEitherIsNotNull(either)
-    assertEitherIsLeft(either)
-    assert(either.left.get === s"Repository-url should not be empty/null")
-  }
 }

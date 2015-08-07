@@ -10,14 +10,23 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Reads
 import model.Author
 import model.Commit
+import model.Link
+import model.Ticket
+import play.api.Logger
+import model.Repository
+import play.api.libs.json.JsArray
+import play.api.libs.json.Json
 
 /**
  * Json deserializer for converting external json types, from the SCM,
  * into internal model.
+ * Each SCM Server(Github or Stash) Should have a Parser per API Version
  */
 
 sealed trait SCMParser {
   type Parser[A, B] = A => B
+  private val logger: Logger = Logger(this.getClass())
+
   /**
    * Returns the list of domains that this parser can
    * parse json objects from.
@@ -40,10 +49,21 @@ sealed trait SCMParser {
    * Returns the parser for deserializing a jsonValue to a List of Commits
    */
   def commitToModel: Parser[JsValue, Either[String, List[Commit]]]
+
+  /**
+   * Returns the parser for deserializing a jsonValue to a List of Tickets
+   */
+  def ticketToModel: Parser[JsValue, Either[String, List[Ticket]]]
+
   /**
    * Returns the parser for deserializing a jsonValue to a List of Authors
    */
   def authorToModel: Parser[JsValue, Either[String, List[Author]]]
+
+  /**
+   * Returns the parser for deserializing a jsonValue to a List of Repositories
+   */
+  def repoToModel: Parser[JsValue, Either[String, Repository]]
 
   /**
    * Unwraps the result from the JsResult and returns the successfully deserialized
@@ -55,14 +75,15 @@ sealed trait SCMParser {
       case s: JsSuccess[T] =>
         Right(s.get)
       case e: JsError =>
-        Left(s"Could not parse $input")
+        logger.error("Failed to parse:" + e.errors)
+        Left(s"Failed to parse!!")
     }
   }
 
 }
 
 /**
- * Deserializer for objects from Github.com
+ * Deserializer for JsonObjects from Github.com
  *
  */
 object GithubToJsonParser extends SCMParser {
@@ -70,42 +91,76 @@ object GithubToJsonParser extends SCMParser {
   def domains = GithubResolver.hosts
 
   val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => extract(value.validate[List[Commit]])
-
   val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (author) => extract(author.validate[List[Author]])
+  val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => extract(value.validate[List[Ticket]])
+  val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => extract(value.validate[Repository])
 
   private implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
-    (JsPath \ "email").read[String])(Author.apply _)
+    (JsPath \ "email").read[String] and
+    Reads.pure(null) //
+    )(Author.apply _)
 
   implicit val commitReader: Reads[Commit] = (
-    (JsPath \ "sha").read[String]
-    and (JsPath \ "commit" \ "message").read[String]
+    (JsPath \ "sha").read[String] // id
+    and (JsPath \ "commit" \ "message").read[String] // message
+    and Reads[List[String]] { js =>
+      val l: List[JsValue] = (JsPath \ "parents" \\ "sha")(js)
+      Json.fromJson[List[String]](JsArray(l))
+    }
+    and (JsPath \ "commit" \ "committer").read[Author]
+    and Reads.pure(None) // links
+    )(Commit.apply _)
+
+  implicit val ticketReader: Reads[Ticket] = null
+
+  implicit val repoReader: Reads[Repository] = (
+    (JsPath \ "html_url").read[String]
+    and Reads.pure(null)
+    and Reads.pure(null)
+    and Reads.pure(null)
     and Reads.pure(None)
-    and (JsPath \ "commit" \ "committer").read[Author])(Commit.apply _)
+    and Reads.pure(None))(Repository.apply _)
+
 }
 
 /**
- * Deserializer for objects from Stash
+ * Deserializer for JsonObjects from Stash
  *
  */
 object StashToJsonParser extends SCMParser {
 
   def domains = StashResolver.hosts
 
-  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) =>  extract((value \ "values").validate[List[Commit]]) 
-
-  val authorToModel: Parser[JsValue, Either[String, List[Author]]] = {
-    (author) => extract(author.validate[List[Author]])
-  }
+  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => extract((value \ "values").validate[List[Commit]])
+  val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => extract(value.validate[List[Ticket]])
+  val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => extract(value.validate[Repository])
+  val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (value) => extract(value.validate[List[Author]])
 
   private implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
-    (JsPath \ "emailAddress").read[String])(Author.apply _)
+    (JsPath \ "emailAddress").read[String] and
+    Reads.pure(null) //
+    )(Author.apply _)
 
   implicit val commitReader: Reads[Commit] = (
-    (JsPath \ "id").read[String]
-    and (JsPath \ "message").read[String]
+    (JsPath \ "id").read[String] //id
+    and (JsPath \ "message").read[String] //message
+    and Reads[List[String]] { js =>
+      val l: List[JsValue] = (JsPath \ "parents" \\ "id")(js)
+      Json.fromJson[List[String]](JsArray(l))
+    }
+    and (JsPath \ "author").read[Author] // author
+    and Reads.pure(None) // links
+    )(Commit.apply _)
+  implicit val ticketReader: Reads[Ticket] = null
+
+  implicit val repoReader: Reads[Repository] = (
+    (JsPath \ "links" \ "self" \\ "href").read[String]
+    and Reads.pure(null)
+    and Reads.pure(null)
+    and Reads.pure(null)
     and Reads.pure(None)
-    and (JsPath \ "author").read[Author])(Commit.apply _)
+    and Reads.pure(None))(Repository.apply _)
 
 }

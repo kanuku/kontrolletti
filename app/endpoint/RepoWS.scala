@@ -1,12 +1,6 @@
 package endpoint
 
 import scala.concurrent.Future
-import com.wordnik.swagger.annotations.Api
-import com.wordnik.swagger.annotations.ApiImplicitParam
-import com.wordnik.swagger.annotations.ApiImplicitParams
-import com.wordnik.swagger.annotations.ApiOperation
-import com.wordnik.swagger.annotations.ApiResponse
-import com.wordnik.swagger.annotations.ApiResponses
 import javax.inject._
 import model.Commit
 import play.api.Logger
@@ -20,102 +14,66 @@ import service.Search
 import java.net.URLEncoder
 import scala.concurrent.future
 import scala.concurrent.Future
+import model.RepositoryResult
+import model.KontrollettiToJsonParser._
 
-@Api(value = "/api/repos", description = "Access repository information.")
 @Singleton
 class RepoWS @Inject() (searchService: Search) extends Controller {
-  val NORMALIZED_REQUEST_PARAMETER = "Normalized-Repository-Identifier"
-  import model.KontrollettiToJsonParser._
+
   val logger: Logger = Logger { this.getClass }
 
-  private val acceptableCodes = List(200, 301)
-
-  @ApiOperation(
-    nickname = "get" //
-    , value = "Get list of commits" //
-    , notes = "A commit is a record of the change(s) in a repository", httpMethod = "GET" //
-    , response = classOf[Commit] //
-    , responseContainer = "List" //
-    )
-  @ApiResponses(Array(
-    new ApiResponse(code = 200, message = "Operation succeeded.") //
-    , new ApiResponse(code = 404, message = "Did not find the resource.") //
-    , new ApiResponse(code = 400, message = "Bad Request.")
-    , new ApiResponse(code = 500, message = "Internal Server Error." ) //
-    ))
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "repo_url", value = "repo url", required = true, dataType = "string", paramType = "path") //
-    , new ApiImplicitParam(name = "valid", value = "State of spec validation", allowableValues = "true,false", required = false, dataType = "string", paramType = "query") //
-    , new ApiImplicitParam(name = "from_commit_id", value = "Starting from commit-id", required = false, dataType = "string", paramType = "query") //
-    , new ApiImplicitParam(name = "to_commit_id", value = "Untill commit-id", required = false, dataType = "string", paramType = "query")) //
-    )
-  def commits(repoUrl: String, valid: Option[Boolean], from_commit_id: Option[String]) = Action.async {
-    val url = UriEncoding.decodePath(repoUrl, "UTF-8")
+  def normalize(repositoryUrl: String) = Action.async {
+    val url = UriEncoding.decodePath(repositoryUrl, "UTF-8")
     logger.info(s"Request: $url")
+
     searchService.parse(url) match {
       case Left(error) =>
-        Future.successful(BadRequest(error))
-      case Right(_) =>
-        Future.firstCompletedOf(Seq(searchService.commits(url))).map {
+        logger.info("Result: 400:" + error)
+        Future.successful(BadRequest)
+
+      case Right((host, project, repo)) =>
+        val normalizedUrl = searchService.normalize(host, project, repo)
+
+        searchService.isRepo(host, project, repo).map {
+          case Right(result) if (result && normalizedUrl.equals(url)) =>
+            logger.info(s"Result: 200 $normalizedUrl")
+            Ok
+          case Right(result) if result =>
+            logger.info(s"Result: 301 $normalizedUrl")
+            MovedPermanently(routes.RepoWS.byUrl(URLEncoder.encode(normalizedUrl, "UTF-8")).url)
           case Left(error) =>
-            logger.warn(error)
-            InternalServerError(error)
-          case Right(response) =>
-            logger.info("Result: OK")
-            Ok(Json.prettyPrint(Json.toJson(response))).as("application/json")
+            logger.warn(s"Result: 500 $normalizedUrl")
+            InternalServerError.as("application/problem+json")
+          case Right(result) =>
+            logger.info(s"Result: 404 $normalizedUrl")
+            NotFound
         }
 
     }
-
   }
 
-  @ApiOperation(
-    nickname = "head", //
-    value = "Access repository's meta information" //
-    , httpMethod = "HEAD" //
-    )
-  @ApiResponses(Array(
-    new ApiResponse(code = 200, message = "Url is a normalized repository-url.") //
-    , new ApiResponse(code = 301, message = "Moved permanently!") //
-    , new ApiResponse(code = 404, message = "Did not find the resource.") //
-    , new ApiResponse(code = 400, message = "Bad request.") //
-    ))
-  @ApiImplicitParams(Array( //
-    new ApiImplicitParam(name = "repo_url", //
-      value = "repo url", //
-      required = true, //
-      dataType = "string", //
-      paramType = "path")))
-  def normalize(repoUrl: String) = Action.async {
-    val repository = UriEncoding.decodePath(repoUrl, "UTF-8")
-    logger.info(s"Request: $repository")
+  def byUrl(repositoryUrl: String) = Action.async {
+    val url = UriEncoding.decodePath(repositoryUrl, "UTF-8")
+    logger.info(s"Request: $url")
 
-    searchService.normalizeURL(repository) match {
+    searchService.parse(url) match {
+      case Right((host, project, repo)) =>
+        searchService.repo(host, project, repo).map {
+          case Right(None) =>
+            logger.info(s"Result: 404 ")
+            NotFound
+          case Right(Some(result)) =>
+            logger.info(s"Result: 200 ")
+            Ok(Json.toJson(result)).as("application/x.zalando.repository+json")
+          case Left(error) =>
+            logger.info(s"Result: 500 ")
+            InternalServerError.as("application/problem+json")
+        }
       case Left(error) =>
-        logger.warn(s"Result: 400 $error")
-        Future.successful(BadRequest)
-
-      case Right(url) if (repository.equals(url)) => searchService.repoExists(url).map {
-        case Right(result) if acceptableCodes.contains(result) =>
-          logger.info(s"Result>>: 200 $url")
-          Ok
-
-        case Right(result) if result == 500 =>
-          logger.info(s"Result: 500 $url")
-          InternalServerError
-
-        case Right(result) =>
-          logger.info(s"Result: 404 $url")
-          NotFound
-      }
-
-      case Right(url) =>
-        logger.info(s"Result: 301 $url")
-        Future.successful(MovedPermanently(routes.RepoWS.get(URLEncoder.encode(url, "UTF-8")).url) //
-          .withHeaders(NORMALIZED_REQUEST_PARAMETER -> url))
+        logger.info(s"Result: 400 $error")
+        Future.successful(BadRequest(error).as("application/problem+json"))
     }
-  }
 
-  def get(repoUrl: String) = Action { NotImplemented }
+  }
 
 }

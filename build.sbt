@@ -16,7 +16,6 @@ ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages:= "<empty>;views.*;Rev
 
 libraryDependencies ++= Seq(
   ws,
-  "com.wordnik" 			%% "swagger-play2" 	% "1.3.12" 		withSources() withJavadoc(),
   "com.google.inject"  		% "guice" 			% "3.0" 		withSources() withJavadoc(),
   "javax.inject" 			% "javax.inject" 	% "1" 			withSources() withJavadoc(),
   "org.scalatest"			% "scalatest_2.11"  % "2.2.4"  		% "test" withSources() withJavadoc(),
@@ -27,7 +26,7 @@ libraryDependencies ++= Seq(
 // -------------Docker configuration-------------
 maintainer in Docker := "fernando.benjamin@zalando.de"
 
-daemonUser in Docker := "root"
+//daemonUser in Docker := "root"
  
 // Add this to let Jenkins overwrite your 
 dockerRepository :=  Some("pierone.stups.zalan.do/cd") 
@@ -48,5 +47,7 @@ mappings in Universal += {
   file( "./scm-source.json") -> "../../scm-source.json" 
 }
 
-dockerCommands +=  ExecCmd("ADD", "/scm-source.json", "/scm-source.json")
+dockerCommands ++=  Seq(
+  Cmd("ADD", "/scm-source.json" + " /scm-source.json")  
+)
 
