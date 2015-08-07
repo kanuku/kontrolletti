@@ -15,11 +15,11 @@ import java.net.URLEncoder
 import scala.concurrent.future
 import scala.concurrent.Future
 import model.RepositoryResult
+import model.KontrollettiToJsonParser._
 
 @Singleton
 class RepoWS @Inject() (searchService: Search) extends Controller {
 
-  import model.KontrollettiToModelParser._
   val logger: Logger = Logger { this.getClass }
 
   def normalize(repositoryUrl: String) = Action.async {

@@ -18,7 +18,7 @@ import scala.concurrent.Future
 import model.Repository
 import test.util.MockitoUtils
 import play.api.libs.json.Json
-
+import model.KontrollettiToJsonParser._
 class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
   private val X_NORMALIZED_REPOSITORY_URL_HEADER = "X-Normalized-Repository-URL"
   private val alternativeUrl = "git@github.com:zalando/kontrolletti.git"
@@ -156,7 +156,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
         val Some(result) = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl"))
         status(result) mustEqual OK
-        import model.KontrollettiToModelParser._
+
         contentAsString(result) mustEqual Json.stringify(Json.toJson(repository))
         contentType(result) mustEqual Some("application/x.zalando.repository+json")
       }

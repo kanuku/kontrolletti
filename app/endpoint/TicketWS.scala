@@ -1,6 +1,6 @@
 package endpoint
 
-import scala.concurrent.Future 
+import scala.concurrent.Future
 import javax.inject._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc.Action
@@ -9,7 +9,7 @@ import model._
 import play.api.Logger
 import service.Search
 import play.api.libs.json.Json
-
+import model.KontrollettiToJsonParser._
 
 @Singleton
 class TicketWS @Inject() (searchService: Search) extends Controller {
@@ -17,12 +17,12 @@ class TicketWS @Inject() (searchService: Search) extends Controller {
   import model.KontrollettiToModelParser._
 
   private val logger: Logger = Logger(this.getClass())
-  
+
   def tickets(host: String, project: String, repository: String, sinceId: Option[String], untilId: Option[String]) = Action.async {
-    
+
     logger.info(s"host: $host, project: $project repository: $repository, sinceId: $sinceId, untilId: $untilId")
-    val result= searchService.tickets(host, project, repository, sinceId, untilId)
-    logger.info("Information: "+result)
+    val result = searchService.tickets(host, project, repository, sinceId, untilId)
+    logger.info("Information: " + result)
     result.map {
       case Right(None) =>
         logger.info(s"Result: 404 ")

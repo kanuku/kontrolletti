@@ -19,6 +19,7 @@ import org.scalatest.concurrent.ScalaFutures
 import scala.concurrent.duration.Duration
 import play.api.libs.json.Json
 import java.net.URLEncoder
+import model.KontrollettiToJsonParser._
 
 class SpecificationWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
   val reposRoute = "/api/repos/"
@@ -48,7 +49,6 @@ class SpecificationWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         val Some(result) = route(FakeRequest(GET, url))
         status(result) mustEqual OK
         contentType(result) mustEqual Some("application/x.zalando.ticket+json")
-        import model.KontrollettiToModelParser._
         contentAsString(result) mustEqual Json.stringify(Json.toJson(List(ticket)))
       }
 

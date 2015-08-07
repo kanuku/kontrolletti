@@ -46,8 +46,6 @@ class SCMParserTest extends FunSuite with Matchers {
     val jsonData = Json.parse(FakeResponseData.multiStashCommit)
     val result = StashToJsonParser.commitToModel(jsonData)
     assert(result.isRight, "Parser failed!!")
-    println("##########")
-    println("RESULT = " + result)
     val commit_0 = result.right.get(0)
     val commit_1 = result.right.get(1)
 

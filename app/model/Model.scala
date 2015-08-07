@@ -15,22 +15,24 @@ import play.api.libs.functional.syntax._
 case class Error(detail: String, status: Int, errorType: String)
 case class Link(href: String, method: String, rel: String, relType: String)
 case class Author(name: String, email: String, links: List[Link])
+//TODO: Add [specs] and [valid] properties 
 case class Commit(id: String, message: String, parentIds: List[String], author: Author //, valid: Option[Boolean]
 , links: Option[List[Link]])
 case class Repository(html_url: String, project: String, host: String, repository: String, commits: Option[List[Commit]], links: Option[List[Link]])
 case class Ticket(name: String, description: String, href: String, links: List[Link])
 
 //MUST HAVE HATEOAS RESULTS
-case class RepositoryResult(_links: List[Link], result: Repository)
-case class RepositoriesResult(_links: List[Link], result: List[Repository])
-case class TicketResult(_links: List[Link], result: List[Ticket])
-case class CommitResult(_links: List[Link], result: Commit)
-case class CommitsResult(_links: List[Link], result: List[Commit])
+//FIXME: Create a generic Parent case class. This way you will only need one single writer :) for all Results.
+case class RepositoryResult(links: List[Link], result: Repository)
+case class RepositoriesResult(links: List[Link], result: List[Repository])
+case class TicketResult(links: List[Link], result: List[Ticket])
+case class CommitResult(links: List[Link], result: Commit)
+case class CommitsResult(links: List[Link], result: List[Commit])
 
 //TODO: Evaluate Moving the readers in this parser(KontrollettiToJsonParser) into Companion objects
 // And overriding those companion objects in the SCM Parser
 
-object KontrollettiToJsonParser {
+object KontrollettiToModelParser {
 
   implicit val errorReader: Reads[Error] = (
     (__ \ "detail").read[String] and
@@ -92,7 +94,7 @@ object KontrollettiToJsonParser {
     (__ \ "result").read[Repository])(RepositoryResult.apply _)
 
 }
-object KontrollettiToModelParser {
+object KontrollettiToJsonParser {
 
   implicit val errorWriter: Writes[Error] = (
     (__ \ "detail").write[String] and
@@ -139,18 +141,18 @@ object KontrollettiToModelParser {
     )(unlift(Ticket.unapply))
 
   implicit val commitsResultWriter: Writes[CommitsResult] = (
-    (__ \ "links").write[List[Link]] and //
+    (__ \ "_links").write[List[Link]] and //
     (__ \ "result").write[List[Commit]])(unlift(CommitsResult.unapply))
 
   implicit val commitResultWriter: Writes[CommitResult] = (
-    (__ \ "links").write[List[Link]] and //
+    (__ \ "_links").write[List[Link]] and //
     (__ \ "result").write[Commit])(unlift(CommitResult.unapply))
 
   implicit val repositoryResultWriter: Writes[RepositoryResult] = (
-    (__ \ "links").write[List[Link]] and //
+    (__ \ "_links").write[List[Link]] and //
     (__ \ "result").write[Repository])(unlift(RepositoryResult.unapply))
   implicit val repositoriesResultWriter: Writes[RepositoriesResult] = (
-    (__ \ "links").write[List[Link]] and //
+    (__ \ "_links").write[List[Link]] and //
     (__ \ "result").write[List[Repository]])(unlift(RepositoriesResult.unapply))
 
 }

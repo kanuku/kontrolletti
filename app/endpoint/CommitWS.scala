@@ -3,7 +3,7 @@ package endpoint
 import java.net.URLEncoder
 import scala.concurrent.Future
 import javax.inject._
-import model.KontrollettiToModelParser._
+import model.KontrollettiToJsonParser._
 import model.Error
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -18,7 +18,6 @@ import model.CommitsResult
 @Singleton
 class CommitWS @Inject() (search: Search) extends Controller {
   private val defaultErrorResponse = Json.toJson(new Error("An error occurred, please check the logs", 500, "undefined"))
-  import model.KontrollettiToModelParser._
   val logger: Logger = Logger { this.getClass }
 
  def diff(host: String, project: String, repository: String, sourceId: String, targetId: String) = Action.async {

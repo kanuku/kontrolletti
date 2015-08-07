@@ -18,7 +18,7 @@ import play.api.libs.json.Writes
 import play.api.libs.json._
 import service.Search
 import test.util.MockitoUtils
-import model.KontrollettiToModelParser._
+import model.KontrollettiToJsonParser._
 import model.CommitResult
 class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
   val host = "github.com"
