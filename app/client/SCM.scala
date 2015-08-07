@@ -63,21 +63,13 @@ sealed trait SCM {
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String
 
   /**
-   * Issues a HEAD operation against the give url on the SCM.
+   * Issues a HEAD operation against the given URL on the SCM.
    * @param host DNS/IP of the SCM server
-   * @param url The url to executed the HEAD operation against.
+   * @param url The URL to executed the HEAD operation against.
    * @return The future with the response of the call
    *
    */
-  def head(url: String): Future[WSResponse]
-  /**
-   * Issues a HEAD operation against the give url on the SCM.
-   * @param host DNS/IP of the SCM server
-   * @param url The url to executed the HEAD operation against.
-   * @return The future with the response of the call
-   *
-   */
-  def get(url: String): Future[WSResponse]
+  def head(host: String, url: String): Future[WSResponse]
 
   def resolver(host: String): Option[SCMResolver]
 
@@ -89,22 +81,22 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[WSResponse] = {
     val res: SCMResolver = resolver(host).get
     val url = res.commits(host, project, repository)
-    get(url)
+    get(host, url)
   }
   def commit(host: String, project: String, repository: String, id: String): Future[WSResponse] = {
     val res: SCMResolver = resolver(host).get
-    get(res.commit(host, project, repository, id))
+    get(host, res.commit(host, project, repository, id))
   }
   def repo(host: String, project: String, repository: String): Future[WSResponse] = {
     val res: SCMResolver = resolver(host).get
     val url = res.repo(host, project, repository)
-    get(url)
+    get(host, url)
   }
 
   def tickets(host: String, project: String, repository: String): Future[WSResponse] = {
     val res: SCMResolver = resolver(host).get
     val url = res.tickets(host, project, repository)
-    get(url)
+    get(host, url)
 
   }
   def repoUrl(host: String, project: String, repository: String): String = {
@@ -116,18 +108,28 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
     res.diffUrl(host, project, repository, source, target)
   }
 
-  def get(url: String): Future[WSResponse] = {
+  def get(host: String, url: String): Future[WSResponse] = {
     logger.info(s"Issuing a GET on $url")
-    val result = dispatcher.requestHolder(url)
-    val response = result.get()
-    response
+    val res = resolver(host).get
+    dispatcher //
+      .requestHolder(url) //
+      .withHeaders(res.accessTokenKey -> res.accessTokenValue) //
+      .get()
 
   }
-  def head(url: String): Future[WSResponse] = {
+  def head(host: String, url: String): Future[WSResponse] = {
     logger.info(s"Issuing a HEAD on $url")
-    val result = dispatcher.requestHolder(url)
-    val response = result.head()
-    response
+    resolver(host) match {
+      case Some(resolver) if resolver.name == "github" =>
+        logger.info(s"Calling(github) HEAD on $url")
+        dispatcher.requestHolder(url) //
+          .withHeaders(resolver.accessTokenKey -> resolver.accessTokenValue)
+          .head()
+      case Some(resolver) if resolver.name == "stash" =>
+        logger.info(s"Calling(stash) GET on $url")
+        get(host, url)
+    }
+
   }
 
   def resolver(host: String) = {

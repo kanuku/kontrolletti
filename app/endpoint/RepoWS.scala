@@ -64,7 +64,6 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
             NotFound
           case Right(Some(result)) =>
             logger.info(s"Result: 200 ")
-            logger.info("RESULT >> "+result)
             Ok(Json.toJson(result)).as("application/x.zalando.repository+json")
           case Left(error) =>
             logger.info(s"Result: 500 ")

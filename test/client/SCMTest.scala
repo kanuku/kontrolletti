@@ -80,12 +80,12 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
   }
 
   "SCM#repoUrl" should "return a repository-url for github API" in {
-    val url = s"https://$github/$project/$repository"
+    val url = s"https://api.$github/repos/$project/$repository"
     val result = client.repoUrl(github, project, repository)
     assert(result == url)
   }
   it should "return a repository-url for stash API" in {
-    val url = s"https://$stash/projects/$project/repos/$repository/browse"
+    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository"
     val result = client.repoUrl(stash, project, repository)
     assert(result == url)
   }
@@ -101,23 +101,37 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
     assert(result == url)
   }
 
-  "SCM#head" should "" in {
+  "SCM#head" should "GET github url" in {
     val url = s"Test"
     when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.head()).thenReturn(mockedResponse)
-    val result = client.head(url)
+    val result = client.head(github,url)
     assert(result == mockedResponse)
     val urlCap = ArgumentCaptor.forClass(classOf[String])
     verify(mockedDispatcher, times(1)).requestHolder(urlCap.capture())
     assert(url == urlCap.getValue)
   }
+  "SCM#head" should "HEAD stash url" in {
+	  val url = s"Test"
+			  when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
+        when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
+			  when(mockedRequestHolder.get()).thenReturn(mockedResponse)
+			  val result = client.get(stash,url)
+			  assert(result == mockedResponse)
+			  val urlCap = ArgumentCaptor.forClass(classOf[String])
+			  verify(mockedDispatcher, times(1)).requestHolder(urlCap.capture())
+			  assert(url == urlCap.getValue)
+  }
 
   def testGET(url: String, call: => Future[WSResponse]) = {
     when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.get()).thenReturn(mockedResponse)
     val result = call
     assert(result == mockedResponse)
     val urlCap = ArgumentCaptor.forClass(classOf[String])
+    val headerCap = ArgumentCaptor.forClass(classOf[String])
     verify(mockedDispatcher, times(1)).requestHolder(urlCap.capture())
     assert(url == urlCap.getValue)
   }

@@ -127,80 +127,87 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     assert(result.right.get == (host, project, repository))
   }
 
-  "Search#normalize" should "normalize the URL" in {
+  "Search#normalize" should "normalize the github URL" in {
+    val url = "https://api.github.com/repos/zalando-bus/kontrolletti"
     val client = new SCMImpl(new RequestDispatcherImpl())
     val search = new SearchImpl(client)
     assert(search.normalize(host, project, repository) == url)
+  }
+  "Search#normalize" should "normalize the stash URL" in {
+	  val url = "https://stash.zalando.net/rest/api/1.0/projects/zalando-bus/repos/kontrolletti"
+			  val client = new SCMImpl(new RequestDispatcherImpl())
+	  val search = new SearchImpl(client)
+	  assert(search.normalize("stash.zalando.net", project, repository) == url)
   }
 
   "Search#isRepo" should "return true when receiving a 200 response" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("", 200)
     when(client.repoUrl(host, project, repository)).thenReturn(url)
-    when(client.head(url)).thenReturn(response)
+    when(client.head(host,url)).thenReturn(response)
     val result = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
     assert(result.right.get, "Result must be true")
     verify(client, times(1)).repoUrl(host, project, repository)
-    verify(client, times(1)).head(url)
+    verify(client, times(1)).head(host,url)
   }
   it should "return false when receiving a 404 response" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("", 404)
     when(client.repoUrl(host, project, repository)).thenReturn(url)
-    when(client.head(url)).thenReturn(response)
+    when(client.head(host, url)).thenReturn(response)
     val result = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
     assert(!result.right.get, "Result must be false")
     verify(client, times(1)).repoUrl(host, project, repository)
-    verify(client, times(1)).head(url)
+    verify(client, times(1)).head(host,url)
   }
   it should "return error when client throws exception" in {
     when(client.repoUrl(host, project, repository)).thenReturn(url)
-    when(client.head(url)).thenThrow(new RuntimeException())
+    when(client.head(host,url)).thenThrow(new RuntimeException())
     val result = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     assertEitherIsLeft(result)
     assertEitherIsNotNull(result)
     assert(result.left.get == defaultError, f"Result should be [$defaultError]")
     verify(client, times(1)).repoUrl(host, project, repository)
-    verify(client, times(1)).head(url)
+    verify(client, times(1)).head(host,url)
   }
 
   "Search#diff" should "return true when receiving a 200 Response" in {
     val diffLink = "https://github.com/zalando/kontrolletti/compare/sourceId...targetId"
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("", 200)
     when(client.diffUrl(host, project, repository, sourceId, targetId)).thenReturn(diffLink)
-    when(client.head(diffLink)).thenReturn(response)
+    when(client.head(host,diffLink)).thenReturn(response)
     val result = Await.result(search.diff(host, project, repository, sourceId, targetId), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
     assert(result.right.get.isDefined)
     assert(result.right.get.get.href == diffLink, "The Link object should have a href")
     verify(client, times(1)).diffUrl(host, project, repository, sourceId, targetId)
-    verify(client, times(1)).head(diffLink)
+    verify(client, times(1)).head(host,diffLink)
   }
   it should "return false when receiving a 404 response" in {
     val diffLink = "https://github.com/zalando/kontrolletti/compare/sourceId...targetId"
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("", 404)
     when(client.diffUrl(host, project, repository, sourceId, targetId)).thenReturn(diffLink)
-    when(client.head(diffLink)).thenReturn(response)
+    when(client.head(host,diffLink)).thenReturn(response)
     val result = Await.result(search.diff(host, project, repository, sourceId, targetId), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
     assert(result.isRight)
     assert(!result.right.get.isDefined, "The result should be None")
     verify(client, times(1)).diffUrl(host, project, repository, sourceId, targetId)
-    verify(client, times(1)).head(diffLink)
+    verify(client, times(1)).head(host,diffLink)
   }
   it should "return error when client throws exception" in {
     when(client.diffUrl(host, project, repository, sourceId, targetId)).thenReturn(url)
-    when(client.head(url)).thenThrow(new RuntimeException())
+    when(client.head(host,url)).thenThrow(new RuntimeException())
     val result = Await.result(search.diff(host, project, repository, sourceId, targetId), Duration("5 seconds"))
     assertEitherIsLeft(result)
     assertEitherIsNotNull(result)
     assert(result.left.get == defaultError, f"Result should be [$defaultError]")
     verify(client, times(1)).diffUrl(host, project, repository, sourceId, targetId)
-    verify(client, times(1)).head(url)
+    verify(client, times(1)).head(host,url)
   }
   "Search#tickets" should " return repositories when the result is not Empty" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)

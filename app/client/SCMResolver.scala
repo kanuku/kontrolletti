@@ -134,7 +134,7 @@ object GithubResolver extends SCMResolver {
   def tickets(host: String, project: String, repository: String): String = s"$antecedent$host/repos/$project/$repository/commits"
 
   def repo(host: String, project: String, repository: String) = s"$antecedent$host/repos/$project/$repository"
-  def repoUrl(host: String, project: String, repository: String) = s"https://$host/$project/$repository"
+  def repoUrl(host: String, project: String, repository: String) = repo(host,project,repository)
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"http://$host/$project/$repository/compare/$source...$target"
 
   // Authorization variables
@@ -149,7 +149,7 @@ object StashResolver extends SCMResolver {
   def tickets(host: String, project: String, repository: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits"
 
   def repo(host: String, project: String, repository: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository"
-  def repoUrl(host: String, project: String, repository: String) = s"https://$host/projects/$project/repos/$repository/browse"
+  def repoUrl(host: String, project: String, repository: String) = repo(host,project,repository)
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
 
   // Authorization variables

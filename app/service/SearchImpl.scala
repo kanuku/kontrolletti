@@ -1,29 +1,30 @@
 package service
 
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
 import akka.dispatch.OnComplete
 import akka.dispatch.OnFailure
+import client.GithubToJsonParser
+import client.SCM
+import client.SCMParser
+import client.SCMParser
+import client.StashToJsonParser
 import javax.inject._
+import model.Commit
+import model.Link
+import model.Repository
+import model.Ticket
 import play.api.Logger
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.libs.json._
 import play.api.libs.json.Reads._
-import client.SCM
-import model.Author
-import scala.concurrent.Future
-import scala.util.{ Success, Failure }
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.ws.WS
 import play.api.libs.ws.WSResponse
-import client.GithubToJsonParser
-import client.StashToJsonParser
-import client.SCMParser
-import client.SCMParser
-import client.SCMResolver
-import model.Commit
 import utility.UrlParser
-import model.Repository
-import model.Link
-import model.Ticket
-import scala.util.Try
 
 /**
  * @author fbenjamin
@@ -69,12 +70,12 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   def isRepo(host: String, project: String, repository: String): Future[Either[String, Boolean]] = {
     val url = client.repoUrl(host, project, repository)
-    isUrlValid(url)
+    isUrlValid(host,url)
   }
 
   def diff(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]] = {
     val url = client.diffUrl(host, project, repository, source, target)
-    isUrlValid(url).map { response =>
+    isUrlValid(host,url).map { response =>
       response.right.map {
         _ match {
           case true  => Some(new Link(url, null, null, null))
@@ -92,12 +93,12 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
     }
 
-  def isUrlValid(url: String): Future[Either[String, Boolean]] =
-    executeCall(client.head(url)).map { response =>
+  def isUrlValid(host:String, url: String): Future[Either[String, Boolean]] =
+    executeCall(client.head(host,url)).map { response =>
       response.right.map {
         _.status match {
           case status if ACCEPTABLE_CODES.contains(status) => true
-          case 404                                         => false
+          case _                                         => false
         }
       }
     }
@@ -162,3 +163,5 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
     }
 
 }
+
+
