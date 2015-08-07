@@ -15,17 +15,17 @@ import play.api.libs.functional.syntax._
 case class Error(detail: String, status: Int, errorType: String)
 case class Link(href: String, method: String, rel: String, relType: String)
 case class Author(name: String, email: String, links: List[Link])
-case class Commit(id: String, message: String, parentId: List[String], author: Author//, valid: Option[Boolean]
-    , links: List[Link])
-case class Repository(href: String, project: String, host: String, repository: String, commits: List[Commit], links: List[Link])
+case class Commit(id: String, message: String, parentId: List[String], author: Author //, valid: Option[Boolean]
+, links: List[Link])
+case class Repository(html_url: String, project: String, host: String, repository: String, commits: Option[List[Commit]], links: Option[List[Link]])
 case class Ticket(name: String, description: String, href: String, links: List[Link])
 
-
-case class RepositoryResult(_links: List[Link], result: Repository) 
-case class RepositoriesResult(_links: List[Link], result: List[Repository]) 
-case class TicketResult(_links: List[Link], result: List[Ticket]) 
-case class CommitResult(_links: List[Link], result: Commit) 
-case class CommitsResult(_links: List[Link], result: List[Commit]) 
+//MUST HAVE HATEOAS RESULTS
+case class RepositoryResult(_links: List[Link], result: Repository)
+case class RepositoriesResult(_links: List[Link], result: List[Repository])
+case class TicketResult(_links: List[Link], result: List[Ticket])
+case class CommitResult(_links: List[Link], result: Commit)
+case class CommitsResult(_links: List[Link], result: List[Commit])
 
 //TODO: Evaluate Moving the readers in this parser(KontrollettiToJsonParser) into Companion objects
 // And overriding those companion objects in the SCM Parser
@@ -56,8 +56,8 @@ object KontrollettiToJsonParser {
     (__ \ "message").read[String] and
     (__ \ "parentId").read[List[String]] and
     (__ \ "author").read[Author] and
-//    (json \ "null").asOpt[Boolean]
-//    Reads.pure(Some(false)) and
+    //    (json \ "null").asOpt[Boolean]
+    //    Reads.pure(Some(false)) and
     (__ \ "links").read[List[Link]] //
     )(Commit.apply _)
 
@@ -66,8 +66,8 @@ object KontrollettiToJsonParser {
     (__ \ "host").read[String] and
     (__ \ "project").read[String] and
     (__ \ "repository").read[String] and
-    (__ \ "commits").read[List[Commit]] and
-    (__ \ "links").read[List[Link]] //
+    (__ \ "commits").readNullable[List[Commit]] and
+    (__ \ "links").readNullable[List[Link]] //
     )(Repository.apply _)
 
   implicit val ticketReader: Reads[Ticket] = (
@@ -120,7 +120,7 @@ object KontrollettiToModelParser {
     (__ \ "message").write[String] and
     (__ \ "parentId").write[List[String]] and
     (__ \ "author").write[Author] and
-//    (__ \ "valid").writeNullable[Boolean] and
+    //    (__ \ "valid").writeNullable[Boolean] and
     (__ \ "links").write[List[Link]] //
     )(unlift(Commit.unapply))
 
@@ -129,8 +129,8 @@ object KontrollettiToModelParser {
     (__ \ "host").write[String] and
     (__ \ "project").write[String] and
     (__ \ "repository").write[String] and
-    (__ \ "commits").write[List[Commit]] and
-    (__ \ "links").write[List[Link]] //
+    (__ \ "commits").writeNullable[List[Commit]] and
+    (__ \ "links").writeNullable[List[Link]] //
     )(unlift(Repository.unapply))
 
   implicit val ticketWriter: Writes[Ticket] = (
