@@ -288,5 +288,161 @@ object FakeResponseData {
       "contributions" : 2
     } ]
 """
+val ghRepo = """
+    {
+      "id" : 33127716,
+      "name" : "kontrolletti",
+      "full_name" : "zalando/kontrolletti",
+      "owner" : {
+        "login" : "zalando",
+        "id" : 1564818,
+        "avatar_url" : "https://avatars.githubusercontent.com/u/1564818?v=3",
+        "gravatar_id" : "",
+        "url" : "https://api.github.com/users/zalando",
+        "html_url" : "https://github.com/zalando",
+        "followers_url" : "https://api.github.com/users/zalando/followers",
+        "following_url" : "https://api.github.com/users/zalando/following{/other_user}",
+        "gists_url" : "https://api.github.com/users/zalando/gists{/gist_id}",
+        "starred_url" : "https://api.github.com/users/zalando/starred{/owner}{/repo}",
+        "subscriptions_url" : "https://api.github.com/users/zalando/subscriptions",
+        "organizations_url" : "https://api.github.com/users/zalando/orgs",
+        "repos_url" : "https://api.github.com/users/zalando/repos",
+        "events_url" : "https://api.github.com/users/zalando/events{/privacy}",
+        "received_events_url" : "https://api.github.com/users/zalando/received_events",
+        "type" : "Organization",
+        "site_admin" : false
+      },
+      "private" : false,
+      "html_url" : "https://github.com/zalando/kontrolletti",
+      "description" : "The REST API that aggregates and unifies information from different Source Control Management for historical and auditing purposes.",
+      "fork" : false,
+      "url" : "https://api.github.com/repos/zalando/kontrolletti",
+      "forks_url" : "https://api.github.com/repos/zalando/kontrolletti/forks",
+      "keys_url" : "https://api.github.com/repos/zalando/kontrolletti/keys{/key_id}",
+      "collaborators_url" : "https://api.github.com/repos/zalando/kontrolletti/collaborators{/collaborator}",
+      "teams_url" : "https://api.github.com/repos/zalando/kontrolletti/teams",
+      "hooks_url" : "https://api.github.com/repos/zalando/kontrolletti/hooks",
+      "issue_events_url" : "https://api.github.com/repos/zalando/kontrolletti/issues/events{/number}",
+      "events_url" : "https://api.github.com/repos/zalando/kontrolletti/events",
+      "assignees_url" : "https://api.github.com/repos/zalando/kontrolletti/assignees{/user}",
+      "branches_url" : "https://api.github.com/repos/zalando/kontrolletti/branches{/branch}",
+      "tags_url" : "https://api.github.com/repos/zalando/kontrolletti/tags",
+      "blobs_url" : "https://api.github.com/repos/zalando/kontrolletti/git/blobs{/sha}",
+      "git_tags_url" : "https://api.github.com/repos/zalando/kontrolletti/git/tags{/sha}",
+      "git_refs_url" : "https://api.github.com/repos/zalando/kontrolletti/git/refs{/sha}",
+      "trees_url" : "https://api.github.com/repos/zalando/kontrolletti/git/trees{/sha}",
+      "statuses_url" : "https://api.github.com/repos/zalando/kontrolletti/statuses/{sha}",
+      "languages_url" : "https://api.github.com/repos/zalando/kontrolletti/languages",
+      "stargazers_url" : "https://api.github.com/repos/zalando/kontrolletti/stargazers",
+      "contributors_url" : "https://api.github.com/repos/zalando/kontrolletti/contributors",
+      "subscribers_url" : "https://api.github.com/repos/zalando/kontrolletti/subscribers",
+      "subscription_url" : "https://api.github.com/repos/zalando/kontrolletti/subscription",
+      "commits_url" : "https://api.github.com/repos/zalando/kontrolletti/commits{/sha}",
+      "git_commits_url" : "https://api.github.com/repos/zalando/kontrolletti/git/commits{/sha}",
+      "comments_url" : "https://api.github.com/repos/zalando/kontrolletti/comments{/number}",
+      "issue_comment_url" : "https://api.github.com/repos/zalando/kontrolletti/issues/comments{/number}",
+      "contents_url" : "https://api.github.com/repos/zalando/kontrolletti/contents/{path}",
+      "compare_url" : "https://api.github.com/repos/zalando/kontrolletti/compare/{base}...{head}",
+      "merges_url" : "https://api.github.com/repos/zalando/kontrolletti/merges",
+      "archive_url" : "https://api.github.com/repos/zalando/kontrolletti/{archive_format}{/ref}",
+      "downloads_url" : "https://api.github.com/repos/zalando/kontrolletti/downloads",
+      "issues_url" : "https://api.github.com/repos/zalando/kontrolletti/issues{/number}",
+      "pulls_url" : "https://api.github.com/repos/zalando/kontrolletti/pulls{/number}",
+      "milestones_url" : "https://api.github.com/repos/zalando/kontrolletti/milestones{/number}",
+      "notifications_url" : "https://api.github.com/repos/zalando/kontrolletti/notifications{?since,all,participating}",
+      "labels_url" : "https://api.github.com/repos/zalando/kontrolletti/labels{/name}",
+      "releases_url" : "https://api.github.com/repos/zalando/kontrolletti/releases{/id}",
+      "created_at" : "2015-03-30T14:24:38Z",
+      "updated_at" : "2015-08-04T12:16:41Z",
+      "pushed_at" : "2015-08-04T08:08:56Z",
+      "git_url" : "git://github.com/zalando/kontrolletti.git",
+      "ssh_url" : "git@github.com:zalando/kontrolletti.git",
+      "clone_url" : "https://github.com/zalando/kontrolletti.git",
+      "svn_url" : "https://github.com/zalando/kontrolletti",
+      "homepage" : "https://zalando.github.io/kontrolletti",
+      "size" : 2739,
+      "stargazers_count" : 1,
+      "watchers_count" : 1,
+      "language" : "JavaScript",
+      "has_issues" : true,
+      "has_downloads" : true,
+      "has_wiki" : true,
+      "has_pages" : true,
+      "forks_count" : 0,
+      "mirror_url" : null,
+      "open_issues_count" : 14,
+      "forks" : 0,
+      "open_issues" : 14,
+      "watchers" : 1,
+      "default_branch" : "develop",
+      "organization" : {
+        "login" : "zalando",
+        "id" : 1564818,
+        "avatar_url" : "https://avatars.githubusercontent.com/u/1564818?v=3",
+        "gravatar_id" : "",
+        "url" : "https://api.github.com/users/zalando",
+        "html_url" : "https://github.com/zalando",
+        "followers_url" : "https://api.github.com/users/zalando/followers",
+        "following_url" : "https://api.github.com/users/zalando/following{/other_user}",
+        "gists_url" : "https://api.github.com/users/zalando/gists{/gist_id}",
+        "starred_url" : "https://api.github.com/users/zalando/starred{/owner}{/repo}",
+        "subscriptions_url" : "https://api.github.com/users/zalando/subscriptions",
+        "organizations_url" : "https://api.github.com/users/zalando/orgs",
+        "repos_url" : "https://api.github.com/users/zalando/repos",
+        "events_url" : "https://api.github.com/users/zalando/events{/privacy}",
+        "received_events_url" : "https://api.github.com/users/zalando/received_events",
+        "type" : "Organization",
+        "site_admin" : false
+      },
+      "network_count" : 0,
+      "subscribers_count" : 7
+    }
+    """
+  val stashRepo = """
+    {
+      "slug" : "ci-cd",
+      "id" : 2578,
+      "name" : "ci-cd",
+      "scmId" : "git",
+      "state" : "AVAILABLE",
+      "statusMessage" : "Available",
+      "forkable" : false,
+      "project" : {
+        "key" : "DOC",
+        "id" : 981,
+        "name" : "Dockerfiles",
+        "public" : true,
+        "type" : "NORMAL",
+        "link" : {
+          "url" : "/projects/DOC",
+          "rel" : "self"
+        },
+        "links" : {
+          "self" : [ {
+            "href" : "https://stash.zalando.net/projects/DOC"
+          } ]
+        }
+      },
+      "public" : true,
+      "link" : {
+        "url" : "/projects/DOC/repos/ci-cd/browse",
+        "rel" : "self"
+      },
+      "cloneUrl" : "https://stash.zalando.net/scm/doc/ci-cd.git",
+      "links" : {
+        "clone" : [ {
+          "href" : "https://stash.zalando.net/scm/doc/ci-cd.git",
+          "name" : "http"
+        }, {
+          "href" : "ssh://git@stash.zalando.net:7999/doc/ci-cd.git",
+          "name" : "ssh"
+        } ],
+        "self" : [ {
+          "href" : "https://stash.zalando.net/projects/DOC/repos/ci-cd/browse"
+        } ]
+      }
+    }
+    """
+
 
 }

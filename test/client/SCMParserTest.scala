@@ -3,8 +3,6 @@ package client
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
 
-
-import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.libs.json.Json._
 import test.util.FakeResponseData
@@ -61,5 +59,30 @@ class SCMParserTest extends FunSuite with Matchers {
     assert(commit_1.author.email == "benibadboy@hotmail.com")
     assert(commit_1.author.name == "Fernando Benjamin")
   }
+//  
+//    test("Deserialize single jsonObject(Repo) with the GithubParser") {
+//    val jsonData = Json.parse(FakeResponseData.ghRepo)
+//    val result = GithubToJsonParser.repoToModel(jsonData)
+//    assert(result.isRight, "Failed to parse!!")
+//    val repo = result.right.get
+//    assert(repo != null)
+//    assert(repo.html_url == "https://github.com/zalando/kontrolletti")
+//    assert(repo.project == null)
+//    assert(repo.host == null)
+//    assert(repo.repository == null)
+//    assert(repo.links == None)
+//  }
+//  test("Deserialize single jsonObject(Repo) with the StashParser") {
+//    val jsonData = Json.parse(FakeResponseData.stashRepo)
+//    val result = StashToJsonParser.repoToModel(jsonData)
+//    assert(result.isRight, "Failed to parse!!")
+//    val repo = result.right.get
+//    assert(repo != null)
+//    assert(repo.html_url == "https://stash.zalando.net/projects/DOC/repos/ci-cd/browse")
+//    assert(repo.project == null)
+//    assert(repo.host == null)
+//    assert(repo.repository == null)
+//    assert(repo.links == None)
+//  }
 
 }

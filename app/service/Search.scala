@@ -32,7 +32,7 @@ trait Search {
   def commit(host: String, project: String, repository: String, id: String): Future[Either[String, Option[List[Commit]]]]
 
   /**
-   * Returns repositories from the given repository in the project on the given host.
+    * Returns a single repository from the given project on the given host.
    * @param host hostname/IP-address of the SCM server <br/>
    * @param project name of the project
    * @param repository name of the repository

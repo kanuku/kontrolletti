@@ -68,7 +68,7 @@ sealed trait SCMParser {
    * object or the detailed error message.
    * @return Either[Left,Right] - Left contains the error message and Right the deserialized Object
    */
-  def extract[T](input: JsResult[T]): Either[String, T] = {
+  def extract[T]( input: JsResult[T]): Either[String, T] = {
     input match {
       case s: JsSuccess[T] =>
         Right(s.get)
@@ -77,7 +77,7 @@ sealed trait SCMParser {
         Left(s"Failed to parse!!")
     }
   }
-
+   
 }
 
 /**
