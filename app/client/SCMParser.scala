@@ -68,7 +68,7 @@ sealed trait SCMParser {
    * object or the detailed error message.
    * @return Either[Left,Right] - Left contains the error message and Right the deserialized Object
    */
-  def extract[T]( input: JsResult[T]): Either[String, T] = {
+  def extract[T](input: JsResult[T]): Either[String, T] = {
     input match {
       case s: JsSuccess[T] =>
         Right(s.get)
@@ -77,7 +77,7 @@ sealed trait SCMParser {
         Left(s"Failed to parse!!")
     }
   }
-   
+
 }
 
 /**
@@ -110,8 +110,15 @@ object GithubToJsonParser extends SCMParser {
     )(Commit.apply _)
 
   implicit val ticketReader: Reads[Ticket] = null
-  
-  implicit val repoReader: Reads[Repository] = null
+
+  implicit val repoReader: Reads[Repository] = (
+    (JsPath \ "html_url").read[String]
+    and Reads.pure(null)
+    and Reads.pure(null)
+    and Reads.pure(null)
+    and Reads.pure(null)
+    and Reads.pure(None))(Repository.apply _)
+
 }
 
 /**
@@ -125,7 +132,7 @@ object StashToJsonParser extends SCMParser {
   val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => extract((value \ "values").validate[List[Commit]])
   val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => extract(value.validate[List[Ticket]])
   val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => extract(value.validate[Repository])
-  val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (value) => extract(value.validate[List[Author]]) 
+  val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (value) => extract(value.validate[List[Author]])
 
   private implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
@@ -143,5 +150,13 @@ object StashToJsonParser extends SCMParser {
     and Reads.pure(null) // links
     )(Commit.apply _)
   implicit val ticketReader: Reads[Ticket] = null
-  implicit val repoReader: Reads[Repository] = null
+
+  implicit val repoReader: Reads[Repository] = (
+    (JsPath \ "links" \ "self" \\ "href").read[String]
+    and Reads.pure(null)
+    and Reads.pure(null)
+    and Reads.pure(null)
+    and Reads.pure(null)
+    and Reads.pure(None))(Repository.apply _)
+
 }
