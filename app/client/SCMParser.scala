@@ -14,6 +14,8 @@ import model.Link
 import model.Ticket
 import play.api.Logger
 import model.Repository
+import play.api.libs.json.JsArray
+import play.api.libs.json.Json
 
 /**
  * Json deserializer for converting external json types, from the SCM,
@@ -102,11 +104,12 @@ object GithubToJsonParser extends SCMParser {
   implicit val commitReader: Reads[Commit] = (
     (JsPath \ "sha").read[String] // id
     and (JsPath \ "commit" \ "message").read[String] // message
-    //    and (JsPath  \ "sha").read[List[String]] //parentId
-    and Reads.pure(null) // links
+    and Reads[List[String]] { js =>
+      val l: List[JsValue] = (JsPath \ "parents" \\ "sha")(js)
+      Json.fromJson[List[String]](JsArray(l))
+    }
     and (JsPath \ "commit" \ "committer").read[Author]
-    //    and Reads.pure(None) // valid
-    and Reads.pure(null) // links
+    and Reads.pure(None) // links
     )(Commit.apply _)
 
   implicit val ticketReader: Reads[Ticket] = null
@@ -116,7 +119,7 @@ object GithubToJsonParser extends SCMParser {
     and Reads.pure(null)
     and Reads.pure(null)
     and Reads.pure(null)
-    and Reads.pure(null)
+    and Reads.pure(None)
     and Reads.pure(None))(Repository.apply _)
 
 }
@@ -143,11 +146,12 @@ object StashToJsonParser extends SCMParser {
   implicit val commitReader: Reads[Commit] = (
     (JsPath \ "id").read[String] //id
     and (JsPath \ "message").read[String] //message
-    //    and (JsPath \ "parents" \ "id").read[List[String]] //parentId
-    and Reads.pure(null) // parentId
+    and Reads[List[String]] { js =>
+      val l: List[JsValue] = (JsPath \ "parents" \\ "id")(js)
+      Json.fromJson[List[String]](JsArray(l))
+    }
     and (JsPath \ "author").read[Author] // author
-    //    and Reads.pure(None) // valid
-    and Reads.pure(null) // links
+    and Reads.pure(None) // links
     )(Commit.apply _)
   implicit val ticketReader: Reads[Ticket] = null
 
@@ -156,7 +160,7 @@ object StashToJsonParser extends SCMParser {
     and Reads.pure(null)
     and Reads.pure(null)
     and Reads.pure(null)
-    and Reads.pure(null)
+    and Reads.pure(None)
     and Reads.pure(None))(Repository.apply _)
 
 }

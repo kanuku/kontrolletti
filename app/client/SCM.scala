@@ -70,6 +70,14 @@ sealed trait SCM {
    *
    */
   def head(url: String): Future[WSResponse]
+  /**
+   * Issues a HEAD operation against the give url on the SCM.
+   * @param host DNS/IP of the SCM server
+   * @param url The url to executed the HEAD operation against.
+   * @return The future with the response of the call
+   *
+   */
+  def get(url: String): Future[WSResponse]
 
   def resolver(host: String): Option[SCMResolver]
 
@@ -116,11 +124,11 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
 
   }
   def head(url: String): Future[WSResponse] = {
-	logger.info(s"Issuing a HEAD on $url")
+    logger.info(s"Issuing a HEAD on $url")
     val result = dispatcher.requestHolder(url)
     val response = result.head()
-    response 
-}
+    response
+  }
 
   def resolver(host: String) = {
     var result = GithubResolver.resolve(host)

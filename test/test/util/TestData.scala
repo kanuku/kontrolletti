@@ -75,6 +75,10 @@ object FakeResponseData {
                 {
                     "id": "9405c626889dbe91694c7dab33eb091a9483317e",
                     "displayId": "9405c626889"
+                },
+                {
+                    "id": "ab33eb091a9483317e9405c626889dbe91694c7d",
+                    "displayId": "268899405c6"
                 }
             ]
         },
@@ -248,7 +252,7 @@ object FakeResponseData {
     """
 
   val ghUsers = """
-      {
+   [{
       "login" : "kanuku",
       "id" : 4045639,
       "avatar_url" : "https://avatars.githubusercontent.com/u/4045639?v=3",
@@ -286,7 +290,7 @@ object FakeResponseData {
       "type" : "User",
       "site_admin" : false,
       "contributions" : 2
-    } ]
+    }]
 """
 val ghRepo = """
     {
