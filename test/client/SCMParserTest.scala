@@ -2,10 +2,10 @@ package client
 
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
-
 import play.api.libs.json._
 import play.api.libs.json.Json._
 import test.util.FakeResponseData
+import model.Commit
 
 /**
  * This class tests the Parsing process implemented in SCMParser file.
@@ -19,7 +19,7 @@ class SCMParserTest extends FunSuite with Matchers {
     val commit0 = result.right.get(0)
     val commit1 = result.right.get(1)
 
-    assert(Option(commit0) !=  None)
+    assert(Option(commit0) != None)
     assert(commit0.id == "50cea1156ca558eb6c67e78ca7e5dabc570ea99a")
     assert(commit0.message == "Merge pull request #8 from zalando-bus/feature-swagger-first\n\nApi Specification in Swagger")
     //    assert(commit0.valid == None, "Validation is done internaly")
@@ -99,4 +99,21 @@ class SCMParserTest extends FunSuite with Matchers {
     assert(repo.links == None)
   }
 
+  test("Deserialize a single commit with the Githubparser") {
+   
+    val jsonData = Json.parse(FakeResponseData.singleCommit)
+
+    val result =GithubToJsonParser.singleCommitToModel(jsonData)
+    assert(result.isRight, "Failed to parse!!")
+    val commit = result.right.get 
+    assert(Option(commit) != None)
+    assert(commit.id == "50cea1156ca558eb6c67e78ca7e5dabc570ea99a")
+    assert(commit.message == "Merge pull request #8 from zalando-bus/feature-swagger-first\n\nApi Specification in Swagger")
+    assert(commit.parentIds.size == 2, "Expected two parent-id's")
+    assert(commit.author.email == "kanuku@users.noreply.github.com")
+    assert(commit.author.name == "Fernando Benjamin")
+    assert(commit.links == None)
+
+  }
+  
 }

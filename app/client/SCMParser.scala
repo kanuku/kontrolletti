@@ -49,6 +49,10 @@ sealed trait SCMParser {
    * Returns the parser for deserializing a jsonValue to a List of Commits
    */
   def commitToModel: Parser[JsValue, Either[String, List[Commit]]]
+  /**
+   * Returns the parser for deserializing a jsonValue to a single Commit
+   */
+  def singleCommitToModel: Parser[JsValue, Either[String, Commit]]
 
   /**
    * Returns the parser for deserializing a jsonValue to a List of Tickets
@@ -91,11 +95,12 @@ object GithubToJsonParser extends SCMParser {
   def domains = GithubResolver.hosts
 
   val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => extract(value.validate[List[Commit]])
+  val singleCommitToModel: Parser[JsValue, Either[String, Commit]] = (value) => extract(value.validate[Commit])
   val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (author) => extract(author.validate[List[Author]])
   val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => extract(value.validate[List[Ticket]])
   val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => extract(value.validate[Repository])
 
-  private implicit val authorReader: Reads[Author] = (
+    implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
     (JsPath \ "email").read[String] and
     Reads.pure(None) //
@@ -112,7 +117,7 @@ object GithubToJsonParser extends SCMParser {
     and Reads.pure(None) // links
     )(Commit.apply _)
 
-    implicit val ticketReader: Reads[Ticket] = (
+  implicit val ticketReader: Reads[Ticket] = (
     Reads.pure("")
     and Reads.pure("")
     and Reads.pure("")
@@ -137,6 +142,7 @@ object StashToJsonParser extends SCMParser {
   def domains = StashResolver.hosts
 
   val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => extract((value \ "values").validate[List[Commit]])
+  val singleCommitToModel: Parser[JsValue, Either[String, Commit]] = (value) => extract(value.validate[Commit])
   val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => extract(value.validate[List[Ticket]])
   val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => extract(value.validate[Repository])
   val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (value) => extract(value.validate[List[Author]])
@@ -158,7 +164,7 @@ object StashToJsonParser extends SCMParser {
     and Reads.pure(None) // links
     )(Commit.apply _)
 
-    implicit val ticketReader: Reads[Ticket] = (
+  implicit val ticketReader: Reads[Ticket] = (
     Reads.pure("")
     and Reads.pure("")
     and Reads.pure("")
