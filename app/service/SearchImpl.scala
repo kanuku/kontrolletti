@@ -41,7 +41,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   private val logger: Logger = Logger(this.getClass())
   private val defaultError = Left("Something went wrong, check the logs!")
-  private val ACCEPTABLE_CODES = List(200)
+  private val acceptableCodes = List(200)
 
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Commit]]]] =
     resolveParser(host) match {
@@ -92,7 +92,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
     executeCall(client.head(host, url)).map { response =>
       response.right.map {
         _.status match {
-          case status if ACCEPTABLE_CODES.contains(status) => true
+          case status if acceptableCodes.contains(status) => true
           case _ => false
         }
       }
@@ -112,7 +112,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
           case 404 =>
             logger.info("Http code 404 (Does not exist)")
             Right(None)
-          case status if (ACCEPTABLE_CODES.contains(status)) =>
+          case status if (acceptableCodes.contains(status)) =>
             logger.info("Http code succefful")
             parser(response.json) match {
               case Right(value) =>
