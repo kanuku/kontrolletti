@@ -21,7 +21,7 @@ class KontrollettiToJsonParserTest extends FunSuite with MockitoSugar with Mocki
   val error = new Error("detail", 500, "http://localhost/errorType")
   val link = new Link("href", "method", "rel", "relType")
   val links = List(link, link)
-  val author = new Author("name", "email", List(link, link))
+  val author = new Author("name", "email", Some(List(link, link)))
   val commit = new Commit("id", "message", List("id-1", "id-2"), author, Some(links))
   val commits = List(commit, commit)
   val repository = new Repository("html_url", "project", "host", "repository", Some(commits), Some(links))

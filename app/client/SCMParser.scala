@@ -98,7 +98,7 @@ object GithubToJsonParser extends SCMParser {
   private implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
     (JsPath \ "email").read[String] and
-    Reads.pure(null) //
+    Reads.pure(None) //
     )(Author.apply _)
 
   implicit val commitReader: Reads[Commit] = (
@@ -140,7 +140,7 @@ object StashToJsonParser extends SCMParser {
   private implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
     (JsPath \ "emailAddress").read[String] and
-    Reads.pure(null) //
+    Reads.pure(None) //
     )(Author.apply _)
 
   implicit val commitReader: Reads[Commit] = (

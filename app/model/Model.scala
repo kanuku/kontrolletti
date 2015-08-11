@@ -14,7 +14,7 @@ import play.api.libs.functional.syntax._
 
 case class Error(detail: String, status: Int, errorType: String)
 case class Link(href: String, method: String, rel: String, relType: String)
-case class Author(name: String, email: String, links: List[Link])
+case class Author(name: String, email: String, links: Option[List[Link]])
 //TODO: Add [specs] and [valid] properties 
 case class Commit(id: String, message: String, parentIds: List[String], author: Author //, valid: Option[Boolean]
 , links: Option[List[Link]])
@@ -50,7 +50,7 @@ object KontrollettiToModelParser {
   implicit val authorReader: Reads[Author] = (
     (__ \ "name").read[String] and
     (__ \ "email").read[String] and
-    (__ \ "links").read[List[Link]] //
+    (__ \ "links").readNullable[List[Link]] //
     )(Author.apply _)
 
   implicit val commitReader: Reads[Commit] = (
@@ -112,7 +112,7 @@ object KontrollettiToJsonParser {
   implicit val authorWriter: Writes[Author] = (
     (__ \ "name").write[String] and
     (__ \ "email").write[String] and
-    (__ \ "links").write[List[Link]] //
+    (__ \ "links").writeNullable[List[Link]] //
     )(unlift(Author.unapply))
 
   implicit val commitWriter: Writes[Commit] = (

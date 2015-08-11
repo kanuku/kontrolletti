@@ -93,5 +93,5 @@ trait MockitoUtils extends MockitoSugar {
   def createCommit(id: String = "id", message: String = "message", parentId: List[String] = List(), author: Author = createAuthor(), valid: Option[Boolean] = None, links: List[Link] = List()): Commit = new Commit(id, message, parentId, author //, valid
   , Some(links))
 
-  def createAuthor(name: String = "name", email: String = "email", links: List[Link] = List()): Author = new Author(name, email, links)
+  def createAuthor(name: String = "name", email: String = "email", links: List[Link] = List()): Author = new Author(name, email, Some(links))
 }
