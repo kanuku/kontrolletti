@@ -23,7 +23,7 @@ class SCMParserTest extends FunSuite with Matchers {
     assert(commit0.id == "50cea1156ca558eb6c67e78ca7e5dabc570ea99a")
     assert(commit0.message == "Merge pull request #8 from zalando-bus/feature-swagger-first\n\nApi Specification in Swagger")
     //    assert(commit0.valid == None, "Validation is done internaly")
-    assert(commit0.author != null, "Author should not be empty")
+    assert(Option(commit0.author) != None, "Author should not be empty")
     assert(commit0.author.email == "kanuku@users.noreply.github.com")
     assert(commit0.author.name == "Fernando Benjamin")
     assert(commit0.parentIds.size == 2, "Expected two parent-id's")
@@ -31,7 +31,7 @@ class SCMParserTest extends FunSuite with Matchers {
     assert(commit0.parentIds(1) == "2ead1df4182c33bbca16768e4200a09ce3b6e68d")
     assert(commit0.links == None)
 
-    assert(commit1 != null)
+    assert(Option(commit1) != None)
     assert(commit1.id == "2ead1df4182c33bbca16768e4200a09ce3b6e68d")
     assert(commit1.message == "Swagger specification is ready.")
     //    assert(commit1.valid == None, "Validation is done internaly")
