@@ -1,5 +1,4 @@
 swagger: '2.0'
-
 info:
   version: '0.1'
   title: Kontrolletti
@@ -11,40 +10,50 @@ info:
     email: automata-team@zalando.de
 paths:
 
-  /api/repos/{repositoryUrl}:
+  /api/repos/{repository-url}:
     head:
       description: |
-        Fetches meta information about the specified repositoryUrl.
-          This operation can be used to normalize repositoryUrl's, ie:  
-          - a request with `git@github.com:zalando/kontrolletti.git` as repositoryUrl will end up redirecting to  
-          `/api/repos/{NormalizedRepositoryUrl}`.
-          - a request with `https://stash.zalando.net/projects/CD/repos/ansible-playbooks/browse` as repositoryUrl will end up redirecting `/api/repos/{NormalizedRepositoryUrl}`.
+        Fetches meta information about the specified repository (repository-url). This operation can be used to normalize repository-url's, ie:  
+          - a request with `git@github.com:zalando/kontrolletti.git` as repository-url will end up redirecting to  
+          `/api/repos/{normalized-repository-url}`.
+          - a request with `https://stash.zalando.net/projects/CD/repos/ansible-playbooks/browse` as repository-url will end up redirecting `/api/repos/{normalized-repository-url}`.
       produces:
-        - application/json
+        - application/problem+json
+        - application/x.zalando.repository+json
       parameters:
-        - name: repositoryUrl
+        - name: repository-url
           in: path
           description: URL of the repository
           required: true
           type: string
           format: uri
       responses:
+        200:
+            description: The `repository-url` is normalized and was found.
+            headers:
+              X-Normalized-Repository-URL:
+                type: string
+                description: Normalized URL of the Repository
         301:
-          description: The `repositoryUrl` is not normalized, follow the redirect for to its normalized URI.
+          description: The `repository-url` is not normalized, follow the redirect for to its normalized URI.
+          headers:
+            X-Normalized-Repository-URL:
+              type: string
+              description: Normalized URL of the Repository
+        400:
+          description: Request could not be understood, due to malformed syntax.
         404:
-          description: The `repositoryUrl` is normalized, but its resource cannot be found.
+          description: The `repository-url` is normalized, but its resource cannot be found.
         500:
           description: Internal Server error.
-
-  /api/repos/{repositoryUrl}:
     get:
       description: |
         Fetches the `Repository` object for the specified URI.
       produces:
-      - application/problem+json
-      - application/x.zalando.repository+json
+        - application/problem+json
+        - application/x.zalando.repository+json
       parameters:
-      - name: repositoryUrl
+      - name: repository-url
         in: path
         description: URL of the repository
         required: true
@@ -56,10 +65,8 @@ paths:
             schema: 
               type: object
               properties:
-                commits:
-                  type: array
-                  items:
-                    $ref: "#/definitions/Repository"
+                result:
+                  $ref: "#/definitions/Repository"
                 _links:
                     type: array
                     items:
@@ -75,7 +82,7 @@ paths:
             schema:
               $ref: "#/definitions/Error"
 
-  /api/hosts/{host}/projects/{project}/repositories/{repository}/commits:
+  /api/hosts/{host}/projects/{project}/repos/{repository}/commits:
     get:
       description: |
         Fetches all `Commit` objects for the specified parameters.
@@ -114,7 +121,7 @@ paths:
             schema: 
               type: object
               properties:
-                commits:
+                result:
                   type: array
                   items:
                     $ref: "#/definitions/Commit"
@@ -124,16 +131,12 @@ paths:
                       $ref: "#/definitions/Link"
           404:
             description: No objects could be found matching the specified parameters.
-          400:
-            description: Request could not be understood, due to malformed syntax.
-            schema:
-              $ref: "#/definitions/Error"
           500:
             description: Internal Server error.
             schema:
               $ref: "#/definitions/Error"
 
-  /api/hosts/{host}/projects/{project}/repositories/{repository}/commits/{id}:
+  /api/hosts/{host}/projects/{project}/repos/{repository}/commits/{id}:
     get:
       description: |
         Fetches the `Commit` object for the specified commitId in the specified repository.
@@ -167,22 +170,18 @@ paths:
             schema: 
               type: object
               properties:
-                commit:
+                result:
                     $ref: "#/definitions/Commit"
                 _links:
                     type: array
                     items:
                       $ref: "#/definitions/Link"
-          301:
-            description: The resources for the specified parameters moved permanently.
           404:
             description: No objects could be found matching the specified parameters.
-          400:
-            description: Failed to parse the repositoryUrl.
           500:
             description: Internal Server error.
 
-  /api/hosts/{host}/projects/{project}/repositories/{repository}/tickets:
+  /api/hosts/{host}/projects/{project}/repos/{repository}/tickets:
     get:
         description: |
           Fetches all the `Ticket` objects for the specified repository.
@@ -221,7 +220,7 @@ paths:
               schema: 
                 type: object
                 properties:
-                  tickets:
+                  result:
                     type: array
                     items:
                       $ref: "#/definitions/Ticket"
@@ -231,12 +230,10 @@ paths:
                         $ref: "#/definitions/Link"
             404:
               description: No objects could be found for the specified parameters.
-            400:
-              description: Failed to parse the repositoryUrl.
             500:
               description: Internal Server error.
 
-  /api/hosts/{host}/projects/{project}/repositories/{repository}/diff/{source}...{target}:
+  /api/hosts/{host}/projects/{project}/repos/{repository}/diff/{source}...{target}:
     get:
       description: |
         Fetches the diff, as a redirect, between the two commitId's on the same repository.
@@ -262,21 +259,17 @@ paths:
         in: path
         type: string
         required: true
-        description: Source from where to compare from
+        description: Source (commit-id) from where to compare from
       - name: target
         in: path
         type: string
         required: true
-        description: Target to where to compare to
+        description: Target (commit-id) to where to compare to
       responses:
-          301:
+          303:
             description: The diff can be found at the specified `Location`.
           404:
             description: No objects could be found matching the specified parameters.
-          400:
-            description: Failed to parse the repositoryUrl.
-            schema:
-              $ref: "#/definitions/Error"
           500:
             description: Internal Server error.
             schema:
@@ -332,10 +325,22 @@ definitions:
         $ref: "#/definitions/Author"
       parentId:
         type: string
+      specs:
+        type: array
+        items:
+          $ref: "#/definitions/Spec"
       links:
         type: array
         items:
           $ref: "#/definitions/Link"
+  Specification:
+    properties:
+      protocol:
+        type: string
+      href: 
+        type: string
+        format: uri
+        description: URI to the detailed specification.
   Ticket:
     properties:
       name:
@@ -345,7 +350,11 @@ definitions:
       href: 
         type: string
         format: uri
-        description: URI which is needed for the specified action
+        description: URI to the detailed specification.
+      links:
+        type: array
+        items:
+          $ref: "#/definitions/Link"
   Repository:
     properties:
       uri:

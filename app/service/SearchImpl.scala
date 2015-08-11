@@ -49,9 +49,9 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
       case Left(error)      => Future.successful(Left(error))
     }
 
-  def commit(host: String, project: String, repository: String, id: String): Future[Either[String, Option[List[Commit]]]] =
+  def commit(host: String, project: String, repository: String, id: String): Future[Either[String, Option[Commit]]] =
     resolveParser(host) match {
-      case Right(scmParser) => handleRequest(scmParser.commitToModel, client.commit(host, project, repository, id))
+      case Right(scmParser) => handleRequest(scmParser.singleCommitToModel, client.commit(host, project, repository, id))
       case Left(error)      => Future.successful(Left(error))
     }
 

@@ -29,7 +29,7 @@ trait Search {
    *
    * @return a future containing either the error(left) or list of commits(right)
    */
-  def commit(host: String, project: String, repository: String, id: String): Future[Either[String, Option[List[Commit]]]]
+  def commit(host: String, project: String, repository: String, id: String): Future[Either[String, Option[Commit]]]
 
   /**
     * Returns a single repository from the given project on the given host.

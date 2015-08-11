@@ -19,6 +19,7 @@ import play.api.libs.ws.WSResponse
 import test.util.MockitoUtils
 import client.RequestDispatcherImpl
 import test.util.TestUtils._
+import model.Link
 /**
  * This class tests the interaction between the Service and the Client(mock).
  */
@@ -40,7 +41,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     reset(client)
   }
 
-  "Search#commits" should "return commits when the result is 200 and body is not empty" in {
+  "Search#commits" should "return commits when the http-result  is 200 and body is not empty" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
     when(client.commits(host, project, repository, None, None)).thenReturn(response)
     val result = Await.result(search.commits(host, project, repository, None, None), Duration("5 seconds"))
@@ -63,17 +64,17 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     val result = Await.result(search.commits(host, project, repository, None, None), Duration("5 seconds"))
     assertEitherIsLeft(result)
     assertEitherIsNotNull(result)
-    assert(result.left.get == defaultError)
+    assert(result  == Left(defaultError))
     verify(client, times(1)).commits(host, project, repository, None, None)
   }
 
-  "Search#commit" should "return a single commit when the result is 200" in {
+  "Search#commit" should "return a single commit when the http-result  is 200" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
     when(client.commit(host, project, repository, commitId)).thenReturn(response)
     val result = Await.result(search.commit(host, project, repository, commitId), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
-    assert(!result.right.get.isEmpty, "Result must not be empty")
+    assert(result != Right(None) , "Result must not be empty")
     verify(client, times(1)).commit(host, project, repository, commitId)
   }
   it should "return None when the result is 404" in {
@@ -82,7 +83,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     val result = Await.result(search.commit(host, project, repository, commitId), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
-    assert(result.right.get.isEmpty, "Result must be None")
+    assert(result == Right(None), "Result must be None")
     verify(client, times(1)).commit(host, project, repository, commitId)
   }
   it should "return an error when client throws an Exception" in {
@@ -90,17 +91,20 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     val result = Await.result(search.commit(host, project, repository, commitId), Duration("5 seconds"))
     assertEitherIsLeft(result)
     assertEitherIsNotNull(result)
-    assert(result.left.get == defaultError)
+    assert(result == Left(defaultError))
     verify(client, times(1)).commit(host, project, repository, commitId)
   }
 
-  "Search#repos" should " return repositories when the result is 200 and body is not empty" in {
+  
+  //FIXME! If you use Optional type in the last assertion, the problem should be clear. Needs investigation.
+  //TODO: 1st test seems wrong
+  "Search#repos" should " return empty result when the http-result is 200 and body is not empty" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
     when(client.repo(host, project, repository)).thenReturn(response)
     val result = Await.result(search.repo(host, project, repository), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
-    assert(!result.right.get.isEmpty, "Result must not be empty")
+    assert(!result.right.get.isEmpty , "Result must be empty")
     verify(client, times(1)).repo(host, project, repository)
   }
   it should " return empty list when the result is 404" in {
@@ -117,14 +121,13 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     val result = Await.result(search.repo(host, project, repository), Duration("5 seconds"))
     assertEitherIsLeft(result)
     assertEitherIsNotNull(result)
-    assert(result.left.get == defaultError, f"Result should be [$defaultError]")
+    assert(result == Left(defaultError), f"Result should be [$defaultError]")
     verify(client, times(1)).repo(host, project, repository)
   }
 
   "Search#parse" should "just parse :D " in {
-    val result = search.parse(url)
-    assert(result.isRight)
-    assert(result.right.get == (host, project, repository))
+    val result = search.parse(url)    
+    assert(result == Right((host, project, repository)))
   }
 
   "Search#normalize" should "normalize the github URL" in {
@@ -140,14 +143,14 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
 	  assert(search.normalize("stash.zalando.net", project, repository) == url)
   }
 
-  "Search#isRepo" should "return true when receiving a 200 response" in {
+  "Search#isRepo" should "return true when http-result is a 200 response" in {
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("", 200)
     when(client.repoUrl(host, project, repository)).thenReturn(url)
     when(client.head(host,url)).thenReturn(response)
     val result = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
-    assert(result.right.get, "Result must be true")
+    assert(result == Right(true), "Result must be true")
     verify(client, times(1)).repoUrl(host, project, repository)
     verify(client, times(1)).head(host,url)
   }
@@ -158,7 +161,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     val result = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
-    assert(!result.right.get, "Result must be false")
+    assert(result== Right(false), "Result must be false")
     verify(client, times(1)).repoUrl(host, project, repository)
     verify(client, times(1)).head(host,url)
   }
@@ -168,7 +171,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     val result = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     assertEitherIsLeft(result)
     assertEitherIsNotNull(result)
-    assert(result.left.get == defaultError, f"Result should be [$defaultError]")
+    assert(result == Left(defaultError), f"Result should be [$defaultError]")
     verify(client, times(1)).repoUrl(host, project, repository)
     verify(client, times(1)).head(host,url)
   }
@@ -181,8 +184,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     val result = Await.result(search.diff(host, project, repository, sourceId, targetId), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
-    assert(result.right.get.isDefined)
-    assert(result.right.get.get.href == diffLink, "The Link object should have a href")
+    assert(result == Right(Some(Link(diffLink,null,null,null))), "The Link object should have a href")
     verify(client, times(1)).diffUrl(host, project, repository, sourceId, targetId)
     verify(client, times(1)).head(host,diffLink)
   }
@@ -194,8 +196,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     val result = Await.result(search.diff(host, project, repository, sourceId, targetId), Duration("5 seconds"))
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
-    assert(result.isRight)
-    assert(!result.right.get.isDefined, "The result should be None")
+    assert(result == Right(None), "The result should be None")
     verify(client, times(1)).diffUrl(host, project, repository, sourceId, targetId)
     verify(client, times(1)).head(host,diffLink)
   }
@@ -205,7 +206,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     val result = Await.result(search.diff(host, project, repository, sourceId, targetId), Duration("5 seconds"))
     assertEitherIsLeft(result)
     assertEitherIsNotNull(result)
-    assert(result.left.get == defaultError, f"Result should be [$defaultError]")
+    assert(result == Left(defaultError), f"Result should be [$defaultError]")
     verify(client, times(1)).diffUrl(host, project, repository, sourceId, targetId)
     verify(client, times(1)).head(host,url)
   }
@@ -234,8 +235,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     val result = Await.result(search.tickets(host, project, repository, None, None), Duration("5 seconds"))
     assertEitherIsLeft(result)
     assertEitherIsNotNull(result)
-    assert(result.isLeft)
-    assert(result.left.get == defaultError, f"Result should be [$defaultError]")
+    assert(result == Left(defaultError), f"Result should be [$defaultError]")
     verify(client, times(1)).tickets(host, project, repository)
   }
 

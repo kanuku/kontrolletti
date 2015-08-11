@@ -60,7 +60,7 @@ class CommitWS @Inject() (search: Search) extends Controller {
         NotFound
       case Right(Some(result)) =>
         logger.info("Result 200") 
-        Ok(Json.toJson(new CommitResult(List(), result(0)))).as("application/x.zalando.commit+json")
+        Ok(Json.toJson(new CommitResult(List(), result))).as("application/x.zalando.commit+json")
     }
 
   }

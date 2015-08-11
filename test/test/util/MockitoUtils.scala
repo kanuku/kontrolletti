@@ -30,6 +30,7 @@ import model.Author
 import model.Author
 import model.CommitsResult
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json.JsPath
 
 trait MockitoUtils extends MockitoSugar {
 
@@ -40,7 +41,7 @@ trait MockitoUtils extends MockitoSugar {
     Future.successful {
       val wsResponse = mock[WSResponse]
       val jsValue = mock[JsValue]
-      val jsResult: JsResult[T] = new JsSuccess(result, null)
+      val jsResult: JsResult[T] = new JsSuccess(result)
 
       when(jsValue.validate[T](anyObject())).thenReturn(jsResult)
       when(wsResponse.status).thenReturn(httpCode)

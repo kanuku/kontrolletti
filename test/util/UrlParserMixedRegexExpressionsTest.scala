@@ -110,7 +110,7 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
     val either = extract(null)
     assertEitherIsNotNull(either)
     assertEitherIsLeft(either)
-    assert(either.left.get == "Repository-url should not be empty/null")
+    assert(either == Left("Repository-url should not be empty/null"))
   }
   test("parse (empty String) and get empty tuple") {
     val either = extract("")
@@ -123,7 +123,7 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
     val either = extract(url)
     assertEitherIsNotNull(either)
     assertEitherIsLeft(either)
-    assert(either.left.get == s"Could not parse $url")
+    assert(either == Left(s"Could not parse $url"))
   }
 
   /**

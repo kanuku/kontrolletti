@@ -447,6 +447,89 @@ val ghRepo = """
       }
     }
     """
+  
+  val singleCommit = """
+    {
+      "sha": "50cea1156ca558eb6c67e78ca7e5dabc570ea99a",
+      "commit": {
+        "author": {
+          "name": "Fernando Benjamin",
+          "email": "kanuku@users.noreply.github.com",
+          "date": "2015-05-11T08:33:24Z"
+        },
+        "committer": {
+          "name": "Fernando Benjamin",
+          "email": "kanuku@users.noreply.github.com",
+          "date": "2015-05-11T08:33:24Z"
+        },
+        "message": "Merge pull request #8 from zalando-bus/feature-swagger-first\n\nApi Specification in Swagger",
+        "tree": {
+          "sha": "6336b59c25540296d4d6d718fbee2480403e756f",
+          "url": "https://api.github.com/repos/zalando/kontrolletti/git/trees/6336b59c25540296d4d6d718fbee2480403e756f"
+        },
+        "url": "https://api.github.com/repos/zalando/kontrolletti/git/commits/50cea1156ca558eb6c67e78ca7e5dabc570ea99a",
+        "comment_count": 0
+      },
+      "url": "https://api.github.com/repos/zalando/kontrolletti/commits/50cea1156ca558eb6c67e78ca7e5dabc570ea99a",
+      "html_url": "https://github.com/zalando/kontrolletti/commit/50cea1156ca558eb6c67e78ca7e5dabc570ea99a",
+      "comments_url": "https://api.github.com/repos/zalando/kontrolletti/commits/50cea1156ca558eb6c67e78ca7e5dabc570ea99a/comments",
+      "author": {
+        "login": "kanuku",
+        "id": 4045639,
+        "avatar_url": "https://avatars.githubusercontent.com/u/4045639?v=3",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/kanuku",
+        "html_url": "https://github.com/kanuku",
+        "followers_url": "https://api.github.com/users/kanuku/followers",
+        "following_url": "https://api.github.com/users/kanuku/following{/other_user}",
+        "gists_url": "https://api.github.com/users/kanuku/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/kanuku/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/kanuku/subscriptions",
+        "organizations_url": "https://api.github.com/users/kanuku/orgs",
+        "repos_url": "https://api.github.com/users/kanuku/repos",
+        "events_url": "https://api.github.com/users/kanuku/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/kanuku/received_events",
+        "type": "User",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "kanuku",
+        "id": 4045639,
+        "avatar_url": "https://avatars.githubusercontent.com/u/4045639?v=3",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/kanuku",
+        "html_url": "https://github.com/kanuku",
+        "followers_url": "https://api.github.com/users/kanuku/followers",
+        "following_url": "https://api.github.com/users/kanuku/following{/other_user}",
+        "gists_url": "https://api.github.com/users/kanuku/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/kanuku/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/kanuku/subscriptions",
+        "organizations_url": "https://api.github.com/users/kanuku/orgs",
+        "repos_url": "https://api.github.com/users/kanuku/repos",
+        "events_url": "https://api.github.com/users/kanuku/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/kanuku/received_events",
+        "type": "User",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "88c31c976507b32574bb9c76311da1cfc4832d1d",
+          "url": "https://api.github.com/repos/zalando/kontrolletti/commits/88c31c976507b32574bb9c76311da1cfc4832d1d",
+          "html_url": "https://github.com/zalando/kontrolletti/commit/88c31c976507b32574bb9c76311da1cfc4832d1d"
+        },
+        {
+          "sha": "2ead1df4182c33bbca16768e4200a09ce3b6e68d",
+          "url": "https://api.github.com/repos/zalando/kontrolletti/commits/2ead1df4182c33bbca16768e4200a09ce3b6e68d",
+          "html_url": "https://github.com/zalando/kontrolletti/commit/2ead1df4182c33bbca16768e4200a09ce3b6e68d"
+        }
+      ],
+      "stats": {
+        "total": 869,
+        "additions": 579,
+        "deletions": 290
+      }
+    }
+    """
 
 
 }

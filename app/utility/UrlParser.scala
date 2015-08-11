@@ -47,7 +47,7 @@ trait UrlParser {
 
   private def transform[B](url: String, transformer: Transformer[PartionedURL, B]): Either[String, B] = url match {
 
-    case link if (link == null || link.isEmpty()) =>
+    case link if (Option(link) == None || link.isEmpty()) =>
       Left("Repository-url should not be empty/null")
 
     case urlRegex(protocol, user, host, prjAntecedent, project, repoAntecedent, repo, succeeder) =>
