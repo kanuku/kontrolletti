@@ -75,7 +75,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
     isUrlValid(host, url).map { response =>
       response.right.map {
         _ match {
-          case true  => Some(new Link(url, null, null, null))
+          case true  => Option(new Link(url, null, null, null))
           case false => None
         }
       }

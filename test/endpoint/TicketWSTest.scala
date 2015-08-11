@@ -30,8 +30,8 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
   val untilId = Some("untilId")
 
   def ticketRoute(host: String = host, project: String = project, repository: String = repo, sinceId: Option[String], untilId: Option[String]) = {
-    val since = if (sinceId.isDefined) sinceId.get else None
-    val until = if (untilId.isDefined) untilId.get else None
+    val since = sinceId.getOrElse("default")
+    val until = untilId.getOrElse("default")
     s"/api/hosts/$host/projects/$project/repos/$repository/tickets?since=$since&until=$until"
   }
    

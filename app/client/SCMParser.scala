@@ -41,7 +41,7 @@ sealed trait SCMParser {
    *
    */
   def resolve: PartialFunction[String, Option[SCMParser]] = {
-    case host if domains.contains(host) => Some(this)
+    case host if domains.contains(host) => Option(this)
     case _                              => None
   }
 
