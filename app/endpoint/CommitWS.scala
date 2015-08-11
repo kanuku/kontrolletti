@@ -44,7 +44,7 @@ class CommitWS @Inject() (search: Search) extends Controller {
         logger.info("Result 404")
         NotFound
       case Right(Some(result)) =>
-        logger.info("Result 200"+result)
+        logger.info("Result 200")
         Ok(Json.toJson(new CommitsResult(List(), result))).as("application/x.zalando.commit+json")
     }
   }
