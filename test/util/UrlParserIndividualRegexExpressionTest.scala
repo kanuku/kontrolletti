@@ -11,6 +11,7 @@ import org.scalatest.concurrent.AsyncAssertions.Waiter
 import org.scalatest.Matchers
 import test.util.ParsingData
 import utility.UrlParser
+import ParsingData._
 
 /**
  * In this class you can find the individual tests for the regular expressions in UrlParser. <br/>
@@ -18,9 +19,6 @@ import utility.UrlParser
  */
 class UrlParserIndividualRegexExpressionTest extends FunSuite with Matchers with UrlParser {
 
-  //Github has none, but stash does it REST-STyle /projects/ 
-import utility.UrlParser;
-import ParsingData._
 
   test("parse (protocol) and get protocol") {
     val regex = s"$protocolRgx".r
@@ -111,7 +109,7 @@ import ParsingData._
     val input = repoSucceeders
     val parsed = for (value <- input) yield value match { case regex(result) => result }
     val diff1 = input.filterNot { x => x != "null" }.filterNot { x => parsed.contains(x) }
-    val diff2 = parsed.filterNot { x => x == null || x.isEmpty() }.filterNot { x => input.contains(x) }
+    val diff2 = parsed.filterNot { x => Option(x) == None || x.isEmpty() }.filterNot { x => input.contains(x) }
     parsed.size shouldEqual input.size
     diff1 shouldBe empty
     diff2 shouldBe empty

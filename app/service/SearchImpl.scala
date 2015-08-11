@@ -47,21 +47,18 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
     resolveParser(host) match {
       case Right(scmParser) => handleRequest(scmParser.commitToModel, client.commits(host, project, repository, since, until))
       case Left(error)      => Future.successful(Left(error))
-
     }
 
   def commit(host: String, project: String, repository: String, id: String): Future[Either[String, Option[List[Commit]]]] =
     resolveParser(host) match {
       case Right(scmParser) => handleRequest(scmParser.commitToModel, client.commit(host, project, repository, id))
       case Left(error)      => Future.successful(Left(error))
-
     }
 
   def repo(host: String, project: String, repository: String): Future[Either[String, Option[Repository]]] =
     resolveParser(host) match {
       case Right(scmParser) => handleRequest(scmParser.repoToModel, client.repo(host, project, repository))
       case Left(error)      => Future.successful(Left(error))
-
     }
 
   def parse(url: String): Either[String, (String, String, String)] = extract(url)
@@ -70,19 +67,18 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   def isRepo(host: String, project: String, repository: String): Future[Either[String, Boolean]] = {
     val url = client.repoUrl(host, project, repository)
-    isUrlValid(host,url)
+    isUrlValid(host, url)
   }
 
   def diff(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]] = {
     val url = client.diffUrl(host, project, repository, source, target)
-    isUrlValid(host,url).map { response =>
+    isUrlValid(host, url).map { response =>
       response.right.map {
         _ match {
           case true  => Some(new Link(url, null, null, null))
           case false => None
         }
       }
-
     }
   }
   def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Ticket]]]] =
@@ -90,15 +86,14 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
       //TODO This should go to our local datastore
       case Right(scmParser) => handleRequest(scmParser.ticketToModel, client.tickets(host, project, repository))
       case Left(error)      => Future.successful(Left(error))
-
     }
 
-  def isUrlValid(host:String, url: String): Future[Either[String, Boolean]] =
-    executeCall(client.head(host,url)).map { response =>
+  def isUrlValid(host: String, url: String): Future[Either[String, Boolean]] =
+    executeCall(client.head(host, url)).map { response =>
       response.right.map {
         _.status match {
           case status if ACCEPTABLE_CODES.contains(status) => true
-          case _                                         => false
+          case _ => false
         }
       }
     }
@@ -118,8 +113,14 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
             logger.info("Http code 404 (Does not exist)")
             Right(None)
           case status if (ACCEPTABLE_CODES.contains(status)) =>
-            logger.info("Http code succefful does exist")
-            Right(parser(response.json).right.toOption)
+            logger.info("Http code succefful")
+            parser(response.json) match {
+              case Right(value) =>
+                Right(Some(value))
+              case Left(error) =>
+                Logger.error(error)
+                Left(error)
+            }
           case status =>
             logger.warn(s"Status $status was not hanled!")
             Left("Unexpected SCM response: " + response.status)

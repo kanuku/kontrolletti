@@ -21,7 +21,7 @@ import play.api.libs.json.Json
 import java.net.URLEncoder
 import model.KontrollettiToJsonParser._
 
-class SpecificationWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
+class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
   val reposRoute = "/api/repos/"
   val host = "github.com"
   val project = "zalando"
@@ -46,7 +46,7 @@ class SpecificationWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       when(search.tickets(host, project, repo, sinceId, untilId)).thenReturn(ticketResult)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(GET, url))
+        val result = route(FakeRequest(GET, url)).get
         status(result) mustEqual OK
         contentType(result) mustEqual Some("application/x.zalando.ticket+json")
         contentAsString(result) mustEqual Json.stringify(Json.toJson(List(ticket)))
@@ -63,7 +63,7 @@ class SpecificationWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       when(search.tickets(host, project, repo, sinceId, untilId)).thenReturn(ticketResult)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(GET, url))
+        val result = route(FakeRequest(GET, url)).get
         status(result) mustEqual NOT_FOUND
       }
 
@@ -79,7 +79,7 @@ class SpecificationWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       when(search.tickets(host, project, repo, sinceId, untilId)).thenReturn(ticketResult)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(GET, url))
+        val result = route(FakeRequest(GET, url)).get
         status(result) mustEqual INTERNAL_SERVER_ERROR
         contentType(result) mustEqual Some("application/problem+json")
       }

@@ -43,7 +43,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         when(search.normalize(host, project, repoName)).thenReturn(defaultUrl)
         when(search.isRepo(host, project, repoName)).thenReturn(Future.successful(Right(true)))
 
-        val Some(result) = route(FakeRequest(HEAD, url))
+        val result = route(FakeRequest(HEAD, url)).get
         status(result) mustEqual OK
         header(LOCATION, result) mustBe empty
         header(X_NORMALIZED_REPOSITORY_URL_HEADER, result) === Some(X_NORMALIZED_REPOSITORY_URL_HEADER -> defaultUrl)
@@ -64,7 +64,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
         when(search.parse(erraneousUrl)).thenReturn(response)
         //Let Guice return mocked searchService
 
-        val Some(result) = route(FakeRequest(HEAD, url))
+        val result = route(FakeRequest(HEAD, url)).get
         status(result) mustEqual BAD_REQUEST
         header(LOCATION, result) mustBe empty
         contentAsString(result) mustBe empty
@@ -84,7 +84,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       when(search.isRepo(host, project, repoName)).thenReturn(existsResponse)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl"))
+        val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl")).get
         status(result) mustEqual MOVED_PERMANENTLY
         header(X_NORMALIZED_REPOSITORY_URL_HEADER, result) === Some(X_NORMALIZED_REPOSITORY_URL_HEADER -> defaultUrl)
         header(LOCATION, result) === Some(LOCATION -> s"$reposRoute$encodedAlternativeUrl")
@@ -107,7 +107,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       when(search.isRepo(host, project, repoName)).thenReturn(existsResponse)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl"))
+        val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl")).get
         status(result) mustEqual NOT_FOUND
         header(LOCATION, result) mustBe empty
 
@@ -129,7 +129,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       when(search.isRepo(host, project, repoName)).thenReturn(existsResponse)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl"))
+        val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl")).get
         status(result) mustEqual INTERNAL_SERVER_ERROR
         header(LOCATION, result) mustBe empty
         contentAsString(result) mustBe empty
@@ -154,7 +154,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       when(search.repo(host, project, repoName)).thenReturn(repoResponse)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl"))
+        val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
         status(result) mustEqual OK
 
         contentAsString(result) mustEqual Json.stringify(Json.toJson(repository))
@@ -172,7 +172,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       when(search.parse(erraneousUrl)).thenReturn(parsedResponse)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(GET, s"$reposRoute$erraneousUrl"))
+        val result = route(FakeRequest(GET, s"$reposRoute$erraneousUrl")).get
         status(result) mustEqual BAD_REQUEST
         contentAsString(result) mustEqual parsedResponse.left.get
         contentType(result) mustEqual Some("application/problem+json")
@@ -188,7 +188,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       when(search.repo(host, project, repoName)).thenReturn(repoResponse)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl"))
+        val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
         status(result) mustEqual NOT_FOUND
         contentAsString(result) mustBe empty
 
@@ -205,7 +205,7 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       when(search.repo(host, project, repoName)).thenReturn(repoResponse)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl"))
+        val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
         status(result) mustEqual INTERNAL_SERVER_ERROR
         contentAsString(result) mustBe empty
         contentType(result) mustEqual Some("application/problem+json")

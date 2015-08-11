@@ -116,12 +116,12 @@ sealed trait SCMResolver {
    * The access-token value to use for accessing the SCM Rest api.
    */
   lazy val accessTokenValue = {
-    val input = play.Play.application.configuration.getString(accessTokenProperty)
-    if (input == null || input.isEmpty())
+    val input = Option(play.Play.application.configuration.getString(accessTokenProperty))
+    if (input == None || input.get.isEmpty())
       logger.error(s"Configuration($accessTokenProperty) for the client is missing")
     else
       logger.info(s"Loaded Token configuration for $accessTokenProperty")
-    input
+    input.getOrElse("ERROR")
   }
 
 }

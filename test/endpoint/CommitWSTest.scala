@@ -29,8 +29,8 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
   def diffRoute(host: String = host, project: String = project, repository: String = repository, source: String, target: String) = s"/api/hosts/$host/projects/$project/repos/$repository/diff/$source...$target"
   def commitsRoute(host: String = host, project: String = project, repository: String = repository, sinceId: Option[String] = None, untilId: Option[String] = None) = {
-    val since = if (sinceId.isDefined) sinceId.get else None
-    val until = if (untilId.isDefined) untilId.get else None
+    val since = sinceId.getOrElse("default")
+    val until = untilId.getOrElse("deafult")
     s"/api/hosts/github.com/projects/zalando/repos/kontrolletti/commits?since=$since&until=$until"
   }
   def singleCommitRoute(host: String = host, project: String = project, repository: String = repository, commitId: String = "commitId") = {
@@ -55,9 +55,9 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       when(search.diff(host, project, repository, source, target)).thenReturn(diffExistsResult)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(GET, url))
+        val result = route(FakeRequest(GET, url)).get
         status(result) mustEqual SEE_OTHER
-        header(LOCATION, result).get === (LOCATION -> URLEncoder.encode(link.href, "UTF-8"))
+        header(LOCATION, result) === Some(LOCATION -> URLEncoder.encode(link.href, "UTF-8"))
         contentAsString(result) mustBe empty
       }
 
@@ -77,7 +77,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       when(search.diff(host, project, repository, source, target)).thenReturn(diffExistsResult)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(GET, url))
+        val result = route(FakeRequest(GET, url)).get
         status(result) mustEqual NOT_FOUND
         header(LOCATION, result) mustBe empty
         contentAsString(result) mustBe empty
@@ -97,7 +97,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       when(search.diff(host, project, repository, source, target)).thenReturn(diffExistsResult)
 
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(GET, url))
+        val result = route(FakeRequest(GET, url)).get
         status(result) mustEqual INTERNAL_SERVER_ERROR
         header(LOCATION, result) mustBe empty
         contentAsString(result) mustBe empty
@@ -120,7 +120,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       val url = commitsRoute(sinceId = sinceId, untilId = untilId)
       when(search.commits(host, project, repository, sinceId, untilId)).thenReturn(commitResult)
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(GET, url))
+        val result = route(FakeRequest(GET, url)).get
         status(result) mustEqual OK
         contentType(result) mustEqual Some("application/x.zalando.commit+json")
         contentAsString(result) mustEqual Json.stringify(Json.toJson(response))
@@ -145,7 +145,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       val url = commitsRoute(sinceId = sinceId, untilId = untilId)
       when(search.commits(host, project, repository, sinceId, untilId)).thenReturn(commitResult)
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(GET, url))
+        val result = route(FakeRequest(GET, url)).get
         status(result) mustEqual INTERNAL_SERVER_ERROR
         contentType(result) mustEqual Some("application/problem+json")
         contentAsString(result) mustEqual Json.stringify(Json.toJson(response))
@@ -162,7 +162,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       val response = new CommitResult(List(), commit)
       when(search.commit(host, project, repository, commitId)).thenReturn(commitResult)
       withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val Some(result) = route(FakeRequest(GET, url))
+        val result = route(FakeRequest(GET, url)).get
         status(result) mustEqual OK
         contentType(result) mustEqual Some("application/x.zalando.commit+json")
         contentAsString(result) mustEqual Json.stringify(Json.toJson(response))
@@ -193,7 +193,7 @@ class CommitWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
     			val response = new Error("An error occurred, please check the logs", 500, "undefined")
     	when(search.commit(host, project, repository, commitId)).thenReturn(commitResult)
     	withFakeApplication(new FakeGlobalWithSearchService(search)) {
-    		val Some(result) = route(FakeRequest(GET, url))
+    		val result = route(FakeRequest(GET, url)).get
     				status(result) mustEqual INTERNAL_SERVER_ERROR
             contentType(result) mustEqual Some("application/problem+json")
     				contentAsString(result) mustEqual Json.stringify(Json.toJson(response))

@@ -18,12 +18,12 @@ import play.api.libs.json.JsValue
 import play.api.libs.ws.WSResponse
 import test.util.MockitoUtils
 import client.RequestDispatcherImpl
+import test.util.TestUtils._
 /**
  * This class tests the interaction between the Service and the Client(mock).
  */
 class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with MockitoUtils with BeforeAndAfter {
 
-  import test.util.TestUtils._
 
   val defaultError = "Something went wrong, check the logs!"
   val host = "github.com"

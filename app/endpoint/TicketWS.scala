@@ -10,11 +10,11 @@ import play.api.Logger
 import service.Search
 import play.api.libs.json.Json
 import model.KontrollettiToJsonParser._
+import model.KontrollettiToModelParser._
 
 @Singleton
 class TicketWS @Inject() (searchService: Search) extends Controller {
 
-  import model.KontrollettiToModelParser._
 
   private val logger: Logger = Logger(this.getClass())
 

@@ -3,10 +3,10 @@ package controllers
 import play.api._
 import play.api.Play.current
 import play.api.mvc._
+import scala.io.Source._
 
 
 object Application extends Controller {
-	import scala.io.Source._
 	private val file=scala.io.Source.fromFile(Play.application.getFile("conf/swagger.json")).mkString
 
   def index = Action {

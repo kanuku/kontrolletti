@@ -59,7 +59,7 @@ class UrlParserTest extends FunSuite   {
     
     val result = parser.extract(url)
     assert(result.isRight, "Parsing failed")
-    val (testHost, testGroup, testRepo) = result.right.toOption.get
+    val (testHost, testGroup, testRepo) = result.right.get
     assert(testHost == host)
     assert(testGroup == project)
     assert(testRepo == repo)
