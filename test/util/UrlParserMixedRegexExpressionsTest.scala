@@ -12,15 +12,15 @@ import test.util.ParsingData
 import scala.util.matching.Regex
 import test.util.TestUtils
 import utility.UrlParser
+import utility.UrlParser;
+import ParsingData._
+import TestUtils._
 
 /**
  * This class tests for parsing URL composed of corner cases.
  * The URL's are being tested simultaneous
  */
 class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with UrlParser with ScalaFutures {
-import utility.UrlParser;
-  import ParsingData._
-import TestUtils._
   /**
    * This test has 712800 URLS to test, that is why the URLS are being tested in parallel.
    */

@@ -112,13 +112,17 @@ object GithubToJsonParser extends SCMParser {
     and Reads.pure(None) // links
     )(Commit.apply _)
 
-  implicit val ticketReader: Reads[Ticket] = null
+    implicit val ticketReader: Reads[Ticket] = (
+    Reads.pure("")
+    and Reads.pure("")
+    and Reads.pure("")
+    and Reads.pure(List()))(Ticket.apply _)
 
   implicit val repoReader: Reads[Repository] = (
     (JsPath \ "html_url").read[String]
-    and Reads.pure(null)
-    and Reads.pure(null)
-    and Reads.pure(null)
+    and Reads.pure("")
+    and Reads.pure("")
+    and Reads.pure("")
     and Reads.pure(None)
     and Reads.pure(None))(Repository.apply _)
 
@@ -153,13 +157,18 @@ object StashToJsonParser extends SCMParser {
     and (JsPath \ "author").read[Author] // author
     and Reads.pure(None) // links
     )(Commit.apply _)
-  implicit val ticketReader: Reads[Ticket] = null
+
+    implicit val ticketReader: Reads[Ticket] = (
+    Reads.pure("")
+    and Reads.pure("")
+    and Reads.pure("")
+    and Reads.pure(List()))(Ticket.apply _)
 
   implicit val repoReader: Reads[Repository] = (
     (JsPath \ "links" \ "self" \\ "href").read[String]
-    and Reads.pure(null)
-    and Reads.pure(null)
-    and Reads.pure(null)
+    and Reads.pure("")
+    and Reads.pure("")
+    and Reads.pure("")
     and Reads.pure(None)
     and Reads.pure(None))(Repository.apply _)
 
