@@ -5,7 +5,7 @@ import model.Author
 object TestUtils {
 
   def assertEitherIsNotNull[A, B](either: Either[A, B]) = {
-    assert(either != null, "because either is null")
+    assert(Option(either) != None, "because either is null")
   }
 
   def assertEitherIsLeft[A, B](either: Either[A, B]) = {
