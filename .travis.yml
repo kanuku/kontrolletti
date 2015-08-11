@@ -7,6 +7,5 @@ script:
   - sbt clean coverage test
   - sbt coverageReport
 after_success:
-  - sbt codacyCoverage
   - sbt coveralls
   - bash <(curl -s https://codecov.io/bash)
