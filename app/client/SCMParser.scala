@@ -100,7 +100,7 @@ object GithubToJsonParser extends SCMParser {
   val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => extract(value.validate[List[Ticket]])
   val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => extract(value.validate[Repository])
 
-    implicit val authorReader: Reads[Author] = (
+  implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
     (JsPath \ "email").read[String] and
     Reads.pure(None) //
@@ -114,7 +114,9 @@ object GithubToJsonParser extends SCMParser {
       Json.fromJson[List[String]](JsArray(l))
     }
     and (JsPath \ "commit" \ "committer").read[Author]
-    and Reads.pure(None) // links
+    and Reads.pure(None) // tickets
+    and Reads.pure(None) // valid
+    and Reads.pure(None) //0 links
     )(Commit.apply _)
 
   implicit val ticketReader: Reads[Ticket] = (
@@ -161,7 +163,9 @@ object StashToJsonParser extends SCMParser {
       Json.fromJson[List[String]](JsArray(l))
     }
     and (JsPath \ "author").read[Author] // author
-    and Reads.pure(None) // links
+    and Reads.pure(None) // tickets
+    and Reads.pure(None) // valid
+    and Reads.pure(None) //0 links
     )(Commit.apply _)
 
   implicit val ticketReader: Reads[Ticket] = (

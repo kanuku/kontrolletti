@@ -1,12 +1,12 @@
 package model
 
+import play.api.libs.functional.syntax._
 import play.api.libs.functional.syntax.functionalCanBuildApplicative
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.functional.syntax.unlift
+import play.api.libs.json._
 import play.api.libs.json.Reads
 import play.api.libs.json.Writes
-import play.api.libs.json._
-import play.api.libs.functional.syntax._
 /**
  * The models
  *
@@ -16,8 +16,7 @@ case class Error(detail: String, status: Int, errorType: String)
 case class Link(href: String, method: String, rel: String, relType: String)
 case class Author(name: String, email: String, links: Option[List[Link]])
 //TODO: Add [specs] and [valid] properties 
-case class Commit(id: String, message: String, parentIds: List[String], author: Author //, valid: Option[Boolean]
-, links: Option[List[Link]])
+case class Commit(id: String, message: String, parentIds: List[String], author: Author, tickets: Option[List[Ticket]], valid: Option[Boolean], links: Option[List[Link]])
 case class Repository(html_url: String, project: String, host: String, repository: String, commits: Option[List[Commit]], links: Option[List[Link]])
 case class Ticket(name: String, description: String, href: String, links: List[Link])
 
@@ -58,6 +57,8 @@ object KontrollettiToModelParser {
     (__ \ "message").read[String] and
     (__ \ "parentId").read[List[String]] and
     (__ \ "author").read[Author] and
+    (__ \ "tickets").read[Option[List[Ticket]]] and
+    (__ \ "valid").readNullable[Boolean] and
     (__ \ "links").readNullable[List[Link]] //
     )(Commit.apply _)
 
@@ -120,7 +121,8 @@ object KontrollettiToJsonParser {
     (__ \ "message").write[String] and
     (__ \ "parentId").write[List[String]] and
     (__ \ "author").write[Author] and
-    //    (__ \ "valid").writeNullable[Boolean] and
+    (__ \ "tickets").write[Option[List[Ticket]]] and
+        (__ \ "valid").writeNullable[Boolean] and
     (__ \ "links").writeNullable[List[Link]] //
     )(unlift(Commit.unapply))
 
