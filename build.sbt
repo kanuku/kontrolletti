@@ -2,7 +2,7 @@ import com.typesafe.sbt.packager.docker._
 
 name := """kontrolletti"""
 
-version := "1.0-SNAPSHOT"
+version := "0.02-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala).enablePlugins(DockerPlugin)
 

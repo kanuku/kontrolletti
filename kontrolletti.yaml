@@ -323,24 +323,18 @@ definitions:
         type: boolean
       author:
         $ref: "#/definitions/Author"
-      parentId:
-        type: string
+      parents:
+        type: array
+        items:
+          type: string
       specs:
         type: array
         items:
-          $ref: "#/definitions/Spec"
+          $ref: "#/definitions/Ticket"
       links:
         type: array
         items:
           $ref: "#/definitions/Link"
-  Specification:
-    properties:
-      protocol:
-        type: string
-      href: 
-        type: string
-        format: uri
-        description: URI to the detailed specification.
   Ticket:
     properties:
       name:
