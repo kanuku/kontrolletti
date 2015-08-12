@@ -52,12 +52,19 @@ object KontrollettiToModelParser {
     (__ \ "links").readNullable[List[Link]] //
     )(Author.apply _)
 
+  implicit val ticketReader: Reads[Ticket] = (
+    (__ \ "name").read[String] and
+    (__ \ "description").read[String] and
+    (__ \ "href").read[String] and
+    (__ \ "links").read[List[Link]] //
+    )(Ticket.apply _)
+    
   implicit val commitReader: Reads[Commit] = (
     (__ \ "id").read[String] and
     (__ \ "message").read[String] and
     (__ \ "parentId").read[List[String]] and
     (__ \ "author").read[Author] and
-    (__ \ "tickets").read[Option[List[Ticket]]] and
+    (__ \ "tickets").readNullable[List[Ticket]] and
     (__ \ "valid").readNullable[Boolean] and
     (__ \ "links").readNullable[List[Link]] //
     )(Commit.apply _)
@@ -70,13 +77,6 @@ object KontrollettiToModelParser {
     (__ \ "commits").readNullable[List[Commit]] and
     (__ \ "links").readNullable[List[Link]] //
     )(Repository.apply _)
-
-  implicit val ticketReader: Reads[Ticket] = (
-    (__ \ "name").read[String] and
-    (__ \ "description").read[String] and
-    (__ \ "href").read[String] and
-    (__ \ "links").read[List[Link]] //
-    )(Ticket.apply _)
 
   implicit val commitsResultReader: Reads[CommitsResult] = (
     (__ \ "_links").read[List[Link]] and
@@ -116,13 +116,20 @@ object KontrollettiToJsonParser {
     (__ \ "links").writeNullable[List[Link]] //
     )(unlift(Author.unapply))
 
+  implicit val ticketWriter: Writes[Ticket] = (
+    (__ \ "name").write[String] and
+    (__ \ "description").write[String] and
+    (__ \ "href").write[String] and
+    (__ \ "links").write[List[Link]] //
+    )(unlift(Ticket.unapply))
+
   implicit val commitWriter: Writes[Commit] = (
     (__ \ "id").write[String] and
     (__ \ "message").write[String] and
     (__ \ "parentId").write[List[String]] and
     (__ \ "author").write[Author] and
-    (__ \ "tickets").write[Option[List[Ticket]]] and
-        (__ \ "valid").writeNullable[Boolean] and
+    (__ \ "tickets").writeNullable[List[Ticket]] and
+    (__ \ "valid").writeNullable[Boolean] and
     (__ \ "links").writeNullable[List[Link]] //
     )(unlift(Commit.unapply))
 
@@ -134,13 +141,6 @@ object KontrollettiToJsonParser {
     (__ \ "commits").writeNullable[List[Commit]] and
     (__ \ "links").writeNullable[List[Link]] //
     )(unlift(Repository.unapply))
-
-  implicit val ticketWriter: Writes[Ticket] = (
-    (__ \ "name").write[String] and
-    (__ \ "description").write[String] and
-    (__ \ "href").write[String] and
-    (__ \ "links").write[List[Link]] //
-    )(unlift(Ticket.unapply))
 
   implicit val commitsResultWriter: Writes[CommitsResult] = (
     (__ \ "_links").write[List[Link]] and //

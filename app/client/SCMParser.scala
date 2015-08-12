@@ -109,15 +109,17 @@ object GithubToJsonParser extends SCMParser {
   implicit val commitReader: Reads[Commit] = (
     (JsPath \ "sha").read[String] // id
     and (JsPath \ "commit" \ "message").read[String] // message
-    and Reads[List[String]] { js =>
-      val l: List[JsValue] = (JsPath \ "parents" \\ "sha")(js)
-      Json.fromJson[List[String]](JsArray(l))
-    }
+    and readUrls
     and (JsPath \ "commit" \ "committer").read[Author]
-    and Reads.pure(None) // tickets
+    and Reads.pure(None) // tickets 
     and Reads.pure(None) // valid
     and Reads.pure(None) //0 links
     )(Commit.apply _)
+
+  def readUrls(implicit rt: Reads[String]) = Reads[List[String]] { js =>
+    val l: List[JsValue] = (JsPath \ "parents" \\ "sha")(js)
+    Json.fromJson[List[String]](JsArray(l))
+  }
 
   implicit val ticketReader: Reads[Ticket] = (
     Reads.pure("")
@@ -155,19 +157,22 @@ object StashToJsonParser extends SCMParser {
     Reads.pure(None) //
     )(Author.apply _)
 
+  //FIXME! Extract advanced reader (parent-ids) into its own function
   implicit val commitReader: Reads[Commit] = (
     (JsPath \ "id").read[String] //id
     and (JsPath \ "message").read[String] //message
-    and Reads[List[String]] { js =>
-      val l: List[JsValue] = (JsPath \ "parents" \\ "id")(js)
-      Json.fromJson[List[String]](JsArray(l))
-    }
+    and readUrls
     and (JsPath \ "author").read[Author] // author
     and Reads.pure(None) // tickets
     and Reads.pure(None) // valid
     and Reads.pure(None) //0 links
     )(Commit.apply _)
 
+  def readUrls(implicit rt: Reads[String]) = Reads[List[String]] { js =>
+    val l = (JsPath \ "parents" \\ "id")
+    val b: List[JsValue]= l (js)
+    Json.fromJson[List[String]](JsArray(b))
+  } 
   implicit val ticketReader: Reads[Ticket] = (
     Reads.pure("")
     and Reads.pure("")

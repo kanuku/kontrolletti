@@ -2,10 +2,11 @@ package client
 
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
+
+import model.Commit
 import play.api.libs.json._
 import play.api.libs.json.Json._
 import test.util.FakeResponseData
-import model.Commit
 
 /**
  * This class tests the Parsing process implemented in SCMParser file.
@@ -100,12 +101,10 @@ class SCMParserTest extends FunSuite with Matchers {
   }
 
   test("Deserialize a single commit with the Githubparser") {
-   
-    val jsonData = Json.parse(FakeResponseData.singleCommit)
-
-    val result =GithubToJsonParser.singleCommitToModel(jsonData)
+    val jsonData = Json.parse(FakeResponseData.singleGithubCommit)
+    val result = GithubToJsonParser.singleCommitToModel(jsonData)
     assert(result.isRight, "Failed to parse!!")
-    val commit = result.right.get 
+    val commit = result.right.get
     assert(Option(commit) != None)
     assert(commit.id == "50cea1156ca558eb6c67e78ca7e5dabc570ea99a")
     assert(commit.message == "Merge pull request #8 from zalando-bus/feature-swagger-first\n\nApi Specification in Swagger")
@@ -115,5 +114,20 @@ class SCMParserTest extends FunSuite with Matchers {
     assert(commit.links == None)
 
   }
-  
+
+  ignore("Deserialize a single commit with the Stashparser") {
+    val jsonData = Json.parse(FakeResponseData.singleStashCommit)
+    val result = StashToJsonParser.singleCommitToModel(jsonData)
+    assert(result.isRight, "Failed to parse!!")
+    val commit = result.right.get
+    assert(Option(commit) != None)
+    assert(commit.id == "644a78e681cab53c5cc27be0d3c6e338b9e64b3d")
+    assert(commit.message == "Adding sbt-0.13.8.deb pacakge file back into repo")
+    assert(commit.parentIds.size == 1, "Expected parent-ids")
+    assert(commit.author.email == "benibadboy@hotmail.com")
+    assert(commit.author.name == "Fernando Benjamin")
+    assert(commit.links == None)
+
+  }
+
 }

@@ -448,7 +448,7 @@ val ghRepo = """
     }
     """
   
-  val singleCommit = """
+  val singleGithubCommit = """
     {
       "sha": "50cea1156ca558eb6c67e78ca7e5dabc570ea99a",
       "commit": {
@@ -530,6 +530,35 @@ val ghRepo = """
       }
     }
     """
-
+    val singleStashCommit = """
+      {
+        "id": "644a78e681cab53c5cc27be0d3c6e338b9e64b3d",
+        "displayId": "644a78e681c",
+        "author": {
+          "name": "Fernando Benjamin",
+          "emailAddress": "benibadboy@hotmail.com"
+        },
+        "authorTimestamp": 1434466353000,
+        "message": "Adding sbt-0.13.8.deb pacakge file back into repo",
+        "parents": [
+          {
+            "id": "efa9834bfec4763792c1c6e2ef172ce2b766aff4",
+            "displayId": "efa9834bfec",
+            "author": {
+              "name": "Fernando Benjamin",
+              "emailAddress": "benibadboy@hotmail.com"
+            },
+            "authorTimestamp": 1434466329000,
+            "message": "Adding sbt-0.13.8.deb pacakge file back into repo",
+            "parents": [
+              {
+                "id": "2aded5f6843a87ec3720c1bee78b87a4025d1a0a",
+                "displayId": "2aded5f6843"
+              }
+            ]
+          }
+        ]
+      }
+      """
 
 }

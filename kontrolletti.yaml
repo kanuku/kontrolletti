@@ -327,7 +327,7 @@ definitions:
         type: array
         items:
           type: string
-      specs:
+      tickets:
         type: array
         items:
           $ref: "#/definitions/Ticket"

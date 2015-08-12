@@ -135,7 +135,7 @@ object GithubResolver extends SCMResolver {
 
   def repo(host: String, project: String, repository: String) = s"$antecedent$host/repos/$project/$repository"
   def repoUrl(host: String, project: String, repository: String) = repo(host,project,repository)
-  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"http://$host/$project/$repository/compare/$source...$target"
+  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"https://$host/$project/$repository/compare/$source...$target"
 
   // Authorization variables
   def accessTokenKey = "access_token"
