@@ -8,7 +8,7 @@ import scala.util.Try
 import akka.dispatch.OnComplete
 import akka.dispatch.OnFailure
 import client.GithubToJsonParser
-import client.SCM
+import client.scm.SCM
 import client.SCMParser
 import client.SCMParser
 import client.StashToJsonParser

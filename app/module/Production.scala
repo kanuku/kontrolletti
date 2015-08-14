@@ -3,8 +3,8 @@ package module
 import com.google.inject.AbstractModule
 import service.SearchImpl
 import service.Search
-import client.SCM
-import client.SCMImpl
+import client.scm.SCM
+import client.scm.SCMImpl
 import play.api.Logger
 import client.RequestDispatcherImpl
 import client.RequestDispatcher

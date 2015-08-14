@@ -9,8 +9,8 @@ import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
 import com.google.inject.AbstractModule
 import com.google.inject.Guice
-import client.SCM
-import client.SCMImpl
+import client.scm.SCM
+import client.scm.SCMImpl
 import model.Commit
 import model.Link
 import model.Repository

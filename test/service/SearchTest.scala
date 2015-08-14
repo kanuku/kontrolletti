@@ -10,9 +10,9 @@ import org.scalatest.FunSpec
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneAppPerTest
 import org.scalatestplus.play.PlaySpec
-import client.SCM
-import client.SCMImpl
-import client.SCMImpl
+import client.scm.SCM
+import client.scm.SCMImpl
+import client.scm.SCMImpl
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSResponse

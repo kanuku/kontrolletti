@@ -1,10 +1,10 @@
-package client
+package client.scm
 
 import scala.concurrent.Future
 import play.api.Logger
 import play.api.libs.ws.WSResponse
 import javax.inject._
-import play.api.libs.ws.WSRequestHolder
+import client.StashResolver
 sealed trait SCM {
 
   /**

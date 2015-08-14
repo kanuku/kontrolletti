@@ -1,8 +1,8 @@
 package module
 
 import com.google.inject.AbstractModule
-import client.SCM
-import client.SCMImpl
+import client.scm.SCM
+import client.scm.SCMImpl
 import service.Search
 import service.SearchImpl
 import play.api.Logger

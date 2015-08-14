@@ -11,6 +11,7 @@ import play.api.libs.ws.WSRequestHolder
 import play.api.libs.ws.WSResponse
 import scala.concurrent.Future
 import org.mockito.ArgumentCaptor
+import client.scm.SCMImpl
 
 /**
  * The tests in this class will assure:
