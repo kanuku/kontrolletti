@@ -128,14 +128,15 @@ sealed trait SCMResolver {
 
 object GithubResolver extends SCMResolver {
   def name = "github"
-  private val antecedent = "https://api."
-  def commits(host: String, project: String, repository: String) = s"$antecedent$host/repos/$project/$repository/commits"
-  def commit(host: String, project: String, repository: String, id: String): String = s"$antecedent$host/repos/$project/$repository/commits/$id"
-  def tickets(host: String, project: String, repository: String): String = s"$antecedent$host/repos/$project/$repository/commits"
+  private val apiAntecedent = "https://api."
+  private val antecedent = "https://"
+  def commits(host: String, project: String, repository: String) = s"$apiAntecedent$host/repos/$project/$repository/commits"
+  def commit(host: String, project: String, repository: String, id: String): String = s"$apiAntecedent$host/repos/$project/$repository/commits/$id"
+  def tickets(host: String, project: String, repository: String): String = s"$apiAntecedent$host/repos/$project/$repository/commits"
 
-  def repo(host: String, project: String, repository: String) = s"$antecedent$host/repos/$project/$repository"
-  def repoUrl(host: String, project: String, repository: String) = repo(host,project,repository)
-  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"https://$host/$project/$repository/compare/$source...$target"
+  def repo(host: String, project: String, repository: String) = s"$apiAntecedent$host/repos/$project/$repository"
+  def repoUrl(host: String, project: String, repository: String) = s"$antecedent$host/$project/$repository"
+  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"$antecedent$host/$project/$repository/compare/$source...$target"
 
   // Authorization variables
   def accessTokenKey = "access_token"

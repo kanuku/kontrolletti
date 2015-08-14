@@ -1,11 +1,8 @@
 
 
-package util
+package utility
 
-import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-import utility.UrlParser
-import client.SCM
 import service.SearchImpl
 
 class UrlParserTest extends FunSuite   {

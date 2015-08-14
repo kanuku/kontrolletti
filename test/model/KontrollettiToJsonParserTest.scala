@@ -26,7 +26,7 @@ class KontrollettiToJsonParserTest extends FunSuite with MockitoSugar with Mocki
   val commits = List(commit, commit)
   val repository = new Repository("html_url", "project", "host", "repository", Some(commits), Some(links))
   val repositories = List(repository, repository)
-  val ticket = new Ticket("name", "description", "href", List(link, link))
+  val ticket = new Ticket("name", "href", List(link, link))
   val commitsResult = new CommitsResult(links, commits)
   val commitResult = new CommitResult(links, commit)
   val repositoriesResult = new RepositoriesResult(links, repositories)

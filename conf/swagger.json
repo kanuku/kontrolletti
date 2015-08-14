@@ -454,13 +454,16 @@
                 "author": {
                     "$ref": "#/definitions/Author"
                 },
-                "parentId": {
-                    "type": "string"
-                },
-                "specs": {
+                "parents": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Spec"
+                        "type": "string"
+                    }
+                },
+                "tickets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Ticket"
                     }
                 },
                 "links": {
@@ -471,24 +474,9 @@
                 }
             }
         },
-        "Spec": {
-            "properties": {
-                "protocol": {
-                    "type": "string"
-                },
-                "href": {
-                    "type": "string",
-                    "format": "uri",
-                    "description": "URI to the detailed specification."
-                }
-            }
-        },
         "Ticket": {
             "properties": {
                 "name": {
-                    "type": "string"
-                },
-                "description": {
                     "type": "string"
                 },
                 "href": {

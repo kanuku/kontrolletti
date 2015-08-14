@@ -124,7 +124,6 @@ object GithubToJsonParser extends SCMParser {
   implicit val ticketReader: Reads[Ticket] = (
     Reads.pure("")
     and Reads.pure("")
-    and Reads.pure("")
     and Reads.pure(List()))(Ticket.apply _)
 
   implicit val repoReader: Reads[Repository] = (
@@ -175,7 +174,6 @@ object StashToJsonParser extends SCMParser {
   } 
   implicit val ticketReader: Reads[Ticket] = (
     Reads.pure("")
-    and Reads.pure("")
     and Reads.pure("")
     and Reads.pure(List()))(Ticket.apply _)
 

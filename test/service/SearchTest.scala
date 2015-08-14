@@ -131,7 +131,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
   }
 
   "Search#normalize" should "normalize the github URL" in {
-    val url = "https://api.github.com/repos/zalando-bus/kontrolletti"
+    val url = "https://github.com/zalando-bus/kontrolletti"
     val client = new SCMImpl(new RequestDispatcherImpl())
     val search = new SearchImpl(client)
     assert(search.normalize(host, project, repository) == url)

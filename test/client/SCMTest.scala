@@ -80,7 +80,7 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
   }
 
   "SCM#repoUrl" should "return a repository-url for github API" in {
-    val url = s"https://api.$github/repos/$project/$repository"
+    val url = s"https://$github/$project/$repository"
     val result = client.repoUrl(github, project, repository)
     assert(result == url)
   }
@@ -91,7 +91,7 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
   }
 
   "SCM#diffUrl" should "return a diffUrl for github frontend" in {
-    val url = s"http://$github/$project/$repository/compare/$source...$target"
+    val url = s"https://$github/$project/$repository/compare/$source...$target"
     val result = client.diffUrl(github, project, repository, source, target)
     assert(result == url)
   }

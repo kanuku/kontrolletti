@@ -24,7 +24,7 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
 
   def normalize(repositoryUrl: String) = Action.async {
     val url = UriEncoding.decodePath(repositoryUrl, "UTF-8")
-    logger.info(s"Request: $url")
+    logger.info(s"Request(Normalize): $url")
 
     searchService.parse(url) match {
       case Left(error) =>
@@ -33,7 +33,7 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
 
       case Right((host, project, repo)) =>
         val normalizedUrl = searchService.normalize(host, project, repo)
-
+        logger.info(s"Normalized url $normalizedUrl")
         searchService.isRepo(host, project, repo).map {
           case Right(result) if (result && normalizedUrl.equals(url)) =>
             logger.info(s"Result: 200 $normalizedUrl")
@@ -54,7 +54,7 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
 
   def byUrl(repositoryUrl: String) = Action.async {
     val url = UriEncoding.decodePath(repositoryUrl, "UTF-8")
-    logger.info(s"Request: $url")
+    logger.info(s"Request(By URL): $url")
 
     searchService.parse(url) match {
       case Right((host, project, repo)) =>
