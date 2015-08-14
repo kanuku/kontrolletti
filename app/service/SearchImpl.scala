@@ -7,11 +7,11 @@ import scala.util.Try
 
 import akka.dispatch.OnComplete
 import akka.dispatch.OnFailure
-import client.GithubToJsonParser
+import client.scm.GithubToJsonParser
 import client.scm.SCM
-import client.SCMParser
-import client.SCMParser
-import client.StashToJsonParser
+import client.scm.SCMParser
+import client.scm.SCMParser
+import client.scm.StashToJsonParser
 import javax.inject._
 import model.Commit
 import model.Link

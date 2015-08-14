@@ -1,4 +1,4 @@
-package client
+package client.scm
 
 import java.util.ServiceConfigurationError
 
