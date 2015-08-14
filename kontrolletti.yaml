@@ -339,8 +339,6 @@ definitions:
     properties:
       name:
         type: string
-      description:
-        type: string
       href: 
         type: string
         format: uri

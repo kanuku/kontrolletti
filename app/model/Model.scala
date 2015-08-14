@@ -15,10 +15,11 @@ import play.api.libs.json.Writes
 case class Error(detail: String, status: Int, errorType: String)
 case class Link(href: String, method: String, rel: String, relType: String)
 case class Author(name: String, email: String, links: Option[List[Link]])
+
 //TODO: Add [specs] and [valid] properties 
 case class Commit(id: String, message: String, parentIds: List[String], author: Author, tickets: Option[List[Ticket]], valid: Option[Boolean], links: Option[List[Link]])
 case class Repository(html_url: String, project: String, host: String, repository: String, commits: Option[List[Commit]], links: Option[List[Link]])
-case class Ticket(name: String, description: String, href: String, links: List[Link])
+case class Ticket(name: String, href: String, links: List[Link])
 
 //MUST HAVE HATEOAS RESULTS
 //FIXME: Create a generic Parent case class. This way you will only need one single writer :) for all Results.
@@ -30,6 +31,7 @@ case class CommitsResult(links: List[Link], result: List[Commit])
 
 //TODO: Evaluate Moving the readers in this parser(KontrollettiToJsonParser) into Companion objects
 // And overriding those companion objects in the SCM Parser
+
 
 object KontrollettiToModelParser {
 
@@ -54,7 +56,6 @@ object KontrollettiToModelParser {
 
   implicit val ticketReader: Reads[Ticket] = (
     (__ \ "name").read[String] and
-    (__ \ "description").read[String] and
     (__ \ "href").read[String] and
     (__ \ "links").read[List[Link]] //
     )(Ticket.apply _)
@@ -118,7 +119,6 @@ object KontrollettiToJsonParser {
 
   implicit val ticketWriter: Writes[Ticket] = (
     (__ \ "name").write[String] and
-    (__ \ "description").write[String] and
     (__ \ "href").write[String] and
     (__ \ "links").write[List[Link]] //
     )(unlift(Ticket.unapply))

@@ -35,7 +35,7 @@ class CommitWS @Inject() (search: Search) extends Controller {
   }
 
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]) = Action.async {
-    logger.info("host:$host, project:$project, repository:$repository, since:$since, until:$until")
+    logger.info("Request(commits) - host:$host, project:$project, repository:$repository, since:$since, until:$until")
     search.commits(host, project, repository, since, until).map {
       case Left(error) =>
         logger.info("Result 500: " + error)
@@ -50,7 +50,7 @@ class CommitWS @Inject() (search: Search) extends Controller {
   }
 
   def byId(host: String, project: String, repository: String, id: String) = Action.async {
-    logger.info("host:$host, project:$project, repository:$repository, since:$since, until:$until")
+    logger.info("Request(byId) - host:$host, project:$project, repository:$repository, since:$since, until:$until")
     search.commit(host, project, repository, id).map {
       case Left(error) =>
         logger.info("Result 500: " + error)

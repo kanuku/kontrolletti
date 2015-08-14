@@ -1,17 +1,11 @@
 
 
-package util
+package utility
 
-import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-import org.scalatest.WordSpec
-import org.scalatest.junit.JUnitRunner
 import play.api.test.Helpers._
-import org.scalatest.concurrent.AsyncAssertions.Waiter
 import org.scalatest.Matchers
-import test.util.ParsingData
-import utility.UrlParser
-import ParsingData._
+import test.util.ParsingData._
 
 /**
  * In this class you can find the individual tests for the regular expressions in UrlParser. <br/>

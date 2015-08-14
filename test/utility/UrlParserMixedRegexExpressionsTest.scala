@@ -1,20 +1,13 @@
-package util
+package utility
 
 import scala.concurrent._
-import org.scalatest.Distributor
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
-import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.junit.JUnitRunner
 import play.api.test.Helpers._
-import test.util.ParsingData
-import scala.util.matching.Regex
-import test.util.TestUtils
-import utility.UrlParser
-import utility.UrlParser;
-import ParsingData._
-import TestUtils._
+import test.util.ParsingData._
+import test.util.TestUtils._
+import scala.Left
 
 /**
  * This class tests for parsing URL composed of corner cases.
