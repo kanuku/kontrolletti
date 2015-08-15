@@ -1,4 +1,4 @@
-package client
+package client.scm
 
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.anyString

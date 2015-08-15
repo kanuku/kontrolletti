@@ -1,4 +1,4 @@
-package client
+package client.scm
 
 import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
@@ -11,7 +11,9 @@ import play.api.libs.ws.WSRequestHolder
 import play.api.libs.ws.WSResponse
 import scala.concurrent.Future
 import org.mockito.ArgumentCaptor
-import client.scm.SCMImpl
+import client.RequestDispatcher
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * The tests in this class will assure:

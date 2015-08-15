@@ -1,4 +1,4 @@
-package client
+package client.scm
 
 import org.scalatest.FunSuite
 import org.scalatest.Matchers

@@ -18,9 +18,10 @@ libraryDependencies ++= Seq(
   ws,
   "com.google.inject"  		% "guice" 			% "3.0" 		withSources() withJavadoc(),
   "javax.inject" 			% "javax.inject" 	% "1" 			withSources() withJavadoc(),
-  "org.scalatest"			% "scalatest_2.11"  % "2.2.4"  		% "test" withSources() withJavadoc(),
-  "org.scalatestplus" 		%% "play" 			% "1.2.0" 		% "test",
-  "org.mockito" 			% "mockito-core" 	% "1.9.5" 		% "test" withSources() withJavadoc()
+  "com.amazonaws" 			% "aws-java-sdk" 	% "1.10.11"		withSources() withJavadoc(),
+  "org.scalatest"			% "scalatest_2.11"  % "2.2.4"  		% "test" 	withSources() withJavadoc(),
+  "org.scalatestplus" 		%% "play" 			% "1.2.0" 		% "test"	withSources() withJavadoc(),
+  "org.mockito" 			% "mockito-core" 	% "1.9.5" 		% "test" 	withSources() withJavadoc()
 )
 
 // -------------Docker configuration-------------
