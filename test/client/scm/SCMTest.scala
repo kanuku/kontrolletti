@@ -1,4 +1,4 @@
-package client
+package client.scm
 
 import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
@@ -11,6 +11,9 @@ import play.api.libs.ws.WSRequestHolder
 import play.api.libs.ws.WSResponse
 import scala.concurrent.Future
 import org.mockito.ArgumentCaptor
+import client.RequestDispatcher
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * The tests in this class will assure:
@@ -23,8 +26,8 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
 
   val mockedRequestHolder = mock[WSRequestHolder]
   val mockedDispatcher = mock[RequestDispatcher]
-  val mockedWSResponse = mock[WSResponse]
-  val mockedResponse = mockSuccessfullParsableFutureWSResponse(mockedWSResponse, 200)
+  
+  val mockedResponse = mockSuccessfullParsableFutureWSResponse("", 200)
   val client = new SCMImpl(mockedDispatcher)
 
   val github = "github.com"
@@ -40,7 +43,7 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
   before {
     reset(mockedRequestHolder)
     reset(mockedDispatcher)
-    reset(mockedWSResponse)
+//    reset(mockedWSResponse)
   }
 
   "SCM#commits" should "request commits from github API" in {

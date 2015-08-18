@@ -9,8 +9,8 @@ import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
 import com.google.inject.AbstractModule
 import com.google.inject.Guice
-import client.SCM
-import client.SCMImpl
+import client.scm.SCM
+import client.scm.SCMImpl
 import model.Commit
 import model.Link
 import model.Repository
@@ -37,19 +37,22 @@ trait MockitoUtils extends MockitoSugar {
   /**
    * Creates a mocked WSResponse
    */
-  def mockSuccessfullParsableFutureWSResponse[T](result: T, httpCode: Int): Future[WSResponse] = {
+  def mockSuccessfullParsableFutureWSResponse[T](result: String, httpCode: Int): Future[WSResponse] = {
     Future.successful {
-      val wsResponse = mock[WSResponse]
-      val jsValue = mock[JsValue]
-      val jsResult: JsResult[T] = new JsSuccess(result)
-
-      when(jsValue.validate[T](anyObject())).thenReturn(jsResult)
-      when(wsResponse.status).thenReturn(httpCode)
-      when(wsResponse.json).thenReturn(jsValue)
-      wsResponse
+      createMockedWSResponse(result, httpCode)
     }
   }
+  def createMockedWSResponse[T](result: String, httpCode: Int): WSResponse = {
+    val wsResponse = mock[WSResponse]
+    val jsValue = mock[JsValue]
+    val jsResult: JsResult[String] = new JsSuccess(result)
 
+    when(jsValue.validate[String](anyObject())).thenReturn(jsResult)
+    when(wsResponse.status).thenReturn(httpCode)
+    when(wsResponse.json).thenReturn(jsValue)
+    when(wsResponse.body).thenReturn(result)
+    wsResponse
+  }
   def withFakeApplication(block: => Unit): Unit = {
     running(FakeApplication()) {
       block

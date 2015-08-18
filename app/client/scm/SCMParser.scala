@@ -1,4 +1,4 @@
-package client
+package client.scm
 
 import play.api.libs.functional.syntax.functionalCanBuildApplicative
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
