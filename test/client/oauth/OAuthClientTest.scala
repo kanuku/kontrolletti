@@ -1,0 +1,107 @@
+package client.oauth
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import org.scalatest.FlatSpec
+import org.scalatest.mock.MockitoSugar
+import org.mockito.Mockito._
+import org.mockito.Matchers._
+import client.RequestDispatcher
+import play.api.http.Writeable
+import play.api.libs.ws.WSRequestHolder
+import play.api.libs.ws.WSResponse
+import test.util.MockitoUtils
+import test.util.TestUtils._
+import play.api.libs.ws.WSAuthScheme
+import play.api.http.ContentTypeOf
+import scala.concurrent.Future
+/**
+ * @author fbenjamin
+ */
+class OAuthClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
+
+  //Contains the same values as in src/test/resources/client.json
+  private val clientCred = new OAuthClientCredential("kontrolletti_client_id", "client_secret")
+  //Contains the same values as in src/test/resources/user.json
+  private val userCred = new OAuthUserCredential("kontrolletti", "password")
+  private val oAuthCred = OAuthAccessToken("token_type", "access_token", "scope", 3599)
+  private val mockedDispatcher: RequestDispatcher = mock[RequestDispatcher]
+  private val mockedRequestHolder = mock[WSRequestHolder]
+  private val oAuthAccessToken = """ {"scope":"scope","expires_in":3599,"token_type":"token_type","access_token":"access_token"}"""
+  private val mockedWSResponse = createMockedWSResponse(oAuthAccessToken, 200)
+  private val mockedResponse = Future.successful(mockedWSResponse)
+
+  private val config: OAuthConfiguration = new OAuthConfigurationImpl() {
+    override def endpointAccessTokenRequest = "https://auth.server.com/oauth2/access_token"
+    override def fileNameClientCredentials = "client.json"
+    override def fileNameUserCredentials = "user.json"
+    override def timeoutRequestClient = 8294
+    override def directoryCredentials = {
+      this.getClass.getResource("/").getPath
+    }
+
+  }
+
+  private val clientImpl: OAuthClientImpl = new OAuthClientImpl(mockedDispatcher, config)
+  private val client: OAuthClient = clientImpl
+
+  "OAuthHelper#parse" should "parse to OAuthClientCredentials" in {
+    val input = """{"client_id":"kontrolletti_client_id","client_secret":"client_secret"}"""
+    Await.result(clientImpl.parse(input, OAuthParser.oAuthClientCredentialReader), Duration("5 seconds")) match {
+      case clientCredentials: OAuthClientCredential => assert(clientCredentials === clientCred)
+      case _                                        => fail("Result should not be null");
+    }
+  }
+  it should "parse OAuthAccessToken" in {
+    Await.result(clientImpl.parse(oAuthAccessToken, OAuthParser.oAuthAccessTokenReader), Duration("5 seconds")) match {
+      case accessTokenCredentials: OAuthAccessToken => assert(accessTokenCredentials === oAuthCred)
+      case _                                        => fail("Result should not be null");
+    }
+  }
+
+  "OAuthClient#clientCredentials" should "return client credentials" in {
+    Await.result(client.clientCredentials(), Duration("5 seconds")) match {
+      case clientCredentials: OAuthClientCredential => assert(clientCredentials === clientCred)
+      case _                                        => fail("Result should not be null");
+    }
+  }
+
+  "OAuthClient#userCredentials" should "return user credentials" in {
+    Await.result(client.userCredentials(), Duration("5 seconds")) match {
+      case userCredentials: OAuthUserCredential => assert(userCredentials === userCred)
+      case _                                    => fail("Result should not be null");
+    }
+  }
+
+  "OAuthClient#accessToken" should "return access-token" in {
+    val body = s"grant_type=password&scope=uid&username=$userCred.username&password=$userCred.password"
+    when(mockedDispatcher.requestHolder(anyString)).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withAuth(anyString, anyString, any())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withRequestTimeout(anyInt)).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withQueryString(any())).thenReturn(mockedRequestHolder)
+    implicit val writable = any[Writeable[String]]
+    implicit val contentTypeOf = any[ContentTypeOf[String]]
+    when(mockedRequestHolder.post(anyString)).thenReturn(mockedResponse)
+
+    Await.result(client.accessToken(), Duration("5 seconds")) match {
+      case value: OAuthAccessToken => assert(value === oAuthCred)
+      case _                       => fail("Result should not be null");
+    }
+
+    verify(mockedDispatcher, times(1)).requestHolder(config.endpointAccessTokenRequest)
+    verify(mockedRequestHolder, times(1)).withHeaders(("Content-Type", "application/x-www-form-urlencoded"))
+    verify(mockedRequestHolder, times(1)).withAuth(clientCred.id, clientCred.secret, WSAuthScheme.BASIC)
+    verify(mockedRequestHolder, times(1)).withRequestTimeout(config.timeoutRequestClient)
+    verify(mockedRequestHolder, times(1)).withQueryString(("realm", "/services"))
+    verify(mockedRequestHolder, times(1)).withQueryString(("grant_type", "password"))
+    verify(mockedRequestHolder, times(1)).withQueryString(("grant_type", "password"))
+    verify(mockedRequestHolder, times(1)).withQueryString(("grant_type", "password"))
+    verify(mockedRequestHolder, times(1)).withQueryString(("grant_type", "password"))
+    verify(mockedRequestHolder, times(1)).withQueryString(("grant_type", "password"))
+    verify(mockedRequestHolder, times(1)).post(same(""))(any[Writeable[String]], any[ContentTypeOf[String]])
+    verify(mockedWSResponse, times(1)).body
+
+  }
+
+}

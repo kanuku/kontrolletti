@@ -26,8 +26,8 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
 
   val mockedRequestHolder = mock[WSRequestHolder]
   val mockedDispatcher = mock[RequestDispatcher]
-  val mockedWSResponse = mock[WSResponse]
-  val mockedResponse = mockSuccessfullParsableFutureWSResponse(mockedWSResponse, 200)
+  
+  val mockedResponse = mockSuccessfullParsableFutureWSResponse("", 200)
   val client = new SCMImpl(mockedDispatcher)
 
   val github = "github.com"
@@ -43,7 +43,7 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
   before {
     reset(mockedRequestHolder)
     reset(mockedDispatcher)
-    reset(mockedWSResponse)
+//    reset(mockedWSResponse)
   }
 
   "SCM#commits" should "request commits from github API" in {
