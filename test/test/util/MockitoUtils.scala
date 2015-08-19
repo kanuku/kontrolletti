@@ -31,6 +31,10 @@ import model.Author
 import model.CommitsResult
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsPath
+import client.oauth.OAuthClientCredential
+import client.oauth.OAuthUserCredential
+import client.oauth.OAuthAccessToken
+import model.AppInfo
 
 trait MockitoUtils extends MockitoSugar {
 
@@ -97,4 +101,12 @@ trait MockitoUtils extends MockitoSugar {
   def createCommit(id: String = "id", message: String = "message", parentId: List[String] = List(), author: Author = createAuthor(), valid: Option[Boolean] = None, links: List[Link] = List()): Commit = new Commit(id, message, parentId, author, None, None, Option(links))
 
   def createAuthor(name: String = "name", email: String = "email", links: List[Link] = List()): Author = new Author(name, email, Option(links))
+  
+  def createOAuthClientCredential(id: String, secret: String) = new OAuthClientCredential(id, secret)
+  
+  def createOAuthUserCredential(username: String, password: String) = new OAuthUserCredential(username, password)
+  
+  def createOAuthAccessToken(tokenType: String, accessToken: String, scope: String, expiresIn: Int)= new  OAuthAccessToken(tokenType, accessToken, scope, expiresIn)
+  
+  def createAppInfo(scmUrl: String, specificationUrl: String, documentationUrl: String, serviceUrl: String)= new AppInfo(scmUrl, specificationUrl, documentationUrl, serviceUrl)
 }

@@ -21,10 +21,10 @@ import scala.concurrent.Future
 class OAuthClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
 
   //Contains the same values as in src/test/resources/client.json
-  private val clientCred = new OAuthClientCredential("kontrolletti_client_id", "client_secret")
+  private val clientCred = createOAuthClientCredential("kontrolletti_client_id", "client_secret")
   //Contains the same values as in src/test/resources/user.json
-  private val userCred = new OAuthUserCredential("kontrolletti", "password")
-  private val oAuthCred = OAuthAccessToken("token_type", "access_token", "scope", 3599)
+  private val userCred = createOAuthUserCredential("kontrolletti", "password")
+  private val oAuthCred = createOAuthAccessToken("token_type", "access_token", "scope", 3599)
   private val mockedDispatcher: RequestDispatcher = mock[RequestDispatcher]
   private val mockedRequestHolder = mock[WSRequestHolder]
   private val oAuthAccessToken = """ {"scope":"scope","expires_in":3599,"token_type":"token_type","access_token":"access_token"}"""

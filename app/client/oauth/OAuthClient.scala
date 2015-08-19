@@ -19,6 +19,7 @@ import play.api.libs.json.JsValue
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WSAuthScheme
 import OAuthParser._
+import client.JsonParseException
 /**
  * @author fbenjamin
  */
@@ -28,7 +29,7 @@ case class OAuthClientCredential(id: String, secret: String)
 case class OAuthUserCredential(username: String, password: String)
 case class OAuthAccessToken(tokenType: String, accessToken: String, scope: String, expiresIn: Int)
 
-case class JsonParseException(message: String) extends Exception(message)
+
 
 sealed trait OAuthClient {
 
@@ -64,7 +65,7 @@ object OAuthParser {
 class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
                                  config: OAuthConfiguration) extends OAuthClient {
 
-  import OAuthParser._
+
 
   val logger: Logger = Logger { this.getClass }
 

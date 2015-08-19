@@ -7,14 +7,14 @@ import javax.inject.Singleton
  */
 
 trait OAuthConfiguration {
-
   def directoryCredentials: String
   def timeoutRequestClient: Int
   def fileNameClientCredentials: String
   def fileNameUserCredentials: String
   def endpointAccessTokenRequest: String
-
 }
+
+
 @Singleton
 class OAuthConfigurationImpl extends OAuthConfiguration {
   def directoryCredentials = play.Play.application.configuration.getString("client.oauth.credentials.dir")

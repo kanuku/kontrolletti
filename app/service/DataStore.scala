@@ -1,17 +1,20 @@
 package service
 
+import javax.inject.Singleton
+import model.AppInfo
 /**
  * @author fbenjamin
  */
 
 trait DataStore {
 
-  def saveRepos(host: String, project: String, repository: String) = ???
+  def saveAppInfo(apps: List[AppInfo])
 
 }
 
-class DataStoreImpl {
-  
-   def saveRepos(host: String, project: String, repository: String) = ???
+@Singleton
+class DataStoreImpl extends DataStore{
+
+  def saveAppInfo(app: List[AppInfo]) = ???
 
 }

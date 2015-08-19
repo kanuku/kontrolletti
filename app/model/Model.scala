@@ -12,6 +12,11 @@ import play.api.libs.json.Writes
  *
  */
 
+// Kio
+case class AppInfo(scmUrl: String, specificationUrl: String, documentationUrl: String, serviceUrl: String)
+
+// Cloud search 
+
 case class Error(detail: String, status: Int, errorType: String)
 case class Link(href: String, method: String, rel: String, relType: String)
 case class Author(name: String, email: String, links: Option[List[Link]])
@@ -31,7 +36,6 @@ case class CommitsResult(links: List[Link], result: List[Commit])
 
 //TODO: Evaluate Moving the readers in this parser(KontrollettiToJsonParser) into Companion objects
 // And overriding those companion objects in the SCM Parser
-
 
 object KontrollettiToModelParser {
 
@@ -59,7 +63,7 @@ object KontrollettiToModelParser {
     (__ \ "href").read[String] and
     (__ \ "links").read[List[Link]] //
     )(Ticket.apply _)
-    
+
   implicit val commitReader: Reads[Commit] = (
     (__ \ "id").read[String] and
     (__ \ "message").read[String] and

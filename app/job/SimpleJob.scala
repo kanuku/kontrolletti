@@ -11,6 +11,6 @@ import service.Synchronizer
 class SimpleJob @Inject() (synchronizer: Synchronizer) {
   private val logger: Logger = Logger(this.getClass())
   def execute = {
-    synchronizer.synchRepositories()
+    synchronizer.syncApps()
   }
 }

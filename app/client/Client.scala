@@ -1,8 +1,9 @@
 package client
 
+import play.api.Play.current
 import play.api.libs.ws.WS
 import play.api.libs.ws.WSRequestHolder
-import play.api.Play.current
+import javax.inject.Singleton
 /**
  * @author fbenjamin
  *
@@ -20,9 +21,15 @@ trait RequestDispatcher {
   def requestHolder(url: String): WSRequestHolder
 }
 
+
+@Singleton
 class RequestDispatcherImpl extends RequestDispatcher {
 
   def requestHolder(url: String): WSRequestHolder = {
     WS.url(url)
   }
 }
+
+
+case class JsonParseException(message: String) extends Exception(message)
+
