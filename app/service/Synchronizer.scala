@@ -17,10 +17,18 @@ trait Synchronizer {
 @Singleton
 class SynchronizerImpl @Inject() (oAuthclient: OAuthClient, store: DataStore, kioClient: KioClient) extends Synchronizer {
   val logger: Logger = Logger { this.getClass }
+
   def syncApps() = {
-    oAuthclient.accessToken().map { x =>
-      logger.info("TOKEN " + x)
+    
+    oAuthclient.accessToken().onSuccess {
+      case accessToken =>
+        logger.info("Received an accessToken")
+        kioClient.apps(accessToken).onSuccess {
+          case apps =>
+            logger.info("Received apps from kio")
+            store.saveAppInfo(apps)
+        }
+
     }
   }
-
 }

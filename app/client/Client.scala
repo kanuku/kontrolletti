@@ -21,7 +21,6 @@ trait RequestDispatcher {
   def requestHolder(url: String): WSRequestHolder
 }
 
-
 @Singleton
 class RequestDispatcherImpl extends RequestDispatcher {
 
@@ -29,7 +28,6 @@ class RequestDispatcherImpl extends RequestDispatcher {
     WS.url(url)
   }
 }
-
 
 case class JsonParseException(message: String) extends Exception(message)
 

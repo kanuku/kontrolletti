@@ -560,5 +560,24 @@ val ghRepo = """
         ]
       }
       """
-
+    val kioApps =  """
+      [
+       {
+        "service_url": "https://cloudlobster.cd.zalan.do",
+        "subtitle": "",
+        "name": "Cloud Lobster",
+        "active": true,
+        "team_id": "cd",
+        "id": "cloudlobster"
+        },
+        {
+            "service_url": "https://api-doc.dz.zalan.do",
+            "subtitle": null,
+            "name": "Api doc",
+            "active": true,
+            "team_id": "dz",
+            "id": "api-doc"
+        }
+      ]
+      """
 }

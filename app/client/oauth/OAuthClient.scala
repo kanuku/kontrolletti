@@ -1,10 +1,17 @@
 package client.oauth
 
 import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+import OAuthParser.oAuthAccessTokenReader
+import OAuthParser.oAuthClientCredentialReader
+import OAuthParser.oAuthUserCredentialReader
 import client.RequestDispatcher
 import javax.inject.Inject
 import javax.inject.Singleton
 import play.api.Logger
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.functional.syntax.functionalCanBuildApplicative
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.JsError
@@ -12,13 +19,7 @@ import play.api.libs.json.JsPath
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.Json
 import play.api.libs.json.Reads
-import scala.util.Try
-import scala.util.Failure
-import scala.util.Success
-import play.api.libs.json.JsValue
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WSAuthScheme
-import OAuthParser._
 import client.JsonParseException
 /**
  * @author fbenjamin
@@ -93,6 +94,7 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
   def userCredentials(): Future[OAuthUserCredential] = get(config.fileNameUserCredentials)(oAuthUserCredentialReader)
 
   def accessToken(): Future[OAuthAccessToken] = {
+    logger.info("Getting access token from OAuth service")
     for {
       client: OAuthClientCredential <- clientCredentials()
       user: OAuthUserCredential <- userCredentials()

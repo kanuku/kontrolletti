@@ -1,16 +1,17 @@
 package job
 
-import akka.actor.Actor
 import akka.actor.Cancellable
-import play.api.Logger
-import javax.inject.Inject
-import service.Search
 import client.oauth.OAuthClient
+import javax.inject.Inject
+import play.api.Logger
+import service.Search
 import service.Synchronizer
 
-class SimpleJob @Inject() (synchronizer: Synchronizer) {
+class SimpleJobDispatcher @Inject() (synchronizer: Synchronizer) {
+
   private val logger: Logger = Logger(this.getClass())
-  def execute = {
+
+  def synchronizeApps = {
     synchronizer.syncApps()
   }
 }

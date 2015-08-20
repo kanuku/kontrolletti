@@ -5,13 +5,13 @@ package client.kio
  */
 trait KioClientConfiguration {
 
-  def serviceUrlKio: String
+  def serviceUrl: String
 
 }
 
 class KioClientConfigurationImpl extends KioClientConfiguration {
 
-  def serviceUrlKio: String = play.Play.application.configuration.getString("client.kio.service.url")
+  def serviceUrl: String = play.Play.application.configuration.getString("client.kio.service.url")
 
 }
 
