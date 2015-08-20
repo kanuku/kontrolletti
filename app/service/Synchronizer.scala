@@ -1,27 +1,30 @@
 package service
 
+import scala.concurrent.Future
 import client.oauth.OAuthClient
-import javax.inject.Inject
+import javax.inject.{ Inject, Singleton }
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import client.kio.KioClient
+
 /**
  * @author fbenjamin
  */
 trait Synchronizer {
-  def synchRepositories()
+  def syncApps():Future[Boolean]
 }
 
-class SynchronizerImpl @Inject() (client: OAuthClient) extends Synchronizer {
+@Singleton
+class SynchronizerImpl @Inject() (oAuthclient: OAuthClient, store: DataStore, kioClient: KioClient) extends Synchronizer {
   val logger: Logger = Logger { this.getClass }
-  def synchRepositories() = {
-    logger.info("Synchronizing repositories")
-    logger.info("Client credentials " + client.clientCredentials())
-    logger.info("User credentials " + client.userCredentials())
 
-    client.accessToken().map { x =>
-      logger.info("Access tokens" + x)
+  def syncApps() = {
+    oAuthclient.accessToken().flatMap { accessToken =>
+      logger.info("Received an accessToken")
+      kioClient.apps(accessToken).flatMap { apps =>
+        logger.info("Received apps from kio")
+        store.saveAppInfo(apps)
+      }
     }
-
   }
-
 }

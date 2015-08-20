@@ -1,17 +1,21 @@
 package service
 
+import javax.inject.Singleton
+import model.AppInfo
+import scala.concurrent.Future
 /**
  * @author fbenjamin
  */
 
 trait DataStore {
 
-  def saveRepos(host: String, project: String, repository: String) = ???
+  def saveAppInfo(apps: List[AppInfo]):Future[Boolean]
 
 }
 
-class DataStoreImpl {
-  
-   def saveRepos(host: String, project: String, repository: String) = ???
+@Singleton
+class DataStoreImpl extends DataStore{
+
+  def saveAppInfo(app: List[AppInfo]):Future[Boolean] = ???
 
 }
