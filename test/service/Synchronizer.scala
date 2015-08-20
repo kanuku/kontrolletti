@@ -30,8 +30,6 @@ class SynchronizerTest extends FlatSpec with MockitoSugar with MockitoUtils {
   "Synchronizer#syncApps" should "store apps from kio in data-store" in {
     when(oAuthClient.accessToken()).thenReturn(accessTokenResult)
     when(kioClient.apps(accessToken)).thenReturn(appsResult)
-    store.saveAppInfo(apps)
-    
     synchronizer.syncApps()
     verify(oAuthClient, times(1)).accessToken()
     verify(kioClient, times(1)).apps(accessToken)
