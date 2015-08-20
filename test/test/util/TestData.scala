@@ -563,20 +563,26 @@ val ghRepo = """
     val kioApps =  """
       [
        {
-        "service_url": "https://cloudlobster.cd.zalan.do",
-        "subtitle": "",
-        "name": "Cloud Lobster",
-        "active": true,
-        "team_id": "cd",
-        "id": "cloudlobster"
+          "service_url": "https://cloudlobster.cd.zalan.do",
+          "subtitle": "",
+          "name": "Cloud Lobster",
+          "active": true,
+          "team_id": "cd",
+          "id": "cloudlobster",
+          "created": "2015-07-29T15:03:01.534+0000",
+          "scm_url": "https://github.bus.zalan.do/continuous-delivery/cloud-lobster",
+          "last_modified": "2015-08-05T12:15:50.696+0000"
         },
         {
-            "service_url": "https://api-doc.dz.zalan.do",
-            "subtitle": null,
-            "name": "Api doc",
-            "active": true,
-            "team_id": "dz",
-            "id": "api-doc"
+          "service_url": "https://api-doc.dz.zalan.do",
+          "subtitle": null,
+          "name": "Api doc",
+          "active": true,
+          "team_id": "dz",
+          "id": "api-doc",
+          "created": "2015-08-14T05:00:29.049+0000",
+          "scm_url": "ssh://git@stash.zalando.net:7999/shop-editorial/dz-api-doc.git",
+          "last_modified": "2015-08-14T05:00:29.049+0000"
         }
       ]
       """

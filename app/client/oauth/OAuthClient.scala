@@ -4,6 +4,7 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+
 import OAuthParser.oAuthAccessTokenReader
 import OAuthParser.oAuthClientCredentialReader
 import OAuthParser.oAuthUserCredentialReader
@@ -14,13 +15,10 @@ import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.functional.syntax.functionalCanBuildApplicative
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.JsError
 import play.api.libs.json.JsPath
-import play.api.libs.json.JsSuccess
-import play.api.libs.json.Json
 import play.api.libs.json.Reads
 import play.api.libs.ws.WSAuthScheme
-import client.JsonParseException
+import utility.Transformer
 /**
  * @author fbenjamin
  */
@@ -29,8 +27,6 @@ import client.JsonParseException
 case class OAuthClientCredential(id: String, secret: String)
 case class OAuthUserCredential(username: String, password: String)
 case class OAuthAccessToken(tokenType: String, accessToken: String, scope: String, expiresIn: Int)
-
-
 
 sealed trait OAuthClient {
 
@@ -65,10 +61,11 @@ object OAuthParser {
 @Singleton
 class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
                                  config: OAuthConfiguration) extends OAuthClient {
-
-
+  
 
   val logger: Logger = Logger { this.getClass }
+
+  private val transformer = Transformer
 
   def accessToken(client: OAuthClientCredential, serviceUser: OAuthUserCredential): Future[OAuthAccessToken] = {
     logger.info(s"Configuration:$config")
@@ -85,7 +82,7 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
     result.flatMap {
       x =>
         logger.info("Oauth-endpoint return http-code: " + x.status)
-        parse(x.body, oAuthAccessTokenReader)
+        transformer.transform(x.body)(OAuthParser.oAuthAccessTokenReader)
     }
   }
 
@@ -101,7 +98,11 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
       result <- accessToken(client, user)
     } yield result
   }
-  def get[T](file: String)(implicit rds: Reads[T]): Future[T] = readFile(file).flatMap { x => parse(x, rds) }
+  def get[T](file: String)(implicit rds: Reads[T]): Future[T] = readFile(file).flatMap { x =>
+    transformer.parse(x).flatMap { x =>
+      transformer.extract2Future(x.validate(rds))
+    }
+  }
 
   def readFile(file: String): Future[String] = {
     val fileName: String = config.directoryCredentials.replaceFirst("~", System.getProperty("user.home")) + "/" + file
@@ -117,14 +118,6 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
         Future.failed(ex)
     }
   }
-
-  def parse[T](input: String, reader: Reads[T]): Future[T] = Json.parse(input)
-    .validate(reader) match {
-      case s: JsSuccess[T] => Future.successful(s.get)
-      case e: JsError =>
-        logger.error("Failed to parse:" + e.errors)
-        Future.failed(new JsonParseException("Failed to parse the json-object"))
-    }
 
 }
 

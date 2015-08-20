@@ -33,8 +33,9 @@ class KioClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
 
     val result = client.apps(oAuthAccessToken)
 
-    verify(dispatcher, times(1))
-    verify(requestHolder, times(2))
+    verify(dispatcher, times(1)).requestHolder(config.serviceUrl)
+    verify(requestHolder, times(1)).withHeaders(("Authorization", "Bearer " + oAuthAccessToken.accessToken))
+    verify(requestHolder, times(1)).get()
 
   }
 

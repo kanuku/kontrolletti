@@ -1,20 +1,21 @@
 package client.oauth
 
 import scala.concurrent.Await
+import scala.concurrent.Future
 import scala.concurrent.duration.Duration
+import org.mockito.Matchers._
+import org.mockito.Mockito._
 import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
-import org.mockito.Mockito._
-import org.mockito.Matchers._
 import client.RequestDispatcher
+import play.api.http.ContentTypeOf
 import play.api.http.Writeable
+import play.api.libs.ws.WSAuthScheme
 import play.api.libs.ws.WSRequestHolder
 import play.api.libs.ws.WSResponse
 import test.util.MockitoUtils
 import test.util.TestUtils._
-import play.api.libs.ws.WSAuthScheme
-import play.api.http.ContentTypeOf
-import scala.concurrent.Future
+import utility.Transformer
 /**
  * @author fbenjamin
  */
@@ -47,13 +48,13 @@ class OAuthClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
 
   "OAuthHelper#parse" should "parse to OAuthClientCredentials" in {
     val input = """{"client_id":"kontrolletti_client_id","client_secret":"client_secret"}"""
-    Await.result(clientImpl.parse(input, OAuthParser.oAuthClientCredentialReader), Duration("5 seconds")) match {
+    Await.result(Transformer.transform(input)(OAuthParser.oAuthClientCredentialReader), Duration("5 seconds")) match {
       case clientCredentials: OAuthClientCredential => assert(clientCredentials === clientCred)
       case _                                        => fail("Result should not be null");
     }
   }
   it should "parse OAuthAccessToken" in {
-    Await.result(clientImpl.parse(oAuthAccessToken, OAuthParser.oAuthAccessTokenReader), Duration("5 seconds")) match {
+    Await.result(Transformer.transform(oAuthAccessToken)(OAuthParser.oAuthAccessTokenReader), Duration("5 seconds")) match {
       case accessTokenCredentials: OAuthAccessToken => assert(accessTokenCredentials === oAuthCred)
       case _                                        => fail("Result should not be null");
     }

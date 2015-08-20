@@ -29,5 +29,5 @@ class RequestDispatcherImpl extends RequestDispatcher {
   }
 }
 
-case class JsonParseException(message: String) extends Exception(message)
+
 

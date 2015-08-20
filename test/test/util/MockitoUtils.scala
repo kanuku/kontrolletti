@@ -108,5 +108,5 @@ trait MockitoUtils extends MockitoSugar {
   
   def createOAuthAccessToken(tokenType: String, accessToken: String, scope: String, expiresIn: Int)= new  OAuthAccessToken(tokenType, accessToken, scope, expiresIn)
   
-  def createAppInfo(scmUrl: String, specificationUrl: String, documentationUrl: String, serviceUrl: String)= new AppInfo(scmUrl, specificationUrl, documentationUrl, serviceUrl)
+  def createAppInfo(scmUrl: String, specificationUrl: String, documentationUrl: String, serviceUrl: String, created: String, lastModified: String) = new AppInfo(scmUrl,  serviceUrl,created, lastModified)
 }

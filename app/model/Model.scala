@@ -13,7 +13,7 @@ import play.api.libs.json.Writes
  */
 
 // Kio
-case class AppInfo(scmUrl: String, specificationUrl: String, documentationUrl: String, serviceUrl: String)
+case class AppInfo(scmUrl: String, serviceUrl: String, created: String, lastModified: String)
 
 // Cloud search 
 

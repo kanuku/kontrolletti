@@ -16,6 +16,7 @@ import play.api.Logger
 import model.Repository
 import play.api.libs.json.JsArray
 import play.api.libs.json.Json
+import utility.Transformer
 
 /**
  * Json deserializer for converting external json types, from the SCM,
@@ -69,20 +70,7 @@ sealed trait SCMParser {
    */
   def repoToModel: Parser[JsValue, Either[String, Repository]]
 
-  /**
-   * Unwraps the result from the JsResult and returns the successfully deserialized
-   * object or the detailed error message.
-   * @return Either[Left,Right] - Left contains the error message and Right the deserialized Object
-   */
-  def extract[T](input: JsResult[T]): Either[String, T] = {
-    input match {
-      case s: JsSuccess[T] =>
-        Right(s.get)
-      case e: JsError =>
-        logger.error("Failed to parse:" + e.errors)
-        Left(s"Failed to parse!!")
-    }
-  }
+ 
 
 }
 
@@ -92,13 +80,13 @@ sealed trait SCMParser {
  */
 object GithubToJsonParser extends SCMParser {
 
+  private val transformer=Transformer
   def domains = GithubResolver.hosts
-
-  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => extract(value.validate[List[Commit]])
-  val singleCommitToModel: Parser[JsValue, Either[String, Commit]] = (value) => extract(value.validate[Commit])
-  val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (author) => extract(author.validate[List[Author]])
-  val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => extract(value.validate[List[Ticket]])
-  val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => extract(value.validate[Repository])
+  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => transformer.extract2Either(value.validate[List[Commit]])
+  val singleCommitToModel: Parser[JsValue, Either[String, Commit]] = (value) => transformer.extract2Either(value.validate[Commit])
+  val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (author) => transformer.extract2Either(author.validate[List[Author]])
+  val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => transformer.extract2Either(value.validate[List[Ticket]])
+  val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => transformer.extract2Either(value.validate[Repository])
 
   implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
@@ -143,12 +131,12 @@ object GithubToJsonParser extends SCMParser {
 object StashToJsonParser extends SCMParser {
 
   def domains = StashResolver.hosts
-
-  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => extract((value \ "values").validate[List[Commit]])
-  val singleCommitToModel: Parser[JsValue, Either[String, Commit]] = (value) => extract(value.validate[Commit])
-  val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => extract(value.validate[List[Ticket]])
-  val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => extract(value.validate[Repository])
-  val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (value) => extract(value.validate[List[Author]])
+  val transformer=Transformer
+  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => transformer.extract2Either((value \ "values").validate[List[Commit]])
+  val singleCommitToModel: Parser[JsValue, Either[String, Commit]] = (value) => transformer.extract2Either(value.validate[Commit])
+  val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => transformer.extract2Either(value.validate[List[Ticket]])
+  val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => transformer.extract2Either(value.validate[Repository])
+  val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (value) => transformer.extract2Either(value.validate[List[Author]])
 
   private implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
