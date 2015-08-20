@@ -15,8 +15,8 @@ import client.scm.SCMImpl
 import play.api.Logger
 import service.Search
 import service.SearchImpl
-import service.Synchronizer
-import service.SynchronizerImpl
+import jobs.Synchronizer
+import jobs.SynchronizerImpl
 import client.kio.KioClientConfigurationImpl
 import service.DataStore
 import service.DataStoreImpl

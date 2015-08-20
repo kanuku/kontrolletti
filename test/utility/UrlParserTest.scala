@@ -6,7 +6,7 @@ import org.scalatest.FunSuite
 import service.SearchImpl
 
 class UrlParserTest extends FunSuite   {
-	val parser:UrlParser = new SearchImpl(null)
+	val parser:UrlParser = new UrlParser{}
 
   test("test-0") {
     test("https://git-hub.com/zalando-bus/kontrolletti", "git-hub.com", "zalando-bus", "kontrolletti")

@@ -6,12 +6,10 @@ import scala.concurrent.duration.Duration
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.FlatSpec
-import org.scalatest.FunSpec
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneAppPerTest
 import org.scalatestplus.play.PlaySpec
 import client.scm.SCM
-import client.scm.SCMImpl
 import client.scm.SCMImpl
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsValue

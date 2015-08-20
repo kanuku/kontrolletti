@@ -2,10 +2,7 @@
 
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
-
 import com.google.inject.Guice
-
-import job.SimpleJobDispatcher
 import module.Develop
 import module.Production
 import play.api.Application
@@ -19,11 +16,13 @@ import play.api.mvc.RequestHeader
 import play.api.mvc.Result
 import play.api.mvc.Results.InternalServerError
 import play.api.mvc.Results.NotFound
+import jobs.SynchronizerImpl
+import jobs.Synchronizer
 
 object Global extends GlobalSettings {
   private val logger: Logger = Logger(this.getClass())
-  private lazy val simpleJob: SimpleJobDispatcher = {
-    injector.getInstance(classOf[SimpleJobDispatcher])
+  private lazy val synch: Synchronizer = {
+    injector.getInstance(classOf[SynchronizerImpl])
   }
 
   /** binds types for Guice (Dependency Injection)**/
@@ -58,9 +57,13 @@ object Global extends GlobalSettings {
   }
 
   def startJob() = {
+    Akka.system.scheduler.schedule(0 minutes, 60 minutes) {
+      logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
+      synch.syncApps() 
+    }
     Akka.system.scheduler.schedule(0 minutes, 120 seconds) {
-      logger.info("Started the job for synchronizing Applications with KIO")
-      simpleJob.synchronizeApps 
+    	logger.info("Started the job for synchronizing Commits from the SCM's")
+    	synch.synchCommits() 
     }
   }
 

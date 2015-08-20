@@ -4,9 +4,6 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
-import akka.dispatch.OnComplete
-import akka.dispatch.OnFailure
 import client.scm.GithubToJsonParser
 import client.scm.SCM
 import client.scm.SCMParser
@@ -22,9 +19,11 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.libs.json._
 import play.api.libs.json.Reads._
-import play.api.libs.ws.WS
 import play.api.libs.ws.WSResponse
 import utility.UrlParser
+import scala.Left
+import scala.Right
+import service.Search
 
 /**
  * @author fbenjamin
