@@ -41,7 +41,7 @@ trait UrlParser {
   type HostProjectRepo = (String, String, String)
 
   //Transforms  a partionedURL into a Tupple containing Host, Project and Repository
-  val extracter: Transformer[PartionedURL, HostProjectRepo] = { case (protocol, user, host, prjAntecedent, project, repoAntecedent, repo, succeeder) => (host, project, repo) }
+  private val extracter: Transformer[PartionedURL, HostProjectRepo] = { case (protocol, user, host, prjAntecedent, project, repoAntecedent, repo, succeeder) => (host, project, repo) }
 
   type PartionedURL = (String, String, String, String, String, String, String, String)
 

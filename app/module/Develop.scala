@@ -16,8 +16,8 @@ import client.scm.SCMImpl
 import play.api.Logger
 import service.Search
 import service.SearchImpl
-import service.Synchronizer
-import service.SynchronizerImpl
+import jobs.Import
+import jobs.ImportImpl
 import service.DataStore
 import service.DataStoreImpl
 
@@ -28,7 +28,7 @@ class Develop extends AbstractModule {
     bind(classOf[Search]).to(classOf[SearchImpl])
     bind(classOf[SCM]).to(classOf[SCMImpl])
     bind(classOf[RequestDispatcher]).to(classOf[RequestDispatcherImpl])
-    bind(classOf[Synchronizer]).to(classOf[SynchronizerImpl])
+    bind(classOf[Import]).to(classOf[ImportImpl])
     bind(classOf[OAuthClient]).to(classOf[OAuthClientImpl])
     bind(classOf[OAuthConfiguration]).to(classOf[OAuthConfigurationImpl])
     bind(classOf[KioClient]).to(classOf[KioClientImpl])

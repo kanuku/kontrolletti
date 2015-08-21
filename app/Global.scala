@@ -2,10 +2,7 @@
 
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
-
 import com.google.inject.Guice
-
-import job.SimpleJobDispatcher
 import module.Develop
 import module.Production
 import play.api.Application
@@ -19,11 +16,13 @@ import play.api.mvc.RequestHeader
 import play.api.mvc.Result
 import play.api.mvc.Results.InternalServerError
 import play.api.mvc.Results.NotFound
+import jobs.ImportImpl
+import jobs.Import
 
 object Global extends GlobalSettings {
   private val logger: Logger = Logger(this.getClass())
-  private lazy val simpleJob: SimpleJobDispatcher = {
-    injector.getInstance(classOf[SimpleJobDispatcher])
+  private lazy val job = {
+    injector.getInstance(classOf[ImportImpl])
   }
 
   /** binds types for Guice (Dependency Injection)**/
@@ -38,15 +37,14 @@ object Global extends GlobalSettings {
     injector.getInstance(clazz)
   }
 
-  
   // 500 - internal server error
   override def onError(request: RequestHeader, throwable: Throwable) = {
-     Future.successful(InternalServerError(views.html.errors.onError(throwable)))
+    Future.successful(InternalServerError(views.html.errors.onError(throwable)))
   }
-  
-// 404 - page not found error
+
+  // 404 - page not found error
   override def onHandlerNotFound(request: RequestHeader): Future[Result] = {
-   Future.successful(NotFound(views.html.errors.onHandlerNotFound(request)))
+    Future.successful(NotFound(views.html.errors.onHandlerNotFound(request)))
   }
   override def onStart(app: Application) {
     logger.info("############# Application has started!")
@@ -58,9 +56,13 @@ object Global extends GlobalSettings {
   }
 
   def startJob() = {
+    Akka.system.scheduler.schedule(0 minutes, 60 minutes) {
+      logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
+      job.syncApps()
+    }
     Akka.system.scheduler.schedule(0 minutes, 120 seconds) {
-      logger.info("Started the job for synchronizing Applications with KIO")
-      simpleJob.synchronizeApps 
+      logger.info("Started the job for synchronizing Commits from the SCM's")
+      job.synchCommits()
     }
   }
 
