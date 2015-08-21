@@ -14,7 +14,7 @@ trait DataStore {
   
   def saveCommits(commits: List[Commit]): Future[Boolean]
 
-  def scmUrls(): List[String]
+  def scmUrls(): Future[List[String]]
 
 }
 
@@ -23,7 +23,7 @@ class DataStoreImpl extends DataStore {
 
   def saveAppInfo(app: List[AppInfo]): Future[Boolean] = ???
 
-  def scmUrls(): List[String] = ???
+  def scmUrls(): Future[List[String]] = ???
   
   def saveCommits(commits: List[Commit]): Future[Boolean] = ???
 

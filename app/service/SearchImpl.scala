@@ -23,7 +23,6 @@ import play.api.libs.ws.WSResponse
 import utility.UrlParser
 import scala.Left
 import scala.Right
-import service.Search
 
 /**
  * @author fbenjamin
@@ -42,34 +41,45 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
   private val defaultError = Left("Something went wrong, check the logs!")
   private val acceptableCodes = List(200)
 
-  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Commit]]]] =
+  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Commit]]]] = {
+    logger.info(s"commits: $host - $project - $repository")
     resolveParser(host) match {
       case Right(scmParser) => handleRequest(scmParser.commitToModel, client.commits(host, project, repository, since, until))
       case Left(error)      => Future.successful(Left(error))
     }
+  }
 
-  def commit(host: String, project: String, repository: String, id: String): Future[Either[String, Option[Commit]]] =
+  def commit(host: String, project: String, repository: String, id: String): Future[Either[String, Option[Commit]]] = {
+    logger.info(s"commit: $host - $project - $repository - $id")
     resolveParser(host) match {
       case Right(scmParser) => handleRequest(scmParser.singleCommitToModel, client.commit(host, project, repository, id))
       case Left(error)      => Future.successful(Left(error))
     }
+  }
 
-  def repo(host: String, project: String, repository: String): Future[Either[String, Option[Repository]]] =
+  def repo(host: String, project: String, repository: String): Future[Either[String, Option[Repository]]] = {
+    logger.info(s"repo: $host - $project - $repository")
     resolveParser(host) match {
       case Right(scmParser) => handleRequest(scmParser.repoToModel, client.repo(host, project, repository))
       case Left(error)      => Future.successful(Left(error))
     }
+  }
 
   def parse(url: String): Either[String, (String, String, String)] = extract(url)
 
-  def normalize(host: String, project: String, repository: String): String = client.repoUrl(host, project, repository)
+  def normalize(host: String, project: String, repository: String): String = {
+    logger.info(s"normalize: $host - $project - $repository")
+    client.repoUrl(host, project, repository)
+  }
 
   def isRepo(host: String, project: String, repository: String): Future[Either[String, Boolean]] = {
+    logger.info(s"isRepo: $host - $project - $repository")
     val url = client.repoUrl(host, project, repository)
     isUrlValid(host, url)
   }
 
   def diff(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]] = {
+    logger.info(s"diff: $host - $project - $repository - $source - $target")
     val url = client.diffUrl(host, project, repository, source, target)
     isUrlValid(host, url).map { response =>
       response.right.map {
@@ -80,14 +90,17 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
       }
     }
   }
-  def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Ticket]]]] =
+  def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Ticket]]]] = {
+    logger.info(s"tickets: $host - $project - $repository - $since - $until")
     resolveParser(host) match {
       //TODO This should go to our local datastore
       case Right(scmParser) => handleRequest(scmParser.ticketToModel, client.tickets(host, project, repository))
       case Left(error)      => Future.successful(Left(error))
     }
+  }
 
-  def isUrlValid(host: String, url: String): Future[Either[String, Boolean]] =
+  def isUrlValid(host: String, url: String): Future[Either[String, Boolean]] = {
+    logger.info(s"isUrlValid: $host - $url")
     executeCall(client.head(host, url)).map { response =>
       response.right.map {
         _.status match {
@@ -96,6 +109,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
         }
       }
     }
+  }
 
   /**
    * Handles calls to the client parses the jsonObject from the Response if necessary.
