@@ -14,6 +14,7 @@ import play.api.libs.json.JsPath
 import play.api.libs.json.Reads
 import play.api.libs.ws.WSResponse
 import utility.Transformer
+import KioParser._
 
 /**
  * @author fbenjamin
@@ -38,7 +39,6 @@ object KioParser {
 class KioClientImpl @Inject() (dispatcher: RequestDispatcher, config: KioClientConfiguration) extends KioClient {
   private val logger: Logger = Logger { this.getClass }
   private val transformer = Transformer
-  import KioParser._
   def apps(accessToken: OAuthAccessToken): Future[List[AppInfo]] = {
     dispatcher.requestHolder(config.serviceUrl) //
       .withHeaders(("Authorization", "Bearer " + accessToken.accessToken)).get()

@@ -5,6 +5,7 @@ import java.util.ServiceConfigurationError
 import scala.collection.JavaConverters.asScalaBufferConverter
 
 import play.api.Logger
+import collection.JavaConverters._
 
 /**
  * Resolves the URL's in the communication context with the SCM REST API. <br> Holds configurations like URL's
@@ -25,7 +26,6 @@ sealed trait SCMResolver {
    *  @return the list of `hosts` this client can communicate with.
    */
   lazy val hosts: Set[String] = {
-    import collection.JavaConverters._
     val result = play.Play.application.configuration.getStringList(hostsProperty).asScala.toSet
     logger.info(s"Configuring $name with hosts $result")
     result
@@ -150,7 +150,7 @@ object StashResolver extends SCMResolver {
   def tickets(host: String, project: String, repository: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits"
 
   def repo(host: String, project: String, repository: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository"
-  def repoUrl(host: String, project: String, repository: String) = repo(host,project,repository)
+  def repoUrl(host: String, project: String, repository: String) = repo(host, project, repository)
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
 
   // Authorization variables
