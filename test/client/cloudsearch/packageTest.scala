@@ -4,6 +4,9 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatest.FlatSpec
 import model.AppInfo
 import utils._
+import play.api.libs.json.Json
+import play.api.libs.json.JsSuccess
+import play.api.libs.json.JsError
 /**
  * @author fbenjamin
  */
@@ -28,5 +31,19 @@ class packageTest extends FlatSpec with MockitoSugar {
     assert(r2.document == appInfo2)
     assert(r2.id == "scmUrl2")
     assert(r2.operation == "add")
+  }
+
+  "package.utils#uploadDocumentWrites" should "parse parse a UploadDocument" in {
+    val app = new AppInfo("scmUrl", "serviceUrl", "created", "lastModified")
+    val document = new UploadDocument("id", "add", app)
+    val json = Json.toJson(document)
+    implicit val uploadDocumentAppInfoFormat = uploadDocumentGenericFormat[UploadDocument[AppInfo]]
+    Json.fromJson[UploadDocument[AppInfo]](Json.toJson(document)) match {
+      case JsSuccess(result, _) =>
+        assert(result === document)
+      case e: JsError =>
+        fail("Should not result in an error")
+
+    }
   }
 }

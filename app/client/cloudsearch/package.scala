@@ -22,7 +22,7 @@ package object utils {
   //Parsers
   implicit val appInfoFormat: Format[AppInfo] = Format(KontrollettiToModelParser.appInfoReader, KontrollettiToJsonParser.appInfoWriter)
 
-  implicit def uploadDocumentWrites[T: Format]: Format[UploadDocument[T]] =
+  implicit def uploadDocumentGenericFormat[T: Format]: Format[UploadDocument[T]]  =
     ((JsPath \ "id").format[String] and
       (JsPath \ "type").format[String] and
       (JsPath \ "fields").format[T])(UploadDocument.apply, unlift(UploadDocument.unapply))
