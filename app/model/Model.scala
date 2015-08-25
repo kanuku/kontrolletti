@@ -13,7 +13,7 @@ import play.api.libs.json.Writes
  */
 
 // Kio/Cloud search
-case class AppInfo(scmUrl: String, serviceUrl: String, created: String, lastModified: String)
+case class AppInfo(scmUrl: String, documentationUrl: String, specificationUrl: String, lastModified: String)
 
 case class Error(detail: String, status: Int, errorType: String)
 case class Link(href: String, method: String, rel: String, relType: String)
@@ -35,18 +35,7 @@ case class CommitsResult(links: List[Link], result: List[Commit])
 //TODO: Evaluate Moving the readers in this parser(KontrollettiToJsonParser) into Companion objects
 // And overriding those companion objects in the SCM Parser
 
-
-
-
 object KontrollettiToModelParser {
-  
-  
-
-  implicit val appInfoReader: Reads[AppInfo] = (
-    (JsPath \ "scm_url").read[String] and
-    (JsPath \ "service_url").read[String] and
-    (JsPath \ "created").read[String] and
-    (JsPath \ "last_modified").read[String])(AppInfo.apply _)
 
   implicit val errorReader: Reads[Error] = (
     (__ \ "detail").read[String] and
@@ -110,12 +99,6 @@ object KontrollettiToModelParser {
 
 }
 object KontrollettiToJsonParser {
-
-  implicit val appInfoWriter: Writes[AppInfo] = (
-    (JsPath \ "scm_url").write[String] and
-    (JsPath \ "service_url").write[String] and
-    (JsPath \ "created").write[String] and
-    (JsPath \ "last_modified").write[String])(unlift(AppInfo.unapply))
 
   implicit val errorWriter: Writes[Error] = (
     (__ \ "detail").write[String] and

@@ -7,9 +7,8 @@ import play.api.GlobalSettings
 import play.api.Logger
 import play.api.libs.json._
 import play.api.libs.ws.ning.NingWSClient
-import model._
-import utils._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import model._
 
 /**
  * @author fbenjamin
@@ -42,7 +41,7 @@ class CloudSearchImpl @Inject() (config: CloudSearchConfiguration, dispatcher: R
         val cloudSearchDocuments = transform(docs, addOperation)
         dispatcher.requestHolder(url).withHeaders("Content-Type" -> "application/json") //
           .post(Json.toJson(cloudSearchDocuments)).map { result =>
-            logger.info("Received http-status:"+result.status)
+            logger.info("Received http-status:" + result.status)
             result match {
               case response if (response.status == 200) =>
                 true
@@ -62,33 +61,4 @@ class CloudSearchImpl @Inject() (config: CloudSearchConfiguration, dispatcher: R
   }
 
 }
-
-//object Test extends App {
-//  import play.api.libs.ws._
-//  import play.api.libs.ws.ning._
-//  //  val logger: Logger = Logger { this.getClass }
-//  println("####### START")
-//  import model.KontrollettiToJsonParser._
-//  import play.api.libs.ws.WS
-//
-//  val apps = "search-kontrolletti-apps-govh5a2caavwfgsivobuq6qri4.eu-west-1.cloudsearch.amazonaws.com"
-//  val appsDoc = "doc-kontrolletti-apps-govh5a2caavwfgsivobuq6qri4.eu-west-1.cloudsearch.amazonaws.com"
-//  import scala.concurrent.ExecutionContext.Implicits.global
-//  import play.api.libs.ws.ning._
-//  import play.api.libs.ws._
-//
-//  val client = {
-//    val builder = new com.ning.http.client.AsyncHttpClientConfig.Builder()
-//    new play.api.libs.ws.ning.NingWSClient(builder.build())
-//  }
-//  val result = client.url("https://google.com/").get()
-//
-//  result.onSuccess {
-//    case grind =>
-//      println("HTTP STATUS" + grind.status)
-//      client.close()
-//  }
-//  println("####### END")
-//  //  System.exit(1))))
-//
-//}
+ 

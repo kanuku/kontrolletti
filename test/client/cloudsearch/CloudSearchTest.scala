@@ -18,7 +18,6 @@ import org.mockito.Matchers._
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import client.cloudsearch.utils._
 import model.KontrollettiToJsonParser
 import model.KontrollettiToModelParser
 import play.api.libs.json.Format
@@ -26,6 +25,7 @@ import org.scalatest.BeforeAndAfter
 import play.api.http.ContentTypeOf
 import play.api.http.Writeable
 import org.mockito.ArgumentCaptor
+import model._
 
 /**
  * @author fbenjamin
@@ -46,15 +46,13 @@ class CloudSearchTest extends FlatSpec with MockitoSugar with MockitoUtils with 
   }
   private val client = new CloudSearchImpl(config, dispatcher)
 
-  before {
-    reset(dispatcher, requestHolder, mockedWSResponse)
-  }
+   
 
   "CloudSearch#uploadAppInfos" should "post to AppInfosEndpoint with Json objects" in {
     val appInfo1 = new AppInfo("scmUrl1", "serviceUrl1", "created1", "lastModified1")
     val appInfo2 = new AppInfo("scmUrl2", "serviceUrl2", "created2", "lastModified2")
     val apps = List(appInfo1, appInfo2)
-    implicit val appInfoFormat: Format[AppInfo] = Format(KontrollettiToModelParser.appInfoReader, KontrollettiToJsonParser.appInfoWriter)
+
     val result = testUploads(config.appsEndpoint, client.uploadAppInfos(apps))
     assert(result)
 
@@ -75,8 +73,8 @@ class CloudSearchTest extends FlatSpec with MockitoSugar with MockitoUtils with 
     verify(dispatcher, times(1)).requestHolder(url)
     verify(requestHolder, times(1)).withHeaders("Content-Type" -> "application/json")
 
-        val payload = ArgumentCaptor.forClass(classOf[String])
-        verify(requestHolder, times(1)).post(payload.capture())
+    val payload = ArgumentCaptor.forClass(classOf[String])
+    verify(requestHolder, times(1)).post(payload.capture())(any[Writeable[String]], any[ContentTypeOf[String]])
 
     result
   }

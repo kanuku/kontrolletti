@@ -1,4 +1,4 @@
-package client.cloudsearch
+package client
 
 import model.AppInfo
 import play.api.libs.json._
@@ -10,7 +10,7 @@ import play.api.libs.json._
 import model.KontrollettiToJsonParser
 import model.KontrollettiToModelParser
 
-package object utils {
+package object cloudsearch {
 
   //Transformers for getting an id from a certain model
   type IdTransformer[T, String] = T => String
@@ -19,12 +19,10 @@ package object utils {
   def transform[T](input: List[T], operation: String)(implicit transform: IdTransformer[T, String]): List[UploadDocument[T]] =
     input.map { x => new UploadDocument(transform(x), operation, x) }.toList
 
-  //Parsers
-  implicit val appInfoFormat: Format[AppInfo] = Format(KontrollettiToModelParser.appInfoReader, KontrollettiToJsonParser.appInfoWriter)
-
-  implicit def uploadDocumentGenericFormat[T: Format]: Format[UploadDocument[T]]  =
+  implicit def uploadDocumentGenericFormat[T: Format]: Format[UploadDocument[T]] =
     ((JsPath \ "id").format[String] and
       (JsPath \ "type").format[String] and
       (JsPath \ "fields").format[T])(UploadDocument.apply, unlift(UploadDocument.unapply))
+
 
 }

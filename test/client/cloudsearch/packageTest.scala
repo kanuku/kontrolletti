@@ -3,7 +3,8 @@ package client.cloudsearch
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.FlatSpec
 import model.AppInfo
-import utils._
+import model._
+import model._
 import play.api.libs.json.Json
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsError
