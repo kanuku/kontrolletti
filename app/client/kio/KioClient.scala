@@ -14,7 +14,7 @@ import play.api.libs.json.JsPath
 import play.api.libs.json.Reads
 import play.api.libs.ws.WSResponse
 import utility.Transformer
-import KioParser._
+import model.KontrollettiToModelParser._
 
 /**
  * @author fbenjamin
@@ -25,15 +25,6 @@ trait KioClient {
 
 }
 
-object KioParser {
-
-  implicit val appInfoReader: Reads[AppInfo] = (
-    (JsPath \ "scm_url").read[String] and
-    (JsPath \ "service_url").read[String] and
-    (JsPath \ "created").read[String] and
-    (JsPath \ "last_modified").read[String])(AppInfo.apply _)
-
-}
 
 @Singleton
 class KioClientImpl @Inject() (dispatcher: RequestDispatcher, config: KioClientConfiguration) extends KioClient {

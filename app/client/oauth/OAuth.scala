@@ -28,7 +28,7 @@ case class OAuthClientCredential(id: String, secret: String)
 case class OAuthUserCredential(username: String, password: String)
 case class OAuthAccessToken(tokenType: String, accessToken: String, scope: String, expiresIn: Int)
 
-sealed trait OAuthClient {
+sealed trait OAuth {
 
   def clientCredentials(): Future[OAuthClientCredential]
 
@@ -60,8 +60,7 @@ object OAuthParser {
 
 @Singleton
 class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
-                                 config: OAuthConfiguration) extends OAuthClient {
-  
+                                 config: OAuthConfiguration) extends OAuth {
 
   val logger: Logger = Logger { this.getClass }
 

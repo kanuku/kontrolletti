@@ -2,7 +2,7 @@ package jobs
 
 import scala.concurrent.Future
 import client.kio.KioClient
-import client.oauth.OAuthClient
+import client.oauth.OAuth
 import javax.inject.Inject
 import javax.inject.Singleton
 import model.AppInfo
@@ -27,7 +27,7 @@ trait Import {
 }
 
 @Singleton
-class ImportImpl @Inject() (oAuthclient: OAuthClient, //
+class ImportImpl @Inject() (oAuthclient: OAuth, //
                             store: DataStore, //
                             kioClient: KioClient, //
                             search: Search) extends Import with UrlParser {
@@ -46,7 +46,7 @@ class ImportImpl @Inject() (oAuthclient: OAuthClient, //
   }
 
   /**
-   * Only apps that have a parsable scm-url should be accepted into the store.
+   * Filter apps that have a parsable scm-url. And are not already in the datastore.
    */
   private def filterValidApps(apps: List[AppInfo]): List[AppInfo] = apps.filter { x =>
     extract(x.scmUrl) match {

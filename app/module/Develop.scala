@@ -7,7 +7,7 @@ import client.kio.KioClient
 import client.kio.KioClientConfiguration
 import client.kio.KioClientConfigurationImpl
 import client.kio.KioClientImpl
-import client.oauth.OAuthClient
+import client.oauth.OAuth
 import client.oauth.OAuthClientImpl
 import client.oauth.OAuthConfiguration
 import client.oauth.OAuthConfigurationImpl
@@ -29,7 +29,7 @@ class Develop extends AbstractModule {
     bind(classOf[SCM]).to(classOf[SCMImpl])
     bind(classOf[RequestDispatcher]).to(classOf[RequestDispatcherImpl])
     bind(classOf[Import]).to(classOf[ImportImpl])
-    bind(classOf[OAuthClient]).to(classOf[OAuthClientImpl])
+    bind(classOf[OAuth]).to(classOf[OAuthClientImpl])
     bind(classOf[OAuthConfiguration]).to(classOf[OAuthConfigurationImpl])
     bind(classOf[KioClient]).to(classOf[KioClientImpl])
     bind(classOf[KioClientConfiguration]).to(classOf[KioClientConfigurationImpl])

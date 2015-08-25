@@ -1,0 +1,83 @@
+package client.cloudsearch
+
+import org.scalatestplus.play.PlaySpec
+import org.scalatest.mock.MockitoSugar
+import test.util.MockitoUtils
+import play.api.test.WithApplication
+import play.api.test.FakeApplication
+import play.api.test._
+import play.api.test.Helpers._
+import client.RequestDispatcherImpl
+import play.api.libs.json.Json
+import model.AppInfo
+import org.scalatest.FlatSpec
+import play.api.libs.ws.WSRequestHolder
+import client.RequestDispatcher
+import org.mockito.Mockito._
+import org.mockito.Matchers._
+import scala.concurrent.Future
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import client.cloudsearch.utils._
+import model.KontrollettiToJsonParser
+import model.KontrollettiToModelParser
+import play.api.libs.json.Format
+import org.scalatest.BeforeAndAfter
+import play.api.http.ContentTypeOf
+import play.api.http.Writeable
+import org.mockito.ArgumentCaptor
+
+/**
+ * @author fbenjamin
+ */
+class CloudSearchTest extends FlatSpec with MockitoSugar with MockitoUtils with BeforeAndAfter {
+
+  private val dispatcher = mock[RequestDispatcher]
+  private val requestHolder = mock[WSRequestHolder]
+  private val mockedWSResponse = createMockedWSResponse("", 200)
+  private val mockedResponse = Future.successful(mockedWSResponse)
+
+  private val config = new CloudSearchConfiguration {
+    override val appsEndpoint = Some("appsEndpoint")
+    override val repositoriesEndpoint = Some("repositoriesEndpoint")
+    override val commitsEndpoint = Some("commitsEndpoint")
+    override val authorsEndpoint = Some("authorsEndpoint")
+    override val ticketsEndpoint = Some("ticketsEndpoint")
+  }
+  private val client = new CloudSearchImpl(config, dispatcher)
+
+  before {
+    reset(dispatcher, requestHolder, mockedWSResponse)
+  }
+
+  "CloudSearch#uploadAppInfos" should "post to AppInfosEndpoint with Json objects" in {
+    val appInfo1 = new AppInfo("scmUrl1", "serviceUrl1", "created1", "lastModified1")
+    val appInfo2 = new AppInfo("scmUrl2", "serviceUrl2", "created2", "lastModified2")
+    val apps = List(appInfo1, appInfo2)
+    implicit val appInfoFormat: Format[AppInfo] = Format(KontrollettiToModelParser.appInfoReader, KontrollettiToJsonParser.appInfoWriter)
+    val result = testUploads(config.appsEndpoint, client.uploadAppInfos(apps))
+    assert(result)
+
+  }
+
+  def testUploads[T](someUrl: Option[String], call: => Future[Boolean]): Boolean = {
+    val Some(url) = someUrl
+
+    when(dispatcher.requestHolder(url)).thenReturn(requestHolder)
+    when(requestHolder.withHeaders("Content-Type" -> "application/json")).thenReturn(requestHolder)
+
+    implicit val writable = any[Writeable[String]]
+    implicit val contentTypeOf = any[ContentTypeOf[String]]
+
+    when(requestHolder.post(anyString)).thenReturn(mockedResponse)
+
+    val result = Await.result(call, Duration("5 seconds"))
+    verify(dispatcher, times(1)).requestHolder(url)
+    verify(requestHolder, times(1)).withHeaders("Content-Type" -> "application/json")
+
+        val payload = ArgumentCaptor.forClass(classOf[String])
+        verify(requestHolder, times(1)).post(payload.capture())
+
+    result
+  }
+}

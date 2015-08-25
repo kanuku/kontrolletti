@@ -3,7 +3,7 @@ package client.scm
 import java.util.ServiceConfigurationError
 
 import scala.collection.JavaConverters.asScalaBufferConverter
-
+import play.api.Play.current
 import play.api.Logger
 import collection.JavaConverters._
 
@@ -19,16 +19,21 @@ sealed trait SCMResolver {
   /**
    * Hosts configuration property.
    */
-  def hostsProperty: String = s"client.$name.hosts"
+  def hostsProperty: String = s"client.$name.host"
 
   /**
    * The list hosts that can handle the calls implemented by this client.
    *  @return the list of `hosts` this client can communicate with.
    */
   lazy val hosts: Set[String] = {
-    val result = play.Play.application.configuration.getStringList(hostsProperty).asScala.toSet
-    logger.info(s"Configuring $name with hosts $result")
-    result
+    current.configuration.getString(hostsProperty) match {
+      case Some(result) =>
+        logger.info(s"Configuring $name with hosts $result")
+        Set(result)
+      case None =>
+        logger.warn(s"Failed to load configuration $name and property $hostsProperty")
+        Set()
+    }
   }
 
   /**
@@ -81,11 +86,15 @@ sealed trait SCMResolver {
    * Resolves to itself if the host matches to any of the configured `hosts`
    * Otherwise to an instance of None
    */
-  def resolve(host: String): Option[SCMResolver] = host match {
-    case host if hosts.contains(host) =>
-      Option(this)
-    case _ =>
-      None
+  def resolve(host: String): Option[SCMResolver] = {
+    println(host + " >>>>>>>>>> " + hosts)
+    host match {
+
+      case host if hosts.contains(host) =>
+        Option(this)
+      case _ =>
+        None
+    }
   }
 
   /**
