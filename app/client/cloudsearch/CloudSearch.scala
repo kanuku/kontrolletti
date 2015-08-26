@@ -16,23 +16,22 @@ import model._
 trait CloudSearch {
 
   def uploadAppInfos(apps: List[AppInfo]): Future[Boolean]
+  def appInfos(): Future[List[AppInfo]]
 
 }
 
 case class CloudSearchException(msg: String) extends Exception(msg)
-case class UploadDocument[T](id: String, operation: String, document: T)
+case class UploadRequest[T](id: String, operation: String, document: T)
+case class SearchResquest(query: String)
+case class SearchResponse[T](start: Integer, found: Integer, result: List[T])
 
 @Singleton
 class CloudSearchImpl @Inject() (config: CloudSearchConfiguration, dispatcher: RequestDispatcher) extends CloudSearch {
   private val addOperation = "add"
   private val deleteOperation = "delete"
-  private val endpointConfigEx = new CloudSearchException("""
-      Failed to initialize CloudSearch endpoint  
-      from configuration! Check the logs for details!
-    """)
   private val logger: Logger = Logger { this.getClass }
 
-  def uploadAppInfos(apps: List[AppInfo]): Future[Boolean] = uploadDocuments(config.appsEndpoint, apps)
+  def uploadAppInfos(apps: List[AppInfo]): Future[Boolean] = uploadDocuments(config.appsDocEndpoint, apps)
 
   def uploadDocuments[T](url: Option[String], docs: List[T])(implicit reader: Format[T], transformer: IdTransformer[T, String]): Future[Boolean] = {
     url match {
@@ -52,13 +51,10 @@ class CloudSearchImpl @Inject() (config: CloudSearchConfiguration, dispatcher: R
 
           }
 
-      case None => Future.failed(endpointConfigEx)
+      case None => Future.failed(new CloudSearchException("Endpoint-url may not be null/emtpy!"))
     }
   }
 
-  private def uploadDocs(url: String) = {
-
-  }
-
+  def appInfos(): Future[List[AppInfo]] = ???
 }
- 
+

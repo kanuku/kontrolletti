@@ -37,12 +37,10 @@ class CloudSearchTest extends FlatSpec with MockitoSugar with MockitoUtils with 
   private val mockedWSResponse = createMockedWSResponse("", 200)
   private val mockedResponse = Future.successful(mockedWSResponse)
 
-  private val config = new CloudSearchConfiguration {
-    override val appsEndpoint = Some("appsEndpoint")
-    override val repositoriesEndpoint = Some("repositoriesEndpoint")
-    override val commitsEndpoint = Some("commitsEndpoint")
-    override val authorsEndpoint = Some("authorsEndpoint")
-    override val ticketsEndpoint = Some("ticketsEndpoint")
+  private val config = new CloudSearchConfigurationImpl {
+    override lazy val appsDocEndpoint = Some("appsEndpoint")
+    		override lazy val appsSearchEndpoint = Some("appsEndpoint")
+    
   }
   private val client = new CloudSearchImpl(config, dispatcher)
 
@@ -53,9 +51,15 @@ class CloudSearchTest extends FlatSpec with MockitoSugar with MockitoUtils with 
     val appInfo2 = new AppInfo("scmUrl2", "serviceUrl2", "created2", "lastModified2")
     val apps = List(appInfo1, appInfo2)
 
-    val result = testUploads(config.appsEndpoint, client.uploadAppInfos(apps))
+    val result = testUploads(config.appsDocEndpoint, client.uploadAppInfos(apps))
     assert(result)
 
+  }
+  
+  "CloudSearch#appInfos" should "retrieve from appInfosSearchEdnpoint" in {
+//    when(dispatcher.requestHolder(url))
+    
+    
   }
 
   def testUploads[T](someUrl: Option[String], call: => Future[Boolean]): Boolean = {

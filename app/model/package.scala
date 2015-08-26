@@ -6,7 +6,7 @@ import play.api.libs.functional.syntax.functionalCanBuildApplicative
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.functional.syntax.unlift
 import play.api.libs.json._
-import client.cloudsearch.UploadDocument
+import client.cloudsearch.UploadRequest
 
 /**
  * @author fbenjamin

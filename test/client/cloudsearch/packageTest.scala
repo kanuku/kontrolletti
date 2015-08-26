@@ -36,10 +36,10 @@ class packageTest extends FlatSpec with MockitoSugar {
 
   "package.utils#uploadDocumentWrites" should "parse parse a UploadDocument" in {
     val app = new AppInfo("scmUrl", "serviceUrl", "created", "lastModified")
-    val document = new UploadDocument("id", "add", app)
+    val document = new UploadRequest("id", "add", app)
     val json = Json.toJson(document)
-    implicit val uploadDocumentAppInfoFormat = uploadDocumentGenericFormat[UploadDocument[AppInfo]]
-    Json.fromJson[UploadDocument[AppInfo]](Json.toJson(document)) match {
+    implicit val uploadDocumentAppInfoFormat = uploadRequestFormat[UploadRequest[AppInfo]]
+    Json.fromJson[UploadRequest[AppInfo]](Json.toJson(document)) match {
       case JsSuccess(result, _) =>
         assert(result === document)
       case e: JsError =>
