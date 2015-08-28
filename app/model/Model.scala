@@ -13,6 +13,9 @@ import play.api.libs.json.Writes
  */
 
 // Kio/Cloud search
+
+
+
 case class AppInfo(scmUrl: String, documentationUrl: String, specificationUrl: String, lastModified: String)
 
 case class Error(detail: String, status: Int, errorType: String)

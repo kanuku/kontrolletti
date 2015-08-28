@@ -1,22 +1,28 @@
 package client
 
 import model.AppInfo
-import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import play.api.libs.functional.syntax.functionalCanBuildApplicative
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.functional.syntax.unlift
 import play.api.libs.json._
-import model.KontrollettiToJsonParser
-import model.KontrollettiToModelParser
+import play.api.libs.json._
+import utility.JsonParseException
+import scala.concurrent.Future
+import model.Commit
 
 package object cloudsearch {
 
-  //Transformers for getting an id from a certain model
+  //Transformers for generating an id from a certain model
   type IdTransformer[T, String] = T => String
   implicit val app2Id: IdTransformer[AppInfo, String] = request => request.scmUrl
+  //Can't be implicit because app is necessary
+  def commit2Id(app: AppInfo): IdTransformer[Commit, String] = request => app.scmUrl + "-" + request.id
 
-  def transform[T](input: List[T], operation: String)(implicit transform: IdTransformer[T, String]): List[UploadRequest[T]] =
+  def transform2FutureUploadRequest[T](input: List[T], operation: String)(implicit transformer: IdTransformer[T, String]): Future[List[UploadRequest[T]]] =
+    Future.successful(transform2UploadRequest[T](input, operation))
+
+  def transform2UploadRequest[T](input: List[T], operation: String)(implicit transform: IdTransformer[T, String]): List[UploadRequest[T]] =
     input.map { x => new UploadRequest(transform(x), operation, x) }.toList
 
   implicit def uploadRequestFormat[T: Format]: Format[UploadRequest[T]] =
@@ -24,10 +30,16 @@ package object cloudsearch {
       (JsPath \ "type").format[String] and
       (JsPath \ "fields").format[T])(UploadRequest.apply, unlift(UploadRequest.unapply))
 
-  implicit def SearchResponse[T: Format]: Format[SearchResponse[T]] =
-    (
-      (JsPath \ "id").format[String] and
-      (JsPath \ "type").format[String] and
-      (JsPath \ "fields").format[T])(SearchResponse.apply, unlift(SearchResponse.unapply))
+  implicit def appInfoResponseRead: Reads[AppInfoResponse] = (
+    (JsPath \ "hits" \ "found").read[Int] and
+    (JsPath \ "hits" \ "start").read[Int] and
+    readOptionalList[AppInfo]((JsPath \ "hits" \ "hit" \\ "fields")))(AppInfoResponse.apply _)
+
+  def readOptionalList[T](path: JsPath)(implicit rt: Reads[T]) = Reads[Option[List[T]]] { json =>
+    Json.fromJson[Option[List[T]]](JsArray(path(json)))
+  }
+
+  def formatString[String: Format]: Format[List[String]] = (
+    (JsPath \ "hits" \ "hit" \\ "id").format[List[String]])
 
 }
