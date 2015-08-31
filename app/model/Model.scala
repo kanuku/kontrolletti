@@ -12,10 +12,11 @@ import play.api.libs.json.Writes
  *
  */
 
-// Kio
-case class AppInfo(scmUrl: String, serviceUrl: String, created: String, lastModified: String)
+// Kio/Cloud search
 
-// Cloud search 
+
+
+case class AppInfo(scmUrl: String, documentationUrl: String, specificationUrl: String, lastModified: String)
 
 case class Error(detail: String, status: Int, errorType: String)
 case class Link(href: String, method: String, rel: String, relType: String)

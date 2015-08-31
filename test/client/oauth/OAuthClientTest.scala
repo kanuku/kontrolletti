@@ -40,11 +40,10 @@ class OAuthClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
     override def directoryCredentials = {
       this.getClass.getResource("/").getPath
     }
-
   }
 
   private val clientImpl: OAuthClientImpl = new OAuthClientImpl(mockedDispatcher, config)
-  private val client: OAuthClient = clientImpl
+  private val client: OAuth = clientImpl
 
   "OAuthHelper#parse" should "parse to OAuthClientCredentials" in {
     val input = """{"client_id":"kontrolletti_client_id","client_secret":"client_secret"}"""

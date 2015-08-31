@@ -20,7 +20,7 @@ import play.api.libs.json.Reads
  */
 
 case class JsonParseException(message: String) extends Exception(message)
-
+case class LoadConfigurationException(message: String) extends Exception(message)
 object Transformer {
 
   val logger: Logger = Logger { this.getClass }
@@ -66,15 +66,15 @@ object Transformer {
   }
   /**
    * Unwraps the result from the JsResult and returns the successfully deserialized
-   * instance of the [T] type or the detailed error message.
-   * @return Either[Left,Right] - Left contains the error message and Right the deserialized Object
+   * instance of the [T] wrapped in a complete future.
+   * @return Future[T] - Future containing the desierialized object or the error message
    */
-  def extract2Future[T](input: JsResult[T]): Future[T] = {
+  def extract2Future[T](input: JsResult[T]): Future[T] =
     input match {
       case s: JsSuccess[T] => Future.successful(s.get)
       case e: JsError =>
         logger.error("Failed to parse:" + e.errors)
         Future.failed(new JsonParseException("Failed to parse the json-object"))
     }
-  }
+   
 }

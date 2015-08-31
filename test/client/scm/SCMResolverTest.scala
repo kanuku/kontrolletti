@@ -38,7 +38,7 @@ class SCMResolverTest extends PlaySpec with OneAppPerSuite with MockitoSugar wit
       assert(resolver.name == "github")
     }
     "contain the host configuration in the property" in {
-      assert(resolver.hostsProperty == "client.github.hosts")
+      assert(resolver.hostsProperty == "client.github.host")
     }
     "be compatible with github.com" in {
       assert(resolver.isCompatible("github.com"))
@@ -79,7 +79,7 @@ class SCMResolverTest extends PlaySpec with OneAppPerSuite with MockitoSugar wit
       assert(resolver.name == "stash")
     }
     "contain the host configuration in the property" in {
-      assert(resolver.hostsProperty == "client.stash.hosts")
+      assert(resolver.hostsProperty == "client.stash.host")
     }
     "be compatible with stash.zalando.net" in {
       assert(resolver.isCompatible("stash.zalando.net"))

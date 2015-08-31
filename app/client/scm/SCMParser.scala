@@ -119,7 +119,7 @@ object GithubToJsonParser extends SCMParser {
     and Reads.pure("")
     and Reads.pure("")
     and Reads.pure("")
-    and Reads.pure(None)
+    and Reads.pure(None) 
     and Reads.pure(None))(Repository.apply _)
 
 }

@@ -12,7 +12,6 @@ object ParsingData {
   val users = List("", "git@", "fbenjamin@")
   val protocols = List("", "http://", "http://", "https://", "ssh://")
 
-
   def fixture = new {
     val hosts =
       for {
@@ -292,7 +291,7 @@ object FakeResponseData {
       "contributions" : 2
     }]
 """
-val ghRepo = """
+  val ghRepo = """
     {
       "id" : 33127716,
       "name" : "kontrolletti",
@@ -447,7 +446,7 @@ val ghRepo = """
       }
     }
     """
-  
+
   val singleGithubCommit = """
     {
       "sha": "50cea1156ca558eb6c67e78ca7e5dabc570ea99a",
@@ -530,7 +529,7 @@ val ghRepo = """
       }
     }
     """
-    val singleStashCommit = """
+  val singleStashCommit = """
       {
         "id": "644a78e681cab53c5cc27be0d3c6e338b9e64b3d",
         "displayId": "644a78e681c",
@@ -560,7 +559,7 @@ val ghRepo = """
         ]
       }
       """
-    val kioApps =  """
+  val kioApps = """
       [
        {
           "service_url": "https://cloudlobster.cd.zalan.do",
@@ -586,4 +585,42 @@ val ghRepo = """
         }
       ]
       """
+
+  val cloudSearchAppsResult = """
+  {
+    "status" : {
+      "rid" : "ycejmvcprhQKSsUh",
+      "time-ms" : 1
+    },
+    "hits" : {
+      "found" : 210,
+      "start" : 0,
+      "hit" : [ {
+        "id" : "scmUrl-0",
+        "fields" : {
+          "specification_url" : "created-0",
+          "scm_url" : "scmUrl-0",
+          "documentation_url" : "serviceUrl-0",
+          "last_modified" : "2015-08-25T07:48:53.557Z"
+        }
+      }, {
+        "id" : "scmUrl-1",
+        "fields" : {
+          "specification_url" : "created-1",
+          "scm_url" : "scmUrl-1",
+          "documentation_url" : "serviceUrl-1",
+          "last_modified" : "2015-08-25T07:48:53.557Z"
+        }
+      }, {
+        "id" : "scmUrl-2",
+        "fields" : {
+          "specification_url" : "created-2",
+          "scm_url" : "scmUrl-2",
+          "documentation_url" : "serviceUrl-2",
+          "last_modified" : "2015-08-25T07:48:53.557Z"
+        }
+      } ]
+    }
+  }
+"""
 }

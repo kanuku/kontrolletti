@@ -35,6 +35,7 @@ import client.oauth.OAuthClientCredential
 import client.oauth.OAuthUserCredential
 import client.oauth.OAuthAccessToken
 import model.AppInfo
+import client.cloudsearch.DocumentStore
 
 trait MockitoUtils extends MockitoSugar {
 
@@ -68,6 +69,17 @@ trait MockitoUtils extends MockitoSugar {
     }
   }
 
+  class FakeCloudSearchConfiguration(cloudSearch: DocumentStore) extends play.api.GlobalSettings {
+    private lazy val injector = Guice.createInjector(new AbstractModule {
+      def configure() {
+        bind(classOf[DocumentStore]).toInstance(cloudSearch)
+      }
+    })
+    override def getControllerInstance[A](clazz: Class[A]) = {
+      injector.getInstance(clazz)
+    }
+  }
+
   class FakeGlobalWithSearchService(service: Search) extends play.api.GlobalSettings {
     private lazy val injector = Guice.createInjector(new AbstractModule {
       def configure() {
@@ -77,7 +89,6 @@ trait MockitoUtils extends MockitoSugar {
     override def getControllerInstance[A](clazz: Class[A]) = {
       injector.getInstance(clazz)
     }
-
   }
 
   class FakeGlobalWithFakeClient(client: SCM) extends play.api.GlobalSettings {
@@ -100,13 +111,15 @@ trait MockitoUtils extends MockitoSugar {
 
   def createCommit(id: String = "id", message: String = "message", parentId: List[String] = List(), author: Author = createAuthor(), valid: Option[Boolean] = None, links: List[Link] = List()): Commit = new Commit(id, message, parentId, author, None, None, Option(links))
 
+  def createLink(href: String, method: String, rel: String, relType: String) = new Link(href, method, rel, relType)
+
   def createAuthor(name: String = "name", email: String = "email", links: List[Link] = List()): Author = new Author(name, email, Option(links))
-  
+
   def createOAuthClientCredential(id: String, secret: String) = new OAuthClientCredential(id, secret)
-  
+
   def createOAuthUserCredential(username: String, password: String) = new OAuthUserCredential(username, password)
-  
-  def createOAuthAccessToken(tokenType: String, accessToken: String, scope: String, expiresIn: Int)= new  OAuthAccessToken(tokenType, accessToken, scope, expiresIn)
-  
-  def createAppInfo(scmUrl: String, specificationUrl: String, documentationUrl: String, serviceUrl: String, created: String, lastModified: String) = new AppInfo(scmUrl,  serviceUrl,created, lastModified)
+
+  def createOAuthAccessToken(tokenType: String, accessToken: String, scope: String, expiresIn: Int) = new OAuthAccessToken(tokenType, accessToken, scope, expiresIn)
+
+  def createAppInfo(scmUrl: String, specificationUrl: String, documentationUrl: String, serviceUrl: String, created: String, lastModified: String) = new AppInfo(scmUrl, serviceUrl, created, lastModified)
 }
