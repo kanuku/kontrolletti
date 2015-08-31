@@ -10,20 +10,29 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsError
 import test.util.FakeResponseData
 import play.api.libs.json.JsResult
+import test.util.MockitoUtils
 /**
  * @author fbenjamin
  */
-class PackageTest extends FlatSpec with MockitoSugar {
+class PackageTest extends FlatSpec with MockitoSugar with MockitoUtils {
+
+  val appInfo1 = new AppInfo("scmUrl1", "serviceUrl1", "created1", "lastModified1")
+  val appInfo2 = new AppInfo("scmUrl2", "serviceUrl2", "created2", "lastModified2")
+  val author = createAuthor("name1", "email1", List())
+  val link1 = createLink("href1", "method1", "rel1", "relType1")
+  val link2 = createLink("href2", "method2", "rel2", "relType2")
+  val commit1 = createCommit("id1", "message1", List("parentId1"), author, Option(true), List(link1))
+  val commit2 = createCommit("id2", "message2", List("parentId2"), author, Option(true), List(link2))
 
   "package.utils#app2Id" should "transform an AppInfo.scmUrl to an [id]" in {
-    val appInfo1 = new AppInfo("scmUrl1", "serviceUrl1", "created1", "lastModified1")
     val result = app2Id(appInfo1)
     assert(result == "scmUrl1")
   }
-
+  "package.util#commit2Id" should "transform an Commit ton an [id]" in {
+    val result = commit2Id(appInfo1)(commit1)
+    assert(result == "scmUrl1-id1")
+  }
   "package.utils#transform" should "transform list of AppInfos to list of UploadDocuments" in {
-    val appInfo1 = new AppInfo("scmUrl1", "serviceUrl1", "created1", "lastModified1")
-    val appInfo2 = new AppInfo("scmUrl2", "serviceUrl2", "created2", "lastModified2")
     val apps = List(appInfo1, appInfo2)
     val result = transform2UploadRequest(apps, "add")
     val r1 = result(0)
@@ -65,6 +74,19 @@ class PackageTest extends FlatSpec with MockitoSugar {
 
       case e: JsError => fail("It should parse without problems!")
     }
+  }
+  it should "transform to a list of CommitResponse" in {
+    implicit val appInfo = commit2Id(appInfo1)
+    val result = transform2UploadRequest(List(commit1, commit2), "add")
+    val c1 = result(0)
+    val c2 = result(1)
+    assert(c1.id == "scmUrl1-id1")
+    assert(c1.document === commit1)
+    assert(c1.operation == "add")
+    assert(c2.id == "scmUrl1-id2")
+    assert(c2.document === commit2)
+    assert(c2.operation == "add")
+
   }
 
   "package.utils#uploadDocumentWrites" should "parse parse a UploadDocument" in {

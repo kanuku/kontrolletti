@@ -31,7 +31,8 @@ trait DocumentStore {
    * Saves the given AppInfo documents to the document-store.
    *
    * @param input The documents to be added to the document-store.
-   * @return A Future with true if the result of the action was successfull.
+   * 
+   * @return A Future with true if the result of the action was successful.
    */
   def saveAppInfos(input: List[AppInfo]): Future[Boolean]
 
@@ -40,7 +41,8 @@ trait DocumentStore {
    *
    * @param input The documents to be added to the document-store.
    * @param app The application where the documents belong to.
-   * @return A future with true if the result of the action was successfull.
+   * 
+   * @return A future with true if the result of the action was successful.
    */
   def saveCommits(app: AppInfo, input: List[Commit]): Future[Boolean]
 
@@ -50,7 +52,8 @@ trait DocumentStore {
    *
    * @param input The documents to be added to the document-store.
    * @param app The application where the documents belong to.
-   * @return A future with true if the result of the action was successfull.
+   * 
+   * @return A future with true if the result of the action was successful.
    */
   def saveTickets(app: AppInfo, input: List[Ticket]): Future[Boolean]
 
@@ -64,6 +67,12 @@ trait DocumentStore {
   
   /**
    * Retrieves a list of commits.
+   * @param scmUrl
+   * @param size 
+   * @param start 
+   * @param since CommitId from where to start looking for commits
+   * @param until Until commits from this commit
+   * 
    * @return A future with the CommitResponse
    */
   def commits(scmUrl: String, size: Option[Int], start: Option[Int], since: Option[String], untill: Option[String]): Future[CommitResponse]
@@ -78,6 +87,12 @@ trait DocumentStore {
   
   /**
    * Retrieves a list of tickets.
+   * @param scmUrl
+   * @param size 
+   * @param start 
+   * @param since CommitId from where to start looking for commits
+   * @param until Until commits from this commit
+   * 
    * @return A future with the TicketResponse
    */
   def tickets(scmUrl: String, size: Option[Int], start: Option[Int], since: Option[String], untill: Option[String]): Future[TicketResponse]
