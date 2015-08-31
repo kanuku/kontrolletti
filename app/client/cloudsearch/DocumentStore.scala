@@ -13,6 +13,7 @@ import utility.Transformer
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import model.KontrollettiToJsonParser._
+import model.KontrollettiToModelParser._
 case class CloudSearchException(msg: String) extends Exception(msg)
 case class UploadRequest[T](id: String, operation: String, document: T)
 case class SearchResquest(query: String)
@@ -25,6 +26,7 @@ case class TicketResponse(found: Int, start: Int, result: Option[List[Ticket]])
  */
 trait DocumentStore {
 
+  
   /**
    * Saves the given AppInfo documents to the document-store.
    *
@@ -42,6 +44,7 @@ trait DocumentStore {
    */
   def saveCommits(app: AppInfo, input: List[Commit]): Future[Boolean]
 
+  
   /**
    * Saves the given Ticket documents to the document-store.
    *
@@ -51,13 +54,39 @@ trait DocumentStore {
    */
   def saveTickets(app: AppInfo, input: List[Ticket]): Future[Boolean]
 
+  
   /**
    * Retrieves a list of AppInfos.
+   * @return A future with the AppInfoResponse
    */
   def appInfos(): Future[AppInfoResponse]
+  
+  
+  /**
+   * Retrieves a list of commits.
+   * @return A future with the CommitResponse
+   */
   def commits(scmUrl: String, size: Option[Int], start: Option[Int], since: Option[String], untill: Option[String]): Future[CommitResponse]
-  def commit(scmUrl: String, id: String): Future[Commit]
+ 
+  
+  /**
+   * Retrieves a single commit.
+   * @return A future with the CommitResponse
+   */
+  def commit(scmUrl: String, id: String): Future[CommitResponse]
+ 
+  
+  /**
+   * Retrieves a list of tickets.
+   * @return A future with the TicketResponse
+   */
   def tickets(scmUrl: String, size: Option[Int], start: Option[Int], since: Option[String], untill: Option[String]): Future[TicketResponse]
+ 
+  
+  /**
+   * Retrieves a single ticket.
+   * @return A future with the TicketResponse
+   */
   def ticket(scmUrl: String, id: String): Future[TicketResponse]
 
 }
@@ -75,9 +104,8 @@ class CloudSearchImpl @Inject() (config: CloudSearchConfiguration, dispatcher: R
     result <- uploadDocuments(url, input)
   } yield result
 
-  //FIXME: Make those implicit declarations go away!!
+  //TODO: Can you make the implicit declarations go away(without increasing the lines)?!?! 
   def saveCommits(app: AppInfo, input: List[Commit]): Future[Boolean] = {
-    import model.KontrollettiToModelParser._
     implicit val appInfo = commit2Id(app)
     for {
       url <- config.commitsDocEndpoint
@@ -85,7 +113,14 @@ class CloudSearchImpl @Inject() (config: CloudSearchConfiguration, dispatcher: R
     } yield result
   }
 
-  def saveTickets(app: AppInfo, input: List[Ticket]): Future[Boolean] = ???
+  def saveTickets(app: AppInfo, input: List[Ticket]): Future[Boolean] = {
+    for {
+      url <- config.ticketsDocEndpoint
+      result <- uploadDocuments(url, input)
+    } yield result
+  } 
+    
+    
 
   def appInfos(): Future[AppInfoResponse] = for {
     url <- config.appsSearchEndpoint
@@ -93,7 +128,7 @@ class CloudSearchImpl @Inject() (config: CloudSearchConfiguration, dispatcher: R
   } yield result
 
   def commits(scmUrl: String, size: Option[Int], start: Option[Int], since: Option[String], untill: Option[String]): Future[CommitResponse] = ???
-  def commit(scmUrl: String, id: String): Future[Commit] = ???
+  def commit(scmUrl: String, id: String): Future[CommitResponse] = ???
   def tickets(scmUrl: String, size: Option[Int], start: Option[Int], since: Option[String], untill: Option[String]): Future[TicketResponse] = ???
   def ticket(scmUrl: String, id: String): Future[TicketResponse] = ???
 

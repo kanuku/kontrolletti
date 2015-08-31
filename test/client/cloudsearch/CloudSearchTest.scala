@@ -29,16 +29,21 @@ class CloudSearchTest extends FlatSpec with MockitoSugar with MockitoUtils with 
   private val requestHolder = mock[WSRequestHolder]
 
   private val appsDocEndpointUrl = "appsDocEndpoint"
-  private val appsSearchEndpointUrl = "appsSearchEndpoint"
   private val commitsDocEndpointUrl = "commitsDocEndpoint"
+  private val ticketssDocEndpointUrl = "ticketsDocEndpoint"
+  
+  private val appsSearchEndpointUrl = "appsSearchEndpoint"
   private val commitsSearchEndpointUrl = "commitsSearchEndpoint"
+  
   private val config = new CloudSearchConfigurationImpl {
     override lazy val appsDocEndpoint = Future.successful(appsDocEndpointUrl)
     override lazy val appsSearchEndpoint = Future.successful(appsSearchEndpointUrl)
     override lazy val commitsSearchEndpoint = Future.successful(commitsSearchEndpointUrl)
     override lazy val commitsDocEndpoint = Future.successful(commitsDocEndpointUrl)
+    override lazy val ticketsDocEndpoint = Future.successful(ticketssDocEndpointUrl)
 
   }
+  
   private val client: DocumentStore = new CloudSearchImpl(config, dispatcher)
   before(reset(dispatcher, requestHolder))
 
@@ -67,7 +72,7 @@ class CloudSearchTest extends FlatSpec with MockitoSugar with MockitoUtils with 
 			  val ticket2 = createTicket("name2", "description2", "href2", List())
 			  val tickets= List(ticket1, ticket2)
 			  val app = new AppInfo("scmUrl", "serviceUrl", "created", "lastModified1")
-	  val result = testBulkUploads(commitsDocEndpointUrl, client.saveTickets(app, tickets))
+	  val result = testBulkUploads(ticketssDocEndpointUrl, client.saveTickets(app, tickets))
 	  assert(result)
   }
 

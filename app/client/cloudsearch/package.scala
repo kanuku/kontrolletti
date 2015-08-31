@@ -10,14 +10,18 @@ import play.api.libs.json._
 import utility.JsonParseException
 import scala.concurrent.Future
 import model.Commit
+import model.Ticket
 
 package object cloudsearch {
 
   //Transformers for generating an id from a certain model
   type IdTransformer[T, String] = T => String
-  implicit val app2Id: IdTransformer[AppInfo, String] = request => request.scmUrl
+  implicit val app2Id: IdTransformer[AppInfo, String] = input => input.scmUrl
+  
+  implicit val ticket2Id: IdTransformer[Ticket, String] = input => input.href
+  
   //Can't be implicit because app is necessary
-  def commit2Id(app: AppInfo): IdTransformer[Commit, String] = request => app.scmUrl + "-" + request.id
+  def commit2Id(app: AppInfo): IdTransformer[Commit, String] = input => app.scmUrl + "-" + input.id
 
   def transform2FutureUploadRequest[T](input: List[T], operation: String)(implicit transformer: IdTransformer[T, String]): Future[List[UploadRequest[T]]] =
     Future.successful(transform2UploadRequest[T](input, operation))
