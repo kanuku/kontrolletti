@@ -42,6 +42,14 @@ class CloudSearchTest extends FlatSpec with MockitoSugar with MockitoUtils with 
   private val client: DocumentStore = new CloudSearchImpl(config, dispatcher)
   before(reset(dispatcher, requestHolder))
 
+  "DocumentStore#saveAppInfos" should "post to appsDocEndpoint with Json objects" in {
+    	val appInfo1 = new AppInfo("scmUrl1", "serviceUrl1", "created1", "lastModified1")
+    	val appInfo2 = new AppInfo("scmUrl2", "serviceUrl2", "created2", "lastModified2")
+    	val apps = List(appInfo1, appInfo2)
+    	val result = testBulkUploads(appsDocEndpointUrl, client.saveAppInfos(apps))
+    	assert(result)
+    }
+  
   "DocumentStore#saveCommits" should "post to appsDocEndpoint with Json objects" in {
     val author1 = createAuthor("name1", "email1", List())
     val author2 = createAuthor("name2", "email2", List())
@@ -52,13 +60,15 @@ class CloudSearchTest extends FlatSpec with MockitoSugar with MockitoUtils with 
     val result = testBulkUploads(commitsDocEndpointUrl, client.saveCommits(app, commits))
     assert(result)
   }
-
-  "DocumentStore#uploadAppInfos" should "post to appsDocEndpoint with Json objects" in {
-    val appInfo1 = new AppInfo("scmUrl1", "serviceUrl1", "created1", "lastModified1")
-    val appInfo2 = new AppInfo("scmUrl2", "serviceUrl2", "created2", "lastModified2")
-    val apps = List(appInfo1, appInfo2)
-    val result = testBulkUploads(appsDocEndpointUrl, client.saveAppInfos(apps))
-    assert(result)
+  
+  "DocumentStore#saveTickets" should "post to appsDocEndpoint with Json objects" in {
+	  val author1 = createAuthor("name1", "email1", List())
+			  val ticket1 = createTicket("name1", "description1", "href1", List())
+			  val ticket2 = createTicket("name2", "description2", "href2", List())
+			  val tickets= List(ticket1, ticket2)
+			  val app = new AppInfo("scmUrl", "serviceUrl", "created", "lastModified1")
+	  val result = testBulkUploads(commitsDocEndpointUrl, client.saveTickets(app, tickets))
+	  assert(result)
   }
 
   "DocumentStore#appInfos" should "retrieve from appsSearchEndpoint" in {
