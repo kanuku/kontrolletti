@@ -44,7 +44,7 @@ class CloudSearchTest extends FlatSpec with MockitoSugar with MockitoUtils with 
 
   }
   
-  private val client: DocumentStore = new CloudSearchImpl(config, dispatcher)
+  private val client: CloudSearch = new CloudSearchImpl(config, dispatcher)
   before(reset(dispatcher, requestHolder))
 
   "DocumentStore#saveAppInfos" should "post to appsDocEndpoint with Json objects" in {
@@ -55,7 +55,7 @@ class CloudSearchTest extends FlatSpec with MockitoSugar with MockitoUtils with 
     	assert(result)
     }
   
-  "DocumentStore#saveCommits" should "post to appsDocEndpoint with Json objects" in {
+  "DocumentStore#saveCommits" should "post to commitsDocEndpoint with Json objects" in {
     val author1 = createAuthor("name1", "email1", List())
     val author2 = createAuthor("name2", "email2", List())
     val commit1 = createCommit("id1", "message1", List("parentId1", "parentId1"), author1, Some(true), List())
@@ -66,7 +66,7 @@ class CloudSearchTest extends FlatSpec with MockitoSugar with MockitoUtils with 
     assert(result)
   }
   
-  "DocumentStore#saveTickets" should "post to appsDocEndpoint with Json objects" in {
+  "DocumentStore#saveTickets" should "post to ticketsDocEndpoint with Json objects" in {
 	  val author1 = createAuthor("name1", "email1", List())
 			  val ticket1 = createTicket("name1", "description1", "href1", List())
 			  val ticket2 = createTicket("name2", "description2", "href2", List())
@@ -91,14 +91,12 @@ class CloudSearchTest extends FlatSpec with MockitoSugar with MockitoUtils with 
     verify(requestHolder, times(1)).get()
   }
 
-  "DocumentStore#commits" should "post to AppInfosEndpoint with Json objects" in {
-    val appInfo1 = new AppInfo("scmUrl1", "serviceUrl1", "created1", "lastModified1")
-    val appInfo2 = new AppInfo("scmUrl2", "serviceUrl2", "created2", "lastModified2")
-    val apps = List(appInfo1, appInfo2)
-    val result = testBulkUploads(appsDocEndpointUrl, client.saveAppInfos(apps))
-    assert(result)
+  "DocumentStore#commits" should "retrieve from commitsSearchEndpoint" in {
+    
+    
   }
-
+  
+  
   def testBulkUploads[T](url: String, call: => Future[Boolean]): Boolean = {
     val mockedWSResponse = createMockedWSResponse("", 200)
     val response = Future.successful(mockedWSResponse)

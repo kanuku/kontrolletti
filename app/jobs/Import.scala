@@ -1,7 +1,7 @@
 package jobs
 
 import scala.concurrent.Future
-import client.kio.KioClient
+import client.kio.Kio
 import client.oauth.OAuth
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,7 +29,7 @@ trait Import {
 @Singleton
 class ImportImpl @Inject() (oAuthclient: OAuth, //
                             store: DataStore, //
-                            kioClient: KioClient, //
+                            kioClient: Kio, //
                             search: Search) extends Import with UrlParser {
   val logger: Logger = Logger { this.getClass }
 

@@ -24,7 +24,7 @@ case class TicketResponse(found: Int, start: Int, result: Option[List[Ticket]])
 /**
  * @author fbenjamin
  */
-trait DocumentStore {
+trait CloudSearch {
 
   
   /**
@@ -107,7 +107,7 @@ trait DocumentStore {
 }
 
 @Singleton
-class CloudSearchImpl @Inject() (config: CloudSearchConfiguration, dispatcher: RequestDispatcher) extends DocumentStore {
+class CloudSearchImpl @Inject() (config: CloudSearchConfiguration, dispatcher: RequestDispatcher) extends CloudSearch {
 
   private val logger: Logger = Logger { this.getClass }
   private val addOperation = "add"

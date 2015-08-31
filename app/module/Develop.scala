@@ -3,10 +3,10 @@ package module
 import com.google.inject.AbstractModule
 import client.RequestDispatcher
 import client.RequestDispatcherImpl
-import client.kio.KioClient
+import client.kio.Kio
 import client.kio.KioClientConfiguration
 import client.kio.KioClientConfigurationImpl
-import client.kio.KioClientImpl
+import client.kio.KioImpl
 import client.oauth.OAuth
 import client.oauth.OAuthClientImpl
 import client.oauth.OAuthConfiguration
@@ -31,7 +31,7 @@ class Develop extends AbstractModule {
     bind(classOf[Import]).to(classOf[ImportImpl])
     bind(classOf[OAuth]).to(classOf[OAuthClientImpl])
     bind(classOf[OAuthConfiguration]).to(classOf[OAuthConfigurationImpl])
-    bind(classOf[KioClient]).to(classOf[KioClientImpl])
+    bind(classOf[Kio]).to(classOf[KioImpl])
     bind(classOf[KioClientConfiguration]).to(classOf[KioClientConfigurationImpl])
     bind(classOf[DataStore]).to(classOf[DataStoreImpl])
  

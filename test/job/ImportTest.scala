@@ -8,7 +8,7 @@ import client.oauth.OAuth
 import test.util.MockitoUtils
 import org.mockito.Mockito._
 import org.mockito.Matchers._
-import client.kio.KioClient
+import client.kio.Kio
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import jobs.ImportImpl
@@ -20,7 +20,7 @@ import service.Search
 
 class ImportTest extends FlatSpec with MockitoSugar with MockitoUtils {
 
-  private val kioClient = mock[KioClient]
+  private val kioClient = mock[Kio]
   private val oAuthClient = mock[OAuth]
   private val store = mock[DataStore]
   private val search = mock[Search]

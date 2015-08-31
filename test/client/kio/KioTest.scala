@@ -14,14 +14,14 @@ import scala.concurrent.Future
 /**
  * @author fbenjamin
  */
-class KioClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
+class KioTest extends FlatSpec with MockitoSugar with MockitoUtils {
 
   private val dispatcher = mock[RequestDispatcher]
   private val requestHolder = mock[WSRequestHolder]
   private val config = new KioClientConfigurationImpl {
     override def serviceUrl = "thisUrlSucks"
   }
-  private val client = new KioClientImpl(dispatcher, config)
+  private val client = new KioImpl(dispatcher, config)
   private val oAuthAccessToken = createOAuthAccessToken("token_type", "access_token", "scope", 3599)
 
   "KioClient#apps" should "return fully parsed App objects " in {

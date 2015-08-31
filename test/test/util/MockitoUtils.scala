@@ -35,7 +35,7 @@ import client.oauth.OAuthClientCredential
 import client.oauth.OAuthUserCredential
 import client.oauth.OAuthAccessToken
 import model.AppInfo
-import client.cloudsearch.DocumentStore
+import client.cloudsearch.CloudSearch
 
 trait MockitoUtils extends MockitoSugar {
 
@@ -69,10 +69,10 @@ trait MockitoUtils extends MockitoSugar {
     }
   }
 
-  class FakeCloudSearchConfiguration(cloudSearch: DocumentStore) extends play.api.GlobalSettings {
+  class FakeCloudSearchConfiguration(cloudSearch: CloudSearch) extends play.api.GlobalSettings {
     private lazy val injector = Guice.createInjector(new AbstractModule {
       def configure() {
-        bind(classOf[DocumentStore]).toInstance(cloudSearch)
+        bind(classOf[CloudSearch]).toInstance(cloudSearch)
       }
     })
     override def getControllerInstance[A](clazz: Class[A]) = {

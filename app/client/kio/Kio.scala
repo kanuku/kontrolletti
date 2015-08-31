@@ -19,7 +19,7 @@ import model.KontrollettiToModelParser._
 /**
  * @author fbenjamin
  */
-trait KioClient {
+trait Kio {
 
   def apps(accessToken: OAuthAccessToken): Future[List[AppInfo]]
 
@@ -27,7 +27,7 @@ trait KioClient {
 
 
 @Singleton
-class KioClientImpl @Inject() (dispatcher: RequestDispatcher, config: KioClientConfiguration) extends KioClient {
+class KioImpl @Inject() (dispatcher: RequestDispatcher, config: KioClientConfiguration) extends Kio {
   private val logger: Logger = Logger { this.getClass }
   private val transformer = Transformer
   def apps(accessToken: OAuthAccessToken): Future[List[AppInfo]] = {
