@@ -16,12 +16,18 @@ ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages:= "<empty>;views.*;Rev
 
 libraryDependencies ++= Seq(
   ws,
-  "com.google.inject"  		% "guice" 						% "3.0" 		withSources() withJavadoc(),
-  "javax.inject" 			% "javax.inject" 				% "1" 			withSources() withJavadoc(),
-  "com.amazonaws" 			% "aws-java-sdk-cloudsearch" 	% "1.10.11"		withSources() withJavadoc(),
-  "org.scalatest"			% "scalatest_2.11"  			% "2.2.4"  		% "test" 	withSources() withJavadoc(),
-  "org.scalatestplus" 		%% "play" 						% "1.2.0" 		% "test"	withSources() withJavadoc(),
-  "org.mockito" 			% "mockito-core" 				% "1.9.5" 		% "test" 	withSources() withJavadoc()
+  "com.google.inject"  			% "guice" 						% "3.0" 					withSources() withJavadoc(),
+  "javax.inject" 				% "javax.inject" 				% "1" 						withSources() withJavadoc(),
+  "org.scalatest"				% "scalatest_2.11"  			% "2.2.4"  		% "test" 	withSources() withJavadoc(),
+  "org.scalatestplus" 			%% "play" 						% "1.2.0" 		% "test"	withSources() withJavadoc(),
+  "org.mockito" 				% "mockito-core" 				% "1.9.5" 		% "test" 	withSources() withJavadoc()
+  // Database
+  ,"org.postgresql"          	%  "postgresql"  				% "9.4-1202-jdbc41"			withSources() withJavadoc()
+  ,"com.typesafe.play" 			%% "play-slick" 				% "0.8.0"					withSources() withJavadoc()
+  //,"com.typesafe.play" 			%% "play-slick-evolutions"		% "0.8.0"					withSources() withJavadoc()
+  ,"com.typesafe.slick" 		%% "slick" 						% "2.1.x"					withSources() withJavadoc()
+  ,"org.slf4j" 					% "slf4j-nop" 					% "1.6.4" 					withSources() withJavadoc()
+  ,"com.github.tminglei" 		%% "slick-pg" 					% "0.9.2"					withSources() withJavadoc()
 )
 
 // -------------Docker configuration-------------

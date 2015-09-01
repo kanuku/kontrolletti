@@ -12,12 +12,8 @@ import play.api.libs.json.Writes
  *
  */
 
-// Kio/Cloud search
-
-
 
 case class AppInfo(scmUrl: String, documentationUrl: String, specificationUrl: String, lastModified: String)
-
 case class Error(detail: String, status: Int, errorType: String)
 case class Link(href: String, method: String, rel: String, relType: String)
 case class Author(name: String, email: String, links: Option[List[Link]])
@@ -40,11 +36,7 @@ case class CommitsResult(links: List[Link], result: List[Commit])
 
 object KontrollettiToModelParser {
 
-  implicit val errorReader: Reads[Error] = (
-    (__ \ "detail").read[String] and
-    (__ \ "status").read[Int] and
-    (__ \ "errorType").read[String] //
-    )(Error.apply _)
+  
 
   implicit val linkReader: Reads[Link] = (
     (__ \ "href").read[String] and

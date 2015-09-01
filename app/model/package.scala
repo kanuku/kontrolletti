@@ -6,7 +6,6 @@ import play.api.libs.functional.syntax.functionalCanBuildApplicative
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.functional.syntax.unlift
 import play.api.libs.json._
-import client.cloudsearch.UploadRequest
 
 /**
  * @author fbenjamin
@@ -19,6 +18,12 @@ package object model {
     (JsPath \ "specification_url").format[String] and
     (JsPath \ "last_modified").format[String])(AppInfo.apply, unlift(AppInfo.unapply))
 
+    
+     implicit val errorFormat: Format[Error] = (
+    (__ \ "detail").format[String] and
+    (__ \ "status").format[Int] and
+    (__ \ "errorType").format[String] //
+    )(Error.apply, unlift(Error.unapply)) 
 
 }
 
