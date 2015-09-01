@@ -9,12 +9,17 @@ import model.AppInfo
 import model.AppInfo
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import scala.concurrent.duration.DurationInt
 import service.DataStore
 import service.Search
 import utility.UrlParser
 import model.Commit
 import scala.util.Failure
 import scala.util.Success
+import play.api.Play.current
+import play.api.libs.concurrent.Akka
+import play.api.Application
+
 
 /**
  * @author fbenjamin
@@ -30,12 +35,16 @@ trait Import {
 class ImportImpl @Inject() (oAuthclient: OAuth, //
                             store: DataStore, //
                             kioClient: KioClient, //
-                            search: Search) extends Import with UrlParser {
+                            search: Search,
+                            app: Application) extends Import with UrlParser {
   val logger: Logger = Logger { this.getClass }
 
   val falseFuture = Future.successful(false)
+  
+   scheduleJobs
 
   def syncApps(): Future[Boolean] = {
+    logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
     oAuthclient.accessToken().flatMap { accessToken =>
       logger.info("Received an accessToken")
       kioClient.apps(accessToken).flatMap { apps =>
@@ -56,6 +65,7 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
   }
 
   def synchCommits(): Future[List[Future[Boolean]]] = store.scmUrls().flatMap { x =>
+    logger.info("Started the job for synchronizing Commits from the SCM's")
     Future {
       x.map {
         search.parse(_) match {
@@ -89,6 +99,18 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
           logger.info("Received no usefull result from $host/$project$host")
           None
       }
+    }
+  }
+
+  
+    def scheduleJobs() = {
+    Akka.system.scheduler.schedule(0 minutes, 60 minutes) {
+      logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
+      syncApps()
+    }
+    Akka.system.scheduler.schedule(0 minutes, 120 seconds) {
+      logger.info("Started the job for synchronizing Commits from the SCM's")
+      synchCommits()
     }
   }
 

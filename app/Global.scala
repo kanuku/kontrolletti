@@ -33,37 +33,9 @@ object Global extends GlobalSettings {
     }
   }
 
-  override def getControllerInstance[A](clazz: Class[A]) = {
+   def getControllerInstance[A](clazz: Class[A]) = {
     injector.getInstance(clazz)
   }
 
-  // 500 - internal server error
-  override def onError(request: RequestHeader, throwable: Throwable) = {
-    Future.successful(InternalServerError(views.html.errors.onError(throwable)))
-  }
-
-  // 404 - page not found error
-  override def onHandlerNotFound(request: RequestHeader): Future[Result] = {
-    Future.successful(NotFound(views.html.errors.onHandlerNotFound(request)))
-  }
-  override def onStart(app: Application) {
-    logger.info("############# Application has started!")
-    startJob
-  }
-
-  override def onStop(app: Application) {
-    logger.info("############# Application is shutting down!")
-  }
-
-  def startJob() = {
-    Akka.system.scheduler.schedule(0 minutes, 60 minutes) {
-      logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
-      job.syncApps()
-    }
-    Akka.system.scheduler.schedule(0 minutes, 120 seconds) {
-      logger.info("Started the job for synchronizing Commits from the SCM's")
-      job.synchCommits()
-    }
-  }
-
+ 
 }

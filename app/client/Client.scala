@@ -1,9 +1,11 @@
 package client
 
 import play.api.Play.current
-import play.api.libs.ws.WS
 import play.api.libs.ws.WSRequestHolder
 import javax.inject.Singleton
+import javax.inject.Inject
+import play.api.libs.ws.WSClient
+import play.api.libs.ws.WSRequest
 /**
  * @author fbenjamin
  *
@@ -18,14 +20,14 @@ import javax.inject.Singleton
  */
 trait RequestDispatcher {
 
-  def requestHolder(url: String): WSRequestHolder
+  def requestHolder(url: String): WSRequest
 }
 
 @Singleton
-class RequestDispatcherImpl extends RequestDispatcher {
+class RequestDispatcherImpl @Inject() (client:WSClient) extends RequestDispatcher {
 
-  def requestHolder(url: String): WSRequestHolder = {
-    WS.url(url)
+  def requestHolder(url: String): WSRequest = {
+    client.url(url)
   }
 }
 
