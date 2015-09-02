@@ -2,7 +2,6 @@ package endpoint
 
 import scala.concurrent._
 import play.api.test.FakeApplication
-import org.specs2.mutable._
 import play.api.test._
 import play.api.test.Helpers._
 import org.scalatestplus.play.PlaySpec
@@ -20,7 +19,8 @@ import scala.concurrent.duration.Duration
 import play.api.libs.json.Json
 import java.net.URLEncoder
 import model.KontrollettiToJsonParser._
-
+import org.scalatest.Ignore
+@Ignore
 class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
   val reposRoute = "/api/repos/"
   val host = "github.com"

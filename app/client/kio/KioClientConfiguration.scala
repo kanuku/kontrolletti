@@ -1,8 +1,11 @@
 package client.kio
 
+import com.google.inject.ImplementedBy
+
 /**
  * @author fbenjamin
  */
+@ImplementedBy(classOf[KioClientConfigurationImpl])
 trait KioClientConfiguration {
 
   def serviceUrl: String

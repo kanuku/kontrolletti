@@ -7,7 +7,7 @@ import org.mockito.Mockito._
 import org.mockito.Matchers._
 import test.util.MockitoUtils
 import org.scalatest.BeforeAndAfter
-import play.api.libs.ws.WSRequestHolder
+import play.api.libs.ws.WSRequest
 import play.api.libs.ws.WSResponse
 import scala.concurrent.Future
 import org.mockito.ArgumentCaptor
@@ -24,7 +24,7 @@ import javax.inject.Singleton
  */
 class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with MockitoUtils with BeforeAndAfter {
 
-  val mockedRequestHolder = mock[WSRequestHolder]
+  val mockedRequestHolder = mock[WSRequest]
   val mockedDispatcher = mock[RequestDispatcher]
   
   val mockedResponse = mockSuccessfullParsableFutureWSResponse("", 200)

@@ -1,11 +1,12 @@
 package client
 
 import play.api.Play.current
-import play.api.libs.ws.WSRequestHolder
+import play.api.libs.ws.WSRequest
 import javax.inject.Singleton
 import javax.inject.Inject
 import play.api.libs.ws.WSClient
 import play.api.libs.ws.WSRequest
+import com.google.inject.ImplementedBy
 /**
  * @author fbenjamin
  *
@@ -18,6 +19,7 @@ import play.api.libs.ws.WSRequest
  *
  *
  */
+@ImplementedBy(classOf[RequestDispatcherImpl])
 trait RequestDispatcher {
 
   def requestHolder(url: String): WSRequest

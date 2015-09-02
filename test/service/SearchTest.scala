@@ -130,13 +130,13 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
 
   "Search#normalize" should "normalize the github URL" in {
     val url = "https://github.com/zalando-bus/kontrolletti"
-    val client = new SCMImpl(new RequestDispatcherImpl())
+    val client = new SCMImpl(new RequestDispatcherImpl(null))
     val search = new SearchImpl(client)
     assert(search.normalize(host, project, repository) == url)
   }
   "Search#normalize" should "normalize the stash URL" in {
 	  val url = "https://stash.zalando.net/rest/api/1.0/projects/zalando-bus/repos/kontrolletti"
-			  val client = new SCMImpl(new RequestDispatcherImpl())
+			  val client = new SCMImpl(new RequestDispatcherImpl(null))
 	  val search = new SearchImpl(client)
 	  assert(search.normalize("stash.zalando.net", project, repository) == url)
   }

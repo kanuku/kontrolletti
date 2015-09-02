@@ -6,7 +6,6 @@ import client.oauth.OAuth
 import javax.inject.Inject
 import javax.inject.Singleton
 import model.AppInfo
-import model.AppInfo
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.concurrent.duration.DurationInt
@@ -16,14 +15,16 @@ import utility.UrlParser
 import model.Commit
 import scala.util.Failure
 import scala.util.Success
-import play.api.Play.current
-import play.api.libs.concurrent.Akka
 import play.api.Application
+import com.google.inject.ImplementedBy
+import akka.actor.ActorSystem
 
 
 /**
  * @author fbenjamin
  */
+
+@ImplementedBy(classOf[ImportImpl])
 trait Import {
 
   def syncApps(): Future[Boolean]
@@ -36,12 +37,15 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
                             store: DataStore, //
                             kioClient: KioClient, //
                             search: Search,
-                            app: Application) extends Import with UrlParser {
+                            actorSystem: ActorSystem) extends Import with UrlParser {
   val logger: Logger = Logger { this.getClass }
 
   val falseFuture = Future.successful(false)
   
-   scheduleJobs
+  
+  val syncAppsJob=scheduleSyncAppsJob
+  val synchCommitsJobs=scheduleSynchCommitsJobs
+   
 
   def syncApps(): Future[Boolean] = {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
@@ -67,11 +71,15 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
   def synchCommits(): Future[List[Future[Boolean]]] = store.scmUrls().flatMap { x =>
     logger.info("Started the job for synchronizing Commits from the SCM's")
     Future {
-      x.map {
-        search.parse(_) match {
+      x.map { input=>
+        logger.info(s"Synchronizing $input")
+        search.parse(input) match {
           case Right((host, project, repository)) =>
+            logger.info(s"Synchronized $input successfully!")
             synchCommit(host, project, repository)
-          case Left(_) => Future.successful(false)
+          case Left(_) => 
+            logger.info(s"Failed to synchronize $input!")
+            Future.successful(false)
         }
       }
     }
@@ -103,15 +111,17 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
   }
 
   
-    def scheduleJobs() = {
-    Akka.system.scheduler.schedule(0 minutes, 60 minutes) {
+  def scheduleSyncAppsJob() = {
+    actorSystem.scheduler.schedule(0 minutes, 60 minutes) {
       logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
       syncApps()
     }
-    Akka.system.scheduler.schedule(0 minutes, 120 seconds) {
-      logger.info("Started the job for synchronizing Commits from the SCM's")
-      synchCommits()
-    }
+  }
+  def scheduleSynchCommitsJobs() = {
+	  actorSystem.scheduler.schedule(0 minutes, 40 minutes) {
+		  logger.info("Started the job for synchronizing Commits from the SCM's")
+		  synchCommits()
+	  }
   }
 
 }

@@ -87,9 +87,7 @@ sealed trait SCMResolver {
    * Otherwise to an instance of None
    */
   def resolve(host: String): Option[SCMResolver] = {
-    println(host + " >>>>>>>>>> " + hosts)
     host match {
-
       case host if hosts.contains(host) =>
         Option(this)
       case _ =>

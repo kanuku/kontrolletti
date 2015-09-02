@@ -4,7 +4,7 @@ import org.scalatest.mock.MockitoSugar
 import test.util.MockitoUtils
 import org.scalatest.FlatSpec
 import client.RequestDispatcher
-import play.api.libs.ws.WSRequestHolder
+import play.api.libs.ws.WSRequest
 import org.mockito.Mockito._
 import org.mockito.Matchers._
 import org.scalatest.TestData
@@ -17,7 +17,7 @@ import scala.concurrent.Future
 class KioClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
 
   private val dispatcher = mock[RequestDispatcher]
-  private val requestHolder = mock[WSRequestHolder]
+  private val requestHolder = mock[WSRequest]
   private val config = new KioClientConfigurationImpl {
     override def serviceUrl = "thisUrlSucks"
   }

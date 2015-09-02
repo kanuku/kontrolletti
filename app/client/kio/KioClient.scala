@@ -1,7 +1,6 @@
 package client.kio
 
 import scala.concurrent.Future
-
 import client.RequestDispatcher
 import client.oauth.OAuthAccessToken
 import javax.inject.Inject
@@ -15,10 +14,12 @@ import play.api.libs.json.Reads
 import play.api.libs.ws.WSResponse
 import utility.Transformer
 import model.KontrollettiToModelParser._
+import com.google.inject.ImplementedBy
 
 /**
  * @author fbenjamin
  */
+@ImplementedBy(classOf[KioClientImpl])
 trait KioClient {
 
   def apps(accessToken: OAuthAccessToken): Future[List[AppInfo]]

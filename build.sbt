@@ -16,18 +16,20 @@ ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages:= "<empty>;views.*;Rev
 
 libraryDependencies ++= Seq(
   ws,
+  jdbc,
   "com.google.inject"  			% "guice" 						% "3.0" 					withSources() withJavadoc(),
   "javax.inject" 				% "javax.inject" 				% "1" 						withSources() withJavadoc(),
-  "org.scalatest"				% "scalatest_2.11"  			% "2.2.4"  		% "test" 	withSources() withJavadoc(),
-  "org.scalatestplus" 			%% "play" 						% "1.2.0" 		% "test"	withSources() withJavadoc(),
+  "org.scalatest"				% "scalatest_2.11"  			% "2.2.5"  		% "test" 	withSources() withJavadoc(),
+  "org.scalatestplus" 			%% "play" 						% "1.4.0-M4" 		% "test"	withSources() withJavadoc(),
   "org.mockito" 				% "mockito-core" 				% "1.9.5" 		% "test" 	withSources() withJavadoc()
   // Database
-  ,"org.postgresql"          	%  "postgresql"  				% "9.4-1202-jdbc41"			withSources() withJavadoc()
+  /*,"org.postgresql"          	%  "postgresql"  				% "9.4-1202-jdbc41"			withSources() withJavadoc()
   ,"com.typesafe.play" 			%% "play-slick" 				% "1.0.0"					withSources() withJavadoc()
   ,"com.typesafe.play" 			%% "play-slick-evolutions"		% "1.0.0"					withSources() withJavadoc()
   ,"com.typesafe.slick" 		%% "slick" 						% "3.0.0"					withSources() withJavadoc()
   ,"org.slf4j" 					% "slf4j-nop" 					% "1.6.4" 					withSources() withJavadoc()
   ,"com.github.tminglei" 		%% "slick-pg" 					% "0.9.2"					withSources() withJavadoc()
+  */
 )
 
 // -------------Docker configuration-------------

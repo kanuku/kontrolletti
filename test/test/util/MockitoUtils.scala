@@ -19,10 +19,11 @@ import play.api.GlobalSettings
 import play.api.libs.json.JsResult
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
-import play.api.libs.ws.WSRequestHolder
 import play.api.libs.ws.WSResponse
-import play.api.test.FakeApplication
+import org.scalatest._
+import play.api.test._
 import play.api.test.Helpers._
+import org.scalatestplus.play._
 import service.Search
 import service.SearchImpl
 import model.Ticket
@@ -35,7 +36,8 @@ import client.oauth.OAuthClientCredential
 import client.oauth.OAuthUserCredential
 import client.oauth.OAuthAccessToken
 import model.AppInfo
-import client.cloudsearch.DocumentStore
+import org.junit.internal.builders.AnnotatedBuilder
+
 
 trait MockitoUtils extends MockitoSugar {
 
@@ -69,26 +71,15 @@ trait MockitoUtils extends MockitoSugar {
     }
   }
 
-  class FakeCloudSearchConfiguration(cloudSearch: DocumentStore) extends play.api.GlobalSettings {
-    private lazy val injector = Guice.createInjector(new AbstractModule {
-      def configure() {
-        bind(classOf[DocumentStore]).toInstance(cloudSearch)
-      }
-    })
-    override def getControllerInstance[A](clazz: Class[A]) = {
-      injector.getInstance(clazz)
-    }
-  }
-
+  
   class FakeGlobalWithSearchService(service: Search) extends play.api.GlobalSettings {
     private lazy val injector = Guice.createInjector(new AbstractModule {
       def configure() {
         bind(classOf[Search]).toInstance(service)
+        
       }
     })
-    override def getControllerInstance[A](clazz: Class[A]) = {
-      injector.getInstance(clazz)
-    }
+    
   }
 
   class FakeGlobalWithFakeClient(client: SCM) extends play.api.GlobalSettings {
@@ -97,12 +88,10 @@ trait MockitoUtils extends MockitoSugar {
         bind(classOf[Search]).toInstance(new SearchImpl(client))
       }
     })
-    override def getControllerInstance[A](clazz: Class[A]) = {
-      injector.getInstance(clazz)
-    }
+    
 
   }
-
+  
   def createCommitsResult(links: List[Link] = List(), commits: List[Commit] = List(createCommit())): CommitsResult = new CommitsResult(links, commits)
 
   def createRepository(href: String = "href", project: String = "project", host: String = "host", repository: String = "repo", commits: List[Commit] = List(), links: List[Link] = List()): Repository = new Repository(href, project, host, repository, Option(commits), Option(links))

@@ -25,15 +25,6 @@ class Production extends AbstractModule {
   private val logger: Logger = Logger(this.getClass())
   def configure() {
     logger.info("Configured with a production module")
-    bind(classOf[Search]).to(classOf[SearchImpl])
-    bind(classOf[SCM]).to(classOf[SCMImpl])
-    bind(classOf[RequestDispatcher]).to(classOf[RequestDispatcherImpl])
-    bind(classOf[OAuth]).to(classOf[OAuthClientImpl])
-    bind(classOf[OAuthConfiguration]).to(classOf[OAuthConfigurationImpl])
-    bind(classOf[KioClient]).to(classOf[KioClientImpl])
-    bind(classOf[KioClientConfiguration]).to(classOf[KioClientConfigurationImpl])
-    bind(classOf[DataStore]).to(classOf[DataStoreImpl])
-
     bind(classOf[Import]).to(classOf[ImportImpl]).asEagerSingleton()
   }
 }

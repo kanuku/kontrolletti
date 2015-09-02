@@ -6,7 +6,6 @@ import play.api.test._
 import play.api.test.Helpers._
 import test.util.MockitoUtils
 import java.net.URLEncoder
-import org.specs2.matcher.MustExpectable
 import org.scalatest.Matchers
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
@@ -19,6 +18,9 @@ import model.Repository
 import test.util.MockitoUtils
 import play.api.libs.json.Json
 import model.KontrollettiToJsonParser._
+
+import org.scalatest.Ignore
+@Ignore
 class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
   private val X_NORMALIZED_REPOSITORY_URL_HEADER = "X-Normalized-Repository-URL"
   private val alternativeUrl = "git@github.com:zalando/kontrolletti.git"

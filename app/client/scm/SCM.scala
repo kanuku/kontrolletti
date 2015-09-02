@@ -5,8 +5,9 @@ import play.api.Logger
 import play.api.libs.ws.WSResponse
 import javax.inject._
 import client.RequestDispatcher
+import com.google.inject.ImplementedBy
 
-
+@ImplementedBy(classOf[SCMImpl])
 sealed trait SCM {
 
   /**

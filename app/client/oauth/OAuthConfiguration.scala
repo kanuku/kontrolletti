@@ -1,11 +1,12 @@
 package client.oauth
 
 import javax.inject.Singleton
+import com.google.inject.ImplementedBy
 
 /**
  * @author fbenjamin
  */
-
+@ImplementedBy(classOf[OAuthConfigurationImpl])
 trait OAuthConfiguration {
   def directoryCredentials: String
   def timeoutRequestClient: Int

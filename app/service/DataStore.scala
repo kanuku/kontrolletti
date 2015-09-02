@@ -4,10 +4,11 @@ import javax.inject.Singleton
 import model.AppInfo
 import model.Commit
 import scala.concurrent.Future
+import com.google.inject.ImplementedBy
 /**
  * @author fbenjamin
  */
-
+@ImplementedBy(classOf[DataStoreImpl])
 trait DataStore {
 
   def saveAppInfo(apps: List[AppInfo]): Future[Boolean]

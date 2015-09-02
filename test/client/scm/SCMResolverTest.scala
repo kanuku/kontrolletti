@@ -8,9 +8,6 @@ import org.mockito.Mockito.when
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneAppPerSuite
 import org.scalatestplus.play.PlaySpec
- 
-
-import play.api.libs.ws.WSRequestHolder
 import play.api.libs.ws.WSResponse
 import play.api.test.FakeApplication
 import test.util.MockitoUtils
