@@ -1,32 +1,34 @@
 package job
 
+import scala.Right
+import scala.concurrent.Await
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import org.mockito.Matchers._
+import org.mockito.Mockito._
 import org.mockito.Mockito.when
 import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
-import client.oauth.OAuth
-import test.util.MockitoUtils
-import org.mockito.Mockito._
-import org.mockito.Matchers._
 import client.kio.KioClient
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import client.oauth.OAuth
 import jobs.ImportImpl
-import javax.inject.Inject
-import javax.inject.Singleton
-import scala.Right
 import service.DataStore
 import service.Search
-import org.scalatest.Ignore
+import test.util.MockitoUtils
+import akka.actor.ActorSystem
+import akka.actor.Scheduler
 
-@Ignore
 class ImportTest extends FlatSpec with MockitoSugar with MockitoUtils {
 
   private val kioClient = mock[KioClient]
   private val oAuthClient = mock[OAuth]
   private val store = mock[DataStore]
   private val search = mock[Search]
-  private val synchronizer = new ImportImpl(oAuthClient, store, kioClient, search, null)
+  private val actorSystem = mock[ActorSystem]
+  private val scheduler = mock[Scheduler]
+  when(actorSystem.scheduler).thenReturn(scheduler)
+
+  private val synchronizer = new ImportImpl(oAuthClient, store, kioClient, search, actorSystem)
 
   "Synchronizer#syncApps" should "store apps from kio in data-store" in {
 
