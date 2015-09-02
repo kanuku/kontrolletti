@@ -19,15 +19,12 @@ import com.google.inject.ImplementedBy
 /**
  * @author fbenjamin
  */
-@ImplementedBy(classOf[KioClientImpl])
 trait KioClient {
 
   def apps(accessToken: OAuthAccessToken): Future[List[AppInfo]]
 
 }
 
-
-@Singleton
 class KioClientImpl @Inject() (dispatcher: RequestDispatcher, config: KioClientConfiguration) extends KioClient {
   private val logger: Logger = Logger { this.getClass }
   private val transformer = Transformer

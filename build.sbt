@@ -23,11 +23,10 @@ libraryDependencies ++= Seq(
 	"org.mockito" 				% "mockito-core" 				% "1.9.5" 		% "test" 	withSources() withJavadoc()
 
 	// Database
-	,jdbc
-	,"com.h2database" 			% "h2" 							% "1.4.188"		        	withSources() withJavadoc()
-	,"org.postgresql"          	%  "postgresql"  				% "9.4-1202-jdbc41"			withSources() withJavadoc()
-	,"com.typesafe.play" 		%% "play-slick" 				% "1.1.0-M2"				withSources() withJavadoc()
-	,"com.typesafe.play" 		%% "play-slick-evolutions"		% "1.1.0-M2"				withSources() withJavadoc()
+	,"com.h2database" 			% "h2" 							% "1.4.188"		% "test"   	withSources() withJavadoc()
+	,"org.postgresql"          	%  "postgresql"  				% "9.4-1201-jdbc41"			withSources() withJavadoc()
+	,"com.typesafe.play" 		%% "play-slick" 				% "1.0.1"				withSources() withJavadoc()
+	,"com.typesafe.play" 		%% "play-slick-evolutions"		% "1.0.1"				withSources() withJavadoc()
 	// Dependencies of slick-pg
 //	,"com.github.tminglei" 		%% "slick-pg" 					% "0.9.1"					withSources() withJavadoc()
 //	,"com.vividsolutions" 		% "jts" 						% "1.13" 					withSources() withJavadoc()

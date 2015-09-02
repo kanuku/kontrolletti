@@ -8,7 +8,6 @@ import com.google.inject.ImplementedBy
 /**
  * @author fbenjamin
  */
-@ImplementedBy(classOf[DataStoreImpl])
 trait DataStore {
 
   def saveAppInfo(apps: List[AppInfo]): Future[Boolean]

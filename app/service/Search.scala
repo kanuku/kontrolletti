@@ -7,7 +7,7 @@ import model.Link
 import model.Ticket
 import com.google.inject.ImplementedBy
 
-@ImplementedBy(classOf[SearchImpl])
+
 trait Search {
 
   /**

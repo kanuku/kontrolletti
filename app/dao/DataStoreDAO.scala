@@ -15,8 +15,8 @@ import slick.lifted.TableQuery
 import slick.driver.JdbcProfile
 import play.api.Play
 
-@ImplementedBy(classOf[DataStoreDAOImpl])
-trait DataStore { 
+
+trait DataStoreDAO { 
 
   /**
    * Saves the given AppInfo documents to the document-store.
@@ -100,11 +100,11 @@ trait DataStore {
 
 
 @Singleton
-class DataStoreDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext) extends DataStore{ // with HasDatabaseConfigProvider[MyPostgresDriver] {
+class DataStoreDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext) extends DataStoreDAO{ // with HasDatabaseConfigProvider[MyPostgresDriver] {
   val dbConfig = DatabaseConfigProvider.get[JdbcProfile](Play.current)
-  val apps = TableQuery[AppInfos]
+//  val apps = TableQuery[AppInfos]
 
-  def saveAppInfos(input: Seq[AppInfo]) = db.run(this.apps ++= input).map(_ => ())
+  def saveAppInfos(input: Seq[AppInfo]) = ??? // db.run(this.apps ++= input).map(_ => ())
 
   def appInfos(ids: Set[String]): Future[Seq[AppInfo]] = ???
   

@@ -28,7 +28,6 @@ case class OAuthClientCredential(id: String, secret: String)
 case class OAuthUserCredential(username: String, password: String)
 case class OAuthAccessToken(tokenType: String, accessToken: String, scope: String, expiresIn: Int)
 
-@ImplementedBy(classOf[OAuthClientImpl])
 sealed trait OAuth {
 
   def clientCredentials(): Future[OAuthClientCredential]

@@ -1,23 +1,24 @@
 package jobs
 
 import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
+
+import com.google.inject.ImplementedBy
+
+import akka.actor.ActorSystem
 import client.kio.KioClient
 import client.oauth.OAuth
 import javax.inject.Inject
 import javax.inject.Singleton
 import model.AppInfo
+import model.Commit
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import scala.concurrent.duration.DurationInt
 import service.DataStore
+import dao.DataStoreDAO
+import service.DataStoreImpl
 import service.Search
 import utility.UrlParser
-import model.Commit
-import scala.util.Failure
-import scala.util.Success
-import play.api.Application
-import com.google.inject.ImplementedBy
-import akka.actor.ActorSystem
 
 
 /**
@@ -37,7 +38,9 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
                             store: DataStore, //
                             kioClient: KioClient, //
                             search: Search,
-                            actorSystem: ActorSystem) extends Import with UrlParser {
+                            actorSystem: ActorSystem,
+                            dataStore: DataStoreDAO
+                            ) extends Import with UrlParser {
   val logger: Logger = Logger { this.getClass }
 
   val falseFuture = Future.successful(false)
@@ -46,7 +49,6 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
   val syncAppsJob=scheduleSyncAppsJob
   val synchCommitsJobs=scheduleSynchCommitsJobs
    
-
   def syncApps(): Future[Boolean] = {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
     oAuthclient.accessToken().flatMap { accessToken =>
