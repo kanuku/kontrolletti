@@ -107,7 +107,7 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
           logger.info("Received no usefull result from $host/$project$host")
           None
       }
-    }
+    } 
   }
 
   
@@ -121,6 +121,12 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
 	  actorSystem.scheduler.schedule(0 minutes, 40 minutes) {
 		  logger.info("Started the job for synchronizing Commits from the SCM's")
 		  synchCommits()
+	  }
+  }
+  def test() = {
+	  actorSystem.scheduler.schedule(0 minutes, 15 seconds) {
+		  logger.info("Started the job for synchronizing Commits from the SCM's")
+		  
 	  }
   }
 
