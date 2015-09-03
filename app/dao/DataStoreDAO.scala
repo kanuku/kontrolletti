@@ -2,22 +2,28 @@ package dao
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import com.google.inject.ImplementedBy
-import javax.inject._
+import com.google.inject.{ Singleton, Inject }
 import model.AppInfo
 import model.Commit
 import model.Ticket
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.db.slick.HasDatabaseConfigProvider
-import play.api.libs.json.JsValue
-import play.api.libs.json.Json._
-import slick.lifted.TableQuery
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import slick.driver.JdbcProfile
-import play.api.Play
+import play.api.Logger
 
+trait DataStoreDAO { self: HasDatabaseConfigProvider[JdbcProfile] =>
+  import driver.api._
 
-trait DataStoreDAO { 
+  class AppInfos(tag: Tag) extends Table[AppInfo](tag, "APP_INFO") {
+    def scmUrl = column[String]("SCM_URL", O.PrimaryKey)
+    def documentationUrl = column[String]("DOC_URL")
+    def specificationUrl = column[String]("SPEC_URL")
+    def lastModified = column[String]("LAST_MODIFIED")
 
+    def * = (scmUrl, documentationUrl, specificationUrl, lastModified) <> (AppInfo.tupled, AppInfo.unapply _)
+
+  }
   /**
    * Saves the given AppInfo documents to the document-store.
    *
@@ -25,7 +31,7 @@ trait DataStoreDAO {
    *
    * @return A Future with true if the result of the action was successful.
    */
-  def saveAppInfos(input: Seq[AppInfo])
+  def saveApps(input: Seq[AppInfo]): Future[Unit]
 
   /**
    * Saves the given Commit-documents to the document-store.
@@ -98,17 +104,22 @@ trait DataStoreDAO {
   def ticket(scmUrl: String, id: String): Future[Ticket]
 }
 
-
 @Singleton
-class DataStoreDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext) extends DataStoreDAO{ // with HasDatabaseConfigProvider[MyPostgresDriver] {
-  val dbConfig = DatabaseConfigProvider.get[JdbcProfile](Play.current)
-//  val apps = TableQuery[AppInfos]
-
-  def saveAppInfos(input: Seq[AppInfo]) = ??? // db.run(this.apps ++= input).map(_ => ())
+class DataStoreDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends DataStoreDAO with HasDatabaseConfigProvider[JdbcProfile] {
+  
+  import driver.api._
+  
+  val apps = TableQuery[AppInfos]
+  val logger: Logger = Logger { this.getClass }
+  
+  def saveApps(input: Seq[AppInfo]) = {
+    
+	  logger.info(s"Apps to save:"+input.size)
+    db.run(apps ++= input).map(_ => ())
+  }
 
   def appInfos(ids: Set[String]): Future[Seq[AppInfo]] = ???
-  
-  
+
   def appInfos(): Future[Seq[AppInfo]] = ???
 
   def saveCommits(app: AppInfo, input: Seq[Commit]): Future[Boolean] = ???
@@ -123,3 +134,5 @@ class DataStoreDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfig
 
   def ticket(scmUrl: String, id: String): Future[Ticket] = ???
 }
+
+ 

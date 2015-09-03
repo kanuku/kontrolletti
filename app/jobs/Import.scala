@@ -37,9 +37,9 @@ trait Import {
 class ImportImpl @Inject() (oAuthclient: OAuth, //
                             store: DataStore, //
                             kioClient: KioClient, //
-                            search: Search,
-                            actorSystem: ActorSystem,
-                            dataStore: DataStoreDAO
+                            search: Search
+                            ,dataStore: DataStoreDAO
+                            ,system: ActorSystem
                             ) extends Import with UrlParser {
   val logger: Logger = Logger { this.getClass }
 
@@ -48,6 +48,7 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
   
   val syncAppsJob=scheduleSyncAppsJob
   val synchCommitsJobs=scheduleSynchCommitsJobs
+  val synchTest=test
    
   def syncApps(): Future[Boolean] = {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
@@ -114,21 +115,24 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
 
   
   def scheduleSyncAppsJob() = {
-    actorSystem.scheduler.schedule(0 minutes, 60 minutes) {
+    system.scheduler.schedule(1 minutes, 61 minutes) {
       logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
       syncApps()
     }
   }
+  
   def scheduleSynchCommitsJobs() = {
-	  actorSystem.scheduler.schedule(0 minutes, 40 minutes) {
+	  system.scheduler.schedule(1 minutes, 41 minutes) {
 		  logger.info("Started the job for synchronizing Commits from the SCM's")
 		  synchCommits()
 	  }
   }
+  
   def test() = {
-	  actorSystem.scheduler.schedule(0 minutes, 15 seconds) {
-		  logger.info("Started the job for synchronizing Commits from the SCM's")
-		  
+	  system.scheduler.schedule(0 minutes, 15 seconds) {
+		  logger.info("Started storing data in db")
+      val input=List(new AppInfo("scm_url","doc_url","spec_url","last_modified"))
+		  dataStore.saveApps(input)
 	  }
   }
 

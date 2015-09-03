@@ -17,8 +17,11 @@ import service.Search
 import service.SearchImpl
 import dao.DataStoreDAO
 import dao.DataStoreDAOImpl
+import play.api.libs.concurrent.AkkaGuiceSupport
 
-class Production extends AbstractModule {
+class Production extends AbstractModule with AkkaGuiceSupport {
+  
+
   private val logger: Logger = Logger(this.getClass())
   def configure() {
     logger.info("Configured with a production module")
@@ -28,6 +31,7 @@ class Production extends AbstractModule {
     bind(classOf[KioClientConfiguration]).to(classOf[KioClientConfigurationImpl])
     bind(classOf[Search]).to(classOf[SearchImpl])
     bind(classOf[DataStoreDAO]).to(classOf[DataStoreDAOImpl])
-//    bind(classOf[Import]).to(classOf[ImportImpl]).asEagerSingleton()
+    bind(classOf[Import]).to(classOf[ImportImpl]).asEagerSingleton()
+//    bindActor[ConfiguredActor]("configured-actor")
   }
 }
