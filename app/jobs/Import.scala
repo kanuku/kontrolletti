@@ -2,9 +2,7 @@ package jobs
 
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
-
 import com.google.inject.ImplementedBy
-
 import akka.actor.ActorSystem
 import client.kio.KioClient
 import client.oauth.OAuth
@@ -19,6 +17,8 @@ import dao.DataStoreDAO
 import service.DataStoreImpl
 import service.Search
 import utility.UrlParser
+import play.api.libs.concurrent.Akka
+import play.api.Application
 
 
 /**
@@ -39,7 +39,7 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
                             kioClient: KioClient, //
                             search: Search
                             ,dataStore: DataStoreDAO
-                            ,system: ActorSystem
+                            ,app: Application
                             ) extends Import with UrlParser {
   val logger: Logger = Logger { this.getClass }
 
@@ -115,21 +115,22 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
 
   
   def scheduleSyncAppsJob() = {
-    system.scheduler.schedule(1 minutes, 61 minutes) {
+    app.actorSystem.scheduler.schedule(1 minutes, 61 minutes) {
       logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
       syncApps()
     }
   }
   
   def scheduleSynchCommitsJobs() = {
-	  system.scheduler.schedule(1 minutes, 41 minutes) {
+    
+	  app.actorSystem.scheduler.schedule(1 minutes, 41 minutes) {
 		  logger.info("Started the job for synchronizing Commits from the SCM's")
 		  synchCommits()
 	  }
   }
   
   def test() = {
-	  system.scheduler.schedule(0 minutes, 15 seconds) {
+	  app.actorSystem.scheduler.schedule(0 minutes, 15 seconds) {
 		  logger.info("Started storing data in db")
       val input=List(new AppInfo("scm_url","doc_url","spec_url","last_modified"))
 		  dataStore.saveApps(input)

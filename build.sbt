@@ -23,7 +23,7 @@ libraryDependencies ++= Seq(
 	"org.mockito" 				% "mockito-core" 				% "1.9.5" 		% "test" 	withSources() withJavadoc()
 
 	// Database
-	,"com.h2database" 			% "h2" 							% "1.4.188"		% "test"   	withSources() withJavadoc()
+	,"com.h2database" 			% "h2" 							% "1.4.188"				   	withSources() withJavadoc()
 	,"org.postgresql"          	%  "postgresql"  				% "9.4-1201-jdbc41"			withSources() withJavadoc()
 	,"com.typesafe.play" 		%% "play-slick" 				% "1.0.1"				withSources() withJavadoc()
 	,"com.typesafe.play" 		%% "play-slick-evolutions"		% "1.0.1"				withSources() withJavadoc()

@@ -1,16 +1,18 @@
 package dao
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import com.google.inject.{ Singleton, Inject }
+import com.google.inject.Inject
+import com.google.inject.Singleton
 import model.AppInfo
 import model.Commit
 import model.Ticket
+import play.api.Logger
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.db.slick.HasDatabaseConfigProvider
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import slick.driver.JdbcProfile
-import play.api.Logger
+import slick.lifted.ProvenShape.proveShapeOf
+import play.api.Play
 
 trait DataStoreDAO { self: HasDatabaseConfigProvider[JdbcProfile] =>
   import driver.api._
@@ -106,21 +108,28 @@ trait DataStoreDAO { self: HasDatabaseConfigProvider[JdbcProfile] =>
 
 @Singleton
 class DataStoreDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends DataStoreDAO with HasDatabaseConfigProvider[JdbcProfile] {
-  
+
+  import Play.current
   import driver.api._
-  
+
   val apps = TableQuery[AppInfos]
   val logger: Logger = Logger { this.getClass }
-  
+
   def saveApps(input: Seq[AppInfo]) = {
-    
-	  logger.info(s"Apps to save:"+input.size)
+
+    logger.info(s"Apps to save:" + input.size)
     db.run(apps ++= input).map(_ => ())
   }
 
   def appInfos(ids: Set[String]): Future[Seq[AppInfo]] = ???
 
-  def appInfos(): Future[Seq[AppInfo]] = ???
+  def appInfos(): Future[Seq[AppInfo]] = {
+    logger.info("Searching")
+    val result = db.run(apps.result)
+    logger.info("Found something:"+result)
+    result
+  }
+
 
   def saveCommits(app: AppInfo, input: Seq[Commit]): Future[Boolean] = ???
 
