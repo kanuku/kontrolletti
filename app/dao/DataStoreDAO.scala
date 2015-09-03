@@ -126,7 +126,6 @@ class DataStoreDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfig
   def appInfos(): Future[Seq[AppInfo]] = {
     logger.info("Searching")
     val result = db.run(apps.result)
-    logger.info("Found something:"+result)
     result
   }
 
