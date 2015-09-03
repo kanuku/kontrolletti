@@ -3,13 +3,13 @@
 # ~~~~
 
 #################### SWAGGER ####################
-GET    /swagger                                                                      @controllers.Main.swagger
+GET    /swagger                                                                      @endpoint.Main.swagger
 
 # Map static scm from the /public folder to the /assets URL path
 GET    /assets/*file                                                                 controllers.Assets.at(path="/public", file)
-GET    /status                                                                       @controllers.Main.status
+GET    /status                                                                       @endpoint.Main.status
 
-GET    /specs                                                                        @controllers.Main.specs
+GET    /specs                                                                        @endpoint.Main.specs
 
 #################### ENDPOINTS ####################
 

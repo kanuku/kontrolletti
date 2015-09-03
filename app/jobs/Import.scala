@@ -13,19 +13,17 @@ import model.Commit
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import service.DataStore
-import dao.DataStoreDAO
 import service.DataStoreImpl
 import service.Search
 import utility.UrlParser
 import play.api.libs.concurrent.Akka
 import play.api.Application
-
+import dao.AppsRepository
 
 /**
  * @author fbenjamin
  */
 
-@ImplementedBy(classOf[ImportImpl])
 trait Import {
 
   def syncApps(): Future[Boolean]
@@ -37,19 +35,16 @@ trait Import {
 class ImportImpl @Inject() (oAuthclient: OAuth, //
                             store: DataStore, //
                             kioClient: KioClient, //
-                            search: Search
-                            ,dataStore: DataStoreDAO
-                            ,app: Application
-                            ) extends Import with UrlParser {
+                            apps: AppsRepository,
+                            search: Search, app: Application) extends Import with UrlParser {
   val logger: Logger = Logger { this.getClass }
 
   val falseFuture = Future.successful(false)
-  
-  
-  val syncAppsJob=scheduleSyncAppsJob
-  val synchCommitsJobs=scheduleSynchCommitsJobs
-  val synchTest=test
-   
+
+  val syncAppsJob = scheduleSyncAppsJob
+  val synchCommitsJobs = scheduleSynchCommitsJobs
+  val synchTest = test
+
   def syncApps(): Future[Boolean] = {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
     oAuthclient.accessToken().flatMap { accessToken =>
@@ -74,13 +69,13 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
   def synchCommits(): Future[List[Future[Boolean]]] = store.scmUrls().flatMap { x =>
     logger.info("Started the job for synchronizing Commits from the SCM's")
     Future {
-      x.map { input=>
+      x.map { input =>
         logger.info(s"Synchronizing $input")
         search.parse(input) match {
           case Right((host, project, repository)) =>
             logger.info(s"Synchronized $input successfully!")
             synchCommit(host, project, repository)
-          case Left(_) => 
+          case Left(_) =>
             logger.info(s"Failed to synchronize $input!")
             Future.successful(false)
         }
@@ -110,31 +105,30 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
           logger.info("Received no usefull result from $host/$project$host")
           None
       }
-    } 
+    }
   }
 
-  
   def scheduleSyncAppsJob() = {
     app.actorSystem.scheduler.schedule(1 minutes, 61 minutes) {
       logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
       syncApps()
     }
   }
-  
+
   def scheduleSynchCommitsJobs() = {
-    
-	  app.actorSystem.scheduler.schedule(1 minutes, 41 minutes) {
-		  logger.info("Started the job for synchronizing Commits from the SCM's")
-		  synchCommits()
-	  }
+
+    app.actorSystem.scheduler.schedule(1 minutes, 41 minutes) {
+      logger.info("Started the job for synchronizing Commits from the SCM's")
+      synchCommits()
+    }
   }
-  
+
   def test() = {
-	  app.actorSystem.scheduler.schedule(0 minutes, 15 seconds) {
-		  logger.info("Started storing data in db")
-      val input=List(new AppInfo("scm_url","doc_url","spec_url","last_modified"))
-		  dataStore.saveApps(input)
-	  }
+    app.actorSystem.scheduler.schedule(0 minutes, 15 seconds) {
+      logger.info("Started storing data in db")
+      apps.create("name", 12)
+      apps.list().map { x => logger.info("APPPS SIZE ="+x.size) }
+    }
   }
 
 }

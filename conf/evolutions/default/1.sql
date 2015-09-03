@@ -1,16 +1,11 @@
-# AppInfos schema
-
-
 # --- !Ups
- 
-CREATE TABLE apps ( 
-    SCM_URL varchar(255) NOT NULL,
-    DOC_URL varchar(255),
-    SPEC_URL varchar(255),
-    LAST_MODIFIED varchar(255),
-    PRIMARY KEY (SCM_URL)
+
+create table students (
+  "id" serial  primary key,
+  "name" varchar not null,
+  "age" int not null
 );
- 
+
 # --- !Downs
- 
-DROP TABLE apps;
+
+drop table "students" if exists;
