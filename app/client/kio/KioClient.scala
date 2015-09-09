@@ -5,7 +5,7 @@ import client.RequestDispatcher
 import client.oauth.OAuthAccessToken
 import javax.inject.Inject
 import javax.inject.Singleton
-import model.AppInfo
+import model._
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.functional.syntax._
@@ -15,7 +15,8 @@ import play.api.libs.ws.WSResponse
 import utility.Transformer
 import model.KontrollettiToModelParser._
 import com.google.inject.ImplementedBy
-
+import utility.FutureUtil._
+import client.oauth.OAuthClientException
 /**
  * @author fbenjamin
  */
@@ -24,18 +25,29 @@ trait KioClient {
   def apps(accessToken: OAuthAccessToken): Future[List[AppInfo]]
 
 }
-
-class KioClientImpl @Inject() (dispatcher: RequestDispatcher, config: KioClientConfiguration) extends KioClient {
-  private val logger: Logger = Logger { this.getClass }
+@Singleton
+class KioClientImpl @Inject() (dispatcher: RequestDispatcher, //
+                               config: KioClientConfiguration) extends KioClient {
+  val logger: Logger = Logger { this.getClass }
   private val transformer = Transformer
   def apps(accessToken: OAuthAccessToken): Future[List[AppInfo]] = {
-    dispatcher.requestHolder(config.serviceUrl) //
-      .withHeaders(("Authorization", "Bearer " + accessToken.accessToken)).get()
-      .flatMap { response =>
-        logger.info("Received http-status-code: " + response.status)
-        transformer.transform[List[AppInfo]](response.body)
+      logger.info("Kio client is calling endpoint" + config.serviceUrl)
+      logger.info("Kio client is calling endpoint" + config.serviceUrl)
+      logger.info("Kio client is calling endpoint" + config.serviceUrl)
+      logger.info("Kio client is calling endpoint" + config.serviceUrl)
+      logger.info("Kio client is calling endpoint" + config.serviceUrl)
+      logErrorOnFailure {
+        //      dispatcher.requestHolder(config.serviceUrl) //
+        //        .withHeaders(("Authorization", "Bearer " + accessToken.accessToken)).get()
+        //        .flatMap { response =>
+        //          logger.info("Kio client received http-status-code: " + response.status)
+        //          transformer.parse2Future(response.body).flatMap(transformer.deserialize2Future[List[AppInfo]](_))
+        //        }
+        Future.failed(new OAuthClientException("error"))
       }
-  }
+      //    ???
+    }
 
 }
 
+ 

@@ -11,12 +11,13 @@ import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
 import client.kio.KioClient
 import client.oauth.OAuth
-import jobs.ImportImpl
+import service.ImportImpl
 import service.DataStore
 import service.Search
 import test.util.MockitoUtils
 import akka.actor.ActorSystem
 import akka.actor.Scheduler
+import dao.AppInfoRepository
 
 class ImportTest extends FlatSpec with MockitoSugar with MockitoUtils {
 
@@ -26,9 +27,10 @@ class ImportTest extends FlatSpec with MockitoSugar with MockitoUtils {
   private val search = mock[Search]
   private val actorSystem = mock[ActorSystem]
   private val scheduler = mock[Scheduler]
+ private val appRepository = mock[AppInfoRepository]
   when(actorSystem.scheduler).thenReturn(scheduler)
 
-  private val synchronizer = new ImportImpl(oAuthClient, store, kioClient, search, actorSystem)
+  private val synchronizer = new ImportImpl(oAuthClient, store, kioClient, search,appRepository)
 
   "Synchronizer#syncApps" should "store apps from kio in data-store" in {
 
@@ -36,22 +38,20 @@ class ImportTest extends FlatSpec with MockitoSugar with MockitoUtils {
     val accessTokenResult = Future.successful { accessToken }
     val appIds = List("kontrolletti", "cloud-lobster")
     val appIdsResult = Future.successful(appIds)
-    val validAppInfo = createAppInfo("https://git-hub.com/zalando-bus/kontrolletti/", "specUrl1", "docUrl1", "serviceUrl1", "created1", "lastModified1")
-    val unvalidAppInfo = createAppInfo("scmUrl2", "specUrl2", "docUrl2", "serviceUrl2", "created2", "lastModified2")
+    val validAppInfo = createAppInfo("https://git-hub.com/zalando-bus/kontrolletti/", Option("specUrl1"), Option("docUrl1"),  Option("lastModified1"))
+    val unvalidAppInfo = createAppInfo("scmUrl2", Option("specUrl2"), Option("docUrl2"), Option("lastModified2"))
     val apps = List(validAppInfo, unvalidAppInfo)
     val appsResult = Future.successful(apps)
 
     when(oAuthClient.accessToken()).thenReturn(accessTokenResult)
     when(kioClient.apps(accessToken)).thenReturn(appsResult)
-    when(store.saveAppInfo(anyObject())).thenReturn(Future.successful(true))
+    
 
-    Await.result(synchronizer.syncApps(), Duration("5 seconds")) match {
-      case value: Boolean => assert(value == true)
-    }
+    Await.result(synchronizer.syncApps(), Duration("5 seconds")) 
 
     verify(oAuthClient, times(1)).accessToken()
     verify(kioClient, times(1)).apps(accessToken)
-    verify(store, times(1)).saveAppInfo(List(validAppInfo))
+    verify(appRepository, times(1)).save(List(validAppInfo))
   }
 
   "Synchronizer#synchCommits" should "store apps from kio in data-store" in {
@@ -72,14 +72,7 @@ class ImportTest extends FlatSpec with MockitoSugar with MockitoUtils {
     when(store.saveCommits(List(commit1, commit2))).thenReturn(Future.successful(true))
     when(store.saveCommits(List(commit3))).thenReturn(Future.successful(true))
 
-    Await.result(synchronizer.synchCommits(), Duration("5 seconds")) match {
-      case result: List[Future[Boolean]] => result.map {
-        Await.result(_, Duration("5 seconds")) match {
-          case value: Boolean => assert(value == true)
-        }
-      }
-    }
-
+    Await.result(synchronizer.synchCommits(), Duration("5 seconds")) 
     verify(store, times(1)).scmUrls()
     verify(search, times(1)).parse(url1)
     verify(search, times(1)).parse(url2)

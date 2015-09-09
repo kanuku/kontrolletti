@@ -1,9 +1,6 @@
-package jobs
+package service
 
 import scala.concurrent.Future
-import scala.concurrent.duration.DurationInt
-import com.google.inject.ImplementedBy
-import akka.actor.ActorSystem
 import client.kio.KioClient
 import client.oauth.OAuth
 import javax.inject.Inject
@@ -12,46 +9,37 @@ import model.AppInfo
 import model.Commit
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import service.DataStore
-import service.DataStoreImpl
-import service.Search
 import utility.UrlParser
-import play.api.libs.concurrent.Akka
-import play.api.Application
-import dao.AppsRepository
-
+import dao.AppInfoRepository
+import scala.util.Try
+import scala.util.Failure
+import scala.util.Success
+import utility.FutureUtil._
 /**
  * @author fbenjamin
  */
 
 trait Import {
 
-  def syncApps(): Future[Boolean]
-
-  def synchCommits(): Future[List[Future[Boolean]]]
+  def syncApps(): Future[Unit]
+  def synchCommits(): Future[Unit]
 }
 
 @Singleton
-class ImportImpl @Inject() (oAuthclient: OAuth, //
-                            store: DataStore, //
-                            kioClient: KioClient, //
-                            apps: AppsRepository,
-                            search: Search, app: Application) extends Import with UrlParser {
+class ImportImpl @Inject() (oAuthclient: OAuth, store: DataStore, //
+                            kioClient: KioClient, search: Search, //
+                            appRepo: AppInfoRepository) extends Import with UrlParser {
   val logger: Logger = Logger { this.getClass }
 
   val falseFuture = Future.successful(false)
 
-  val syncAppsJob = scheduleSyncAppsJob
-  val synchCommitsJobs = scheduleSynchCommitsJobs
-  val synchTest = test
-
-  def syncApps(): Future[Boolean] = {
+  def syncApps(): Future[Unit] = {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
     oAuthclient.accessToken().flatMap { accessToken =>
       logger.info("Received an accessToken")
-      kioClient.apps(accessToken).flatMap { apps =>
-        logger.info("Received apps from kio")
-        store.saveAppInfo(filterValidApps(apps))
+      logErrorOnFailure(kioClient.apps(accessToken)).flatMap { apps =>
+        logger.info("Number of received apps from kio:" + apps.size)
+        appRepo.save(filterValidApps(apps))
       }
     }
   }
@@ -66,7 +54,7 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
     }
   }
 
-  def synchCommits(): Future[List[Future[Boolean]]] = store.scmUrls().flatMap { x =>
+  def synchCommits(): Future[Unit] = store.scmUrls().flatMap { x =>
     logger.info("Started the job for synchronizing Commits from the SCM's")
     Future {
       x.map { input =>
@@ -76,8 +64,7 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
             logger.info(s"Synchronized $input successfully!")
             synchCommit(host, project, repository)
           case Left(_) =>
-            logger.info(s"Failed to synchronize $input!")
-            Future.successful(false)
+            logger.warn(s"Failed to synchronize $input!")
         }
       }
     }
@@ -105,29 +92,6 @@ class ImportImpl @Inject() (oAuthclient: OAuth, //
           logger.info("Received no usefull result from $host/$project$host")
           None
       }
-    }
-  }
-
-  def scheduleSyncAppsJob() = {
-    app.actorSystem.scheduler.schedule(1 minutes, 61 minutes) {
-      logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
-      syncApps()
-    }
-  }
-
-  def scheduleSynchCommitsJobs() = {
-
-    app.actorSystem.scheduler.schedule(1 minutes, 41 minutes) {
-      logger.info("Started the job for synchronizing Commits from the SCM's")
-      synchCommits()
-    }
-  }
-
-  def test() = {
-    app.actorSystem.scheduler.schedule(0 minutes, 15 seconds) {
-      logger.info("Started storing data in db")
-      apps.create("name", 12)
-      apps.list().map { x => logger.info("APPPS SIZE ="+x.size) }
     }
   }
 

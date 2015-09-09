@@ -38,7 +38,6 @@ import client.oauth.OAuthAccessToken
 import model.AppInfo
 import org.junit.internal.builders.AnnotatedBuilder
 
-
 trait MockitoUtils extends MockitoSugar {
 
   /**
@@ -71,15 +70,14 @@ trait MockitoUtils extends MockitoSugar {
     }
   }
 
-  
   class FakeGlobalWithSearchService(service: Search) extends play.api.GlobalSettings {
     private lazy val injector = Guice.createInjector(new AbstractModule {
       def configure() {
         bind(classOf[Search]).toInstance(service)
-        
+
       }
     })
-    
+
   }
 
   class FakeGlobalWithFakeClient(client: SCM) extends play.api.GlobalSettings {
@@ -88,10 +86,9 @@ trait MockitoUtils extends MockitoSugar {
         bind(classOf[Search]).toInstance(new SearchImpl(client))
       }
     })
-    
 
   }
-  
+
   def createCommitsResult(links: List[Link] = List(), commits: List[Commit] = List(createCommit())): CommitsResult = new CommitsResult(links, commits)
 
   def createRepository(href: String = "href", project: String = "project", host: String = "host", repository: String = "repo", commits: List[Commit] = List(), links: List[Link] = List()): Repository = new Repository(href, project, host, repository, Option(commits), Option(links))
@@ -110,5 +107,5 @@ trait MockitoUtils extends MockitoSugar {
 
   def createOAuthAccessToken(tokenType: String, accessToken: String, scope: String, expiresIn: Int) = new OAuthAccessToken(tokenType, accessToken, scope, expiresIn)
 
-  def createAppInfo(scmUrl: String, specificationUrl: String, documentationUrl: String, serviceUrl: String, created: String, lastModified: String) = new AppInfo(scmUrl, serviceUrl, created, lastModified)
+  def createAppInfo(scmUrl: String, documentationUrl: Option[String], specificationUrl: Option[String], lastModified: Option[String]) = new AppInfo(scmUrl, documentationUrl, specificationUrl, lastModified)
 }

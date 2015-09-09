@@ -31,7 +31,7 @@ object Transformer {
    * @param input a String to parse
    * @return the JsValue representing the string in a future
    */
-  def parse(input: String): Future[JsValue] = {
+  def parse2Future(input: String): Future[JsValue] = {
     Try(Json.parse(input)) match {
       case Success(result) => Future.successful(result)
       case Failure(ex) =>
@@ -41,22 +41,26 @@ object Transformer {
   }
 
   /**
-   * Transforms a String into a Object of type T
+   * Parses a String representing a json to a JsValue.
    *
    * @param input a String to parse
-   * @return the JsValue representing the string in a future
+   * @return the Optional JsValue
    */
-  def transform[T](input: String)(implicit rds: Reads[T]): Future[T] = parse(input).flatMap { jsvalue =>
-    extract2Future(jsvalue.validate)
+  def parse2Option(input: String): Option[JsValue] = Try(Json.parse(input)) match {
+    case Success(result) =>
+      Option(result)
+    case Failure(ex) =>
+      logger.error("Error while parsing:" + ex.getMessage)
+      None
   }
 
   /**
-   * Unwraps the result from the JsResult and returns the successfully deserialized
+   * Deserializes the input into the the Type T.
    * instance of the [T] type or the detailed error message.
    * @return Either[Left,Right] - Left contains the error message and Right the deserialized Object
    */
-  def extract2Either[T](input: JsResult[T]): Either[String, T] = {
-    input match {
+  def deserialize2Either[T](input: JsValue)(implicit rds: Reads[T]): Either[String, T] = {
+    input.validate match {
       case s: JsSuccess[T] =>
         Right(s.get)
       case e: JsError =>
@@ -64,17 +68,36 @@ object Transformer {
         Left(s"Failed to parse!!")
     }
   }
+
+  /**
+   * Validates the input and returns the successfully transformed
+   * instance of  [T] type.
+   * @param input a JsValue
+   * @return Option[T] - Contains the an optional deserialized Object
+   */
+  def deserialize2Option[T](input: JsValue)(implicit rds: Reads[T]): Option[T] = {
+    input.validate match {
+      case s: JsSuccess[T] =>
+        Option(s.get)
+      case e: JsError =>
+        logger.error("Failed to parse:" + e.errors)
+        None
+    }
+  }
+
   /**
    * Unwraps the result from the JsResult and returns the successfully deserialized
    * instance of the [T] wrapped in a complete future.
+   *  @param input a JsValue
    * @return Future[T] - Future containing the desierialized object or the error message
    */
-  def extract2Future[T](input: JsResult[T]): Future[T] =
-    input match {
-      case s: JsSuccess[T] => Future.successful(s.get)
-      case e: JsError =>
-        logger.error("Failed to parse:" + e.errors)
-        Future.failed(new JsonParseException("Failed to parse the json-object"))
-    }
-   
+  def deserialize2Future[T](input: JsValue)(implicit rds: Reads[T]): Future[T] = input.validate match {
+    case s: JsSuccess[T] => Future.successful(s.get)
+    case e: JsError =>
+      logger.error("Failed to parse:" + e.errors)
+      Future.failed(new JsonParseException("Failed to parse the json-object"))
+  }
+  
+  
+  
 }

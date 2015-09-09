@@ -70,8 +70,6 @@ sealed trait SCMParser {
    */
   def repoToModel: Parser[JsValue, Either[String, Repository]]
 
- 
-
 }
 
 /**
@@ -80,13 +78,13 @@ sealed trait SCMParser {
  */
 object GithubToJsonParser extends SCMParser {
 
-  private val transformer=Transformer
+  private val transformer = Transformer
   def domains = GithubResolver.hosts
-  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => transformer.extract2Either(value.validate[List[Commit]])
-  val singleCommitToModel: Parser[JsValue, Either[String, Commit]] = (value) => transformer.extract2Either(value.validate[Commit])
-  val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (author) => transformer.extract2Either(author.validate[List[Author]])
-  val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => transformer.extract2Either(value.validate[List[Ticket]])
-  val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => transformer.extract2Either(value.validate[Repository])
+  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => transformer.deserialize2Either[List[Commit]](value)
+  val singleCommitToModel: Parser[JsValue, Either[String, Commit]] = (value) => transformer.deserialize2Either[Commit](value)
+  val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (author) => transformer.deserialize2Either[List[Author]](author)
+  val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => transformer.deserialize2Either[List[Ticket]](value)
+  val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => transformer.deserialize2Either[Repository](value)
 
   implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
@@ -119,7 +117,7 @@ object GithubToJsonParser extends SCMParser {
     and Reads.pure("")
     and Reads.pure("")
     and Reads.pure("")
-    and Reads.pure(None) 
+    and Reads.pure(None)
     and Reads.pure(None))(Repository.apply _)
 
 }
@@ -131,12 +129,20 @@ object GithubToJsonParser extends SCMParser {
 object StashToJsonParser extends SCMParser {
 
   def domains = StashResolver.hosts
-  val transformer=Transformer
-  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => transformer.extract2Either((value \ "values").validate[List[Commit]])
-  val singleCommitToModel: Parser[JsValue, Either[String, Commit]] = (value) => transformer.extract2Either(value.validate[Commit])
-  val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => transformer.extract2Either(value.validate[List[Ticket]])
-  val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => transformer.extract2Either(value.validate[Repository])
-  val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (value) => transformer.extract2Either(value.validate[List[Author]])
+  val transformer = Transformer
+  val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = { value =>
+    val res = (value \ "values")
+    res.toOption match {
+      case Some(jsValue) =>
+        transformer.deserialize2Either[List[Commit]](jsValue)
+      case None => Left("Failed to parse value")
+
+    }
+  }
+  val singleCommitToModel: Parser[JsValue, Either[String, Commit]] = (value) => transformer.deserialize2Either[Commit](value)
+  val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => transformer.deserialize2Either[List[Ticket]](value)
+  val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => transformer.deserialize2Either[Repository](value)
+  val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (value) => transformer.deserialize2Either[List[Author]](value)
 
   private implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
@@ -157,9 +163,9 @@ object StashToJsonParser extends SCMParser {
 
   def readUrls(implicit rt: Reads[String]) = Reads[List[String]] { js =>
     val l = (JsPath \ "parents" \\ "id")
-    val b: List[JsValue]= l (js)
+    val b: List[JsValue] = l(js)
     Json.fromJson[List[String]](JsArray(b))
-  } 
+  }
   implicit val ticketReader: Reads[Ticket] = (
     Reads.pure("")
     and Reads.pure("")

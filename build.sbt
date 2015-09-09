@@ -14,24 +14,30 @@ ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := true
 
 ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages:= "<empty>;views.*;ReverseAssets.*;ReverseApplication.*;ReverseApiHelpController.*;Routes*;.*routes;Logger.*"
 
-libraryDependencies ++= Seq(
-	ws,
-	"com.google.inject"  		% "guice" 						% "3.0" 					withSources() withJavadoc(),
-	"javax.inject" 				% "javax.inject" 				% "1" 						withSources() withJavadoc(),
-	"org.scalatest"				% "scalatest_2.11"  			% "2.2.5"  		% "test" 	withSources() withJavadoc(),
-	"org.scalatestplus" 		%% "play" 						% "1.4.0-M4" 	% "test"	withSources() withJavadoc(),
-	"org.mockito" 				% "mockito-core" 				% "1.9.5" 		% "test" 	withSources() withJavadoc()
-
-	// Database
-	,"com.h2database" 			% "h2" 							% "1.4.188"				   	withSources() withJavadoc()
-	,"org.postgresql"          	%  "postgresql"  				% "9.4-1201-jdbc41"			withSources() withJavadoc()
-	,"com.typesafe.play" 		%% "play-slick" 				% "1.0.1"				withSources() withJavadoc()
-	,"com.typesafe.play" 		%% "play-slick-evolutions"		% "1.0.1"				withSources() withJavadoc()
-	// Dependencies of slick-pg
-//	,"com.github.tminglei" 		%% "slick-pg" 					% "0.9.1"					withSources() withJavadoc()
-//	,"com.vividsolutions" 		% "jts" 						% "1.13" 					withSources() withJavadoc()
-  
-)
+libraryDependencies ++= {
+	val playVersion = "2.4.2"
+	Seq(
+		ws,
+		"com.google.inject"  		% "guice" 						% "3.0" 					withSources() withJavadoc(),
+		"javax.inject" 				% "javax.inject" 				% "1" 						withSources() withJavadoc(),
+		"org.scalatest"				% "scalatest_2.11"  			% "2.2.5"  		% "test" 	withSources() withJavadoc(),
+		"org.scalatestplus" 		%% "play" 						% "1.4.0-M4" 	% "test"	withSources() withJavadoc(),
+		"org.mockito" 				% "mockito-core" 				% "1.9.5" 		% "test" 	withSources() withJavadoc()
+	
+		// Database
+		,"com.h2database" 			% "h2" 							% "1.4.188"		% "test"   	withSources() withJavadoc()
+//		,"com.typesafe.play" 		% "play-jdbc_2.11" 				% playVersion	% "test"   	withSources() withJavadoc()
+		,"com.typesafe.play"		% "play-test_2.11" 				% playVersion	% "test"   	withSources() withJavadoc()
+		,"org.postgresql"          	%  "postgresql"  				% "9.4-1201-jdbc41"			withSources() withJavadoc()
+		,"com.typesafe.play" 		%% "play-slick" 				% "1.0.1"					withSources() withJavadoc()
+		,"com.typesafe.play" 		%% "play-slick-evolutions"		% "1.0.1"					withSources() withJavadoc()
+		// Dependencies of slick-pg
+		,"com.typesafe.slick" 		%% "slick-codegen" 				% "3.0.1+"					withSources() withJavadoc()
+		,"com.github.tminglei" 		%% "slick-pg" 					% "0.9.1"					withSources() withJavadoc()
+		,"com.vividsolutions" 		% "jts" 						% "1.13" 					withSources() withJavadoc()
+	  
+	)
+}
 
 // -------------Docker configuration-------------
 maintainer in Docker := "fernando.benjamin@zalando.de"

@@ -5,12 +5,13 @@ import model.AppInfo
 import model.Commit
 import scala.concurrent.Future
 import com.google.inject.ImplementedBy
+import javax.inject.Inject
+import dao.AppInfoRepository
 /**
  * @author fbenjamin
  */
 trait DataStore {
 
-  def saveAppInfo(apps: List[AppInfo]): Future[Boolean]
 
   def saveCommits(commits: List[Commit]): Future[Boolean]
 
@@ -19,9 +20,7 @@ trait DataStore {
 }
 
 @Singleton
-class DataStoreImpl extends DataStore {
-
-  def saveAppInfo(app: List[AppInfo]): Future[Boolean] = Future.successful(true)
+class DataStoreImpl @Inject() (appRepo: AppInfoRepository) extends DataStore {
 
   def scmUrls(): Future[List[String]] = Future.successful(List())
 

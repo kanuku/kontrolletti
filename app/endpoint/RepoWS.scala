@@ -57,13 +57,13 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
     logger.info(s"Request(By URL): $url")
 
     searchService.parse(url) match {
-      case Right((host, project, repo)) =>
+      case Right((host, project, repo)) => 
         searchService.repo(host, project, repo).map {
           case Right(None) =>
             logger.info(s"Result: 404 ")
             NotFound
           case Right(Some(result)) =>
-            logger.info(s"Result: 200 ")
+            logger.info(s"Result: 200 "+Json.toJson(result))
             Ok(Json.toJson(result)).as("application/x.zalando.repository+json")
           case Left(error) =>
             logger.info(s"Result: 500 ")
