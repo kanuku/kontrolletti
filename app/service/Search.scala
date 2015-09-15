@@ -6,7 +6,7 @@ import model.Repository
 import model.Link
 import model.Ticket
 import com.google.inject.ImplementedBy
-
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 trait Search {
 
@@ -51,6 +51,15 @@ trait Search {
    *  @return Either a [reason why it couldn't parse] left or a [result (`host`, `project` and `repo`)] right.
    */
   def parse(url: String): Either[String, (String, String, String)]
+  
+  /**
+   * Parse a url into 3 separate parameters, the `host`, `project` and `repo` from a repository-url of a github or stash project
+   *
+   *  @param url URL of the repository
+   *
+   *  @return Either a [reason why it couldn't parse] left or a [result (`host`, `project` and `repo`)] right.
+   */
+  def parse2Future(url: String): Future[Either[String, (String, String, String)]]= Future { parse(url) }
 
   /**
    * Parses and returns the normalized URI for a github/stash repository-URL.

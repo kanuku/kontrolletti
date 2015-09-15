@@ -17,6 +17,8 @@ import model.Repository
 import play.api.libs.json.JsArray
 import play.api.libs.json.Json
 import utility.Transformer
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 
 /**
  * Json deserializer for converting external json types, from the SCM,
@@ -86,6 +88,8 @@ object GithubToJsonParser extends SCMParser {
   val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => transformer.deserialize2Either[List[Ticket]](value)
   val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => transformer.deserialize2Either[Repository](value)
 
+  implicit val dateReads = Reads.jodaDateReads("yyyy-MM-dd'T'HH:mm:ssZ")
+  
   implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
     (JsPath \ "email").read[String] and
@@ -100,6 +104,7 @@ object GithubToJsonParser extends SCMParser {
     and Reads.pure(None) // tickets 
     and Reads.pure(None) // valid
     and Reads.pure(None) //0 links
+    and (JsPath \ "commit" \ "author" \ "date").read[DateTime](dateReads)
     )(Commit.apply _)
 
   def readUrls(implicit rt: Reads[String]) = Reads[List[String]] { js =>
@@ -159,6 +164,7 @@ object StashToJsonParser extends SCMParser {
     and Reads.pure(None) // tickets
     and Reads.pure(None) // valid
     and Reads.pure(None) //0 links
+    and (JsPath \ "authorTimestamp").read[DateTime]
     )(Commit.apply _)
 
   def readUrls(implicit rt: Reads[String]) = Reads[List[String]] { js =>
@@ -180,3 +186,4 @@ object StashToJsonParser extends SCMParser {
     and Reads.pure(None))(Repository.apply _)
 
 }
+

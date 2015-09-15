@@ -12,7 +12,7 @@ trait KioClientConfiguration {
 @Singleton
 class KioClientConfigurationImpl extends KioClientConfiguration {
 
-  def serviceUrl: String = play.Play.application.configuration.getString("client.kio.service.url")
+  def serviceUrl: String = play.Play.application.configuration.getString("client.kio.service.apps.endpoint")
 
 }
 

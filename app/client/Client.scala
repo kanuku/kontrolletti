@@ -30,7 +30,7 @@ class RequestDispatcherImpl @Inject() (client: WSClient) extends RequestDispatch
   val logger: Logger = Logger(this.getClass())
   def requestHolder(url: String): WSRequest = {
     logger.info(s"Creating an dispatcher for $url")
-    client.url(url).withRequestTimeout(3000)
+    client.url(url).withRequestTimeout(30000)
   }
 }
 

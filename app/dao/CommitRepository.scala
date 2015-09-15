@@ -19,6 +19,7 @@ import play.api.libs.json.Writes
  */
 trait CommitRepository { self: HasDatabaseConfig[KontrollettiPostgresDriver] =>
 
+  def lastCommit(host: String, project: String, repository: String):Future[Option[String]]
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Option[List[Commit]]]
   def commit(host: String, project: String, repository: String, id: String): Future[Option[List[Commit]]]
 
@@ -26,7 +27,7 @@ trait CommitRepository { self: HasDatabaseConfig[KontrollettiPostgresDriver] =>
 
   def initializeDatabase: Future[Unit]
 
-  class CommitsTable(tag: Tag)(implicit reader: Reads[Commit]) extends Table[TableDefinitionKey1[Commit]](tag, "COMMITS") {
+  class CommitsTable2(tag: Tag)(implicit reader: Reads[Commit]) extends Table[TableDefinitionKey1[Commit]](tag, "COMMITS") {
     def id = column[String]("id", O.PrimaryKey)
     def json = column[JsValue]("json")
 
@@ -34,6 +35,15 @@ trait CommitRepository { self: HasDatabaseConfig[KontrollettiPostgresDriver] =>
 
     def apply[T](_id: String, _json: JsValue)(implicit reader: Reads[T]) = new TableDefinitionKey1[T](_id, _json)
     def unapply[T](table: TableDefinitionKey1[T]): Option[(String, JsValue)] = Some((table.id1, table.jsonValue))
+  }
+  class CommitsTable(tag: Tag)(implicit reader: Reads[Commit]) extends Table[TableDefinitionKey1[Commit]](tag, "COMMITS") {
+	  def id = column[String]("id", O.PrimaryKey)
+			  def json = column[JsValue]("json")
+			  
+			  def * = (id, json) <> ((apply[Commit] _).tupled, TableDefinitionKey1.unapply[Commit])
+			  
+			  def apply[T](_id: String, _json: JsValue)(implicit reader: Reads[T]) = new TableDefinitionKey1[T](_id, _json)
+			  def unapply[T](table: TableDefinitionKey1[T]): Option[(String, JsValue)] = Some((table.id1, table.jsonValue))
   }
 
 }
@@ -53,7 +63,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
 
   }
   
-
+  def lastCommit(host: String, project: String, repository: String):Future[Option[String]] = ???
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Option[List[Commit]]] = ???
   def commit(host: String, project: String, repository: String, id: String): Future[Option[List[Commit]]] = ???
 

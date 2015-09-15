@@ -2,11 +2,11 @@ package client.scm
 
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
-
 import model.Commit
 import play.api.libs.json._
 import play.api.libs.json.Json._
 import test.util.FakeResponseData
+import org.joda.time.DateTime
 
 /**
  * This class tests the Parsing process implemented in SCMParser file.
@@ -31,6 +31,7 @@ class SCMParserTest extends FunSuite with Matchers {
     assert(commit0.parentIds(0) == "88c31c976507b32574bb9c76311da1cfc4832d1d")
     assert(commit0.parentIds(1) == "2ead1df4182c33bbca16768e4200a09ce3b6e68d")
     assert(commit0.links == None)
+    assert(commit0.date === new DateTime("2015-05-11T08:33:24Z"))
 
     assert(Option(commit1) != None)
     assert(commit1.id == "2ead1df4182c33bbca16768e4200a09ce3b6e68d")
@@ -61,6 +62,7 @@ class SCMParserTest extends FunSuite with Matchers {
     assert(commit0.parentIds(0) == "9405c626889dbe91694c7dab33eb091a9483317e")
     assert(commit0.parentIds(1) == "ab33eb091a9483317e9405c626889dbe91694c7d")
     assert(commit0.links == None)
+    assert(commit0.date === new DateTime("2015-05-04T17:27:40.000+02:00"))
 
     assert(Option(commit1) != None)
     assert(commit1.id == "9405c626889dbe91694c7dab33eb091a9483317e")

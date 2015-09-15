@@ -28,7 +28,7 @@ class AppInfoRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar
     "AppInfoRepository#save" should {
       "store data in the database" in {
         val appInfoRepo = appInfoRepository
-        Await.result(appInfoRepo.save(List(app1, app2)), 5 seconds)
+        Await.result(appInfoRepo.saveApps(List(app1, app2)), 5 seconds)
         val result = Await.result(appInfoRepository.list(), 15 seconds)
         assert(result.size == 2)
         assert(result.contains(app1))

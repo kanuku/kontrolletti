@@ -562,28 +562,28 @@ object FakeResponseData {
   val kioApps = """
       [
        {
-          "service_url": "https://cloudlobster.cd.zalan.do",
-          "subtitle": "",
-          "name": "Cloud Lobster",
-          "active": true,
-          "team_id": "cd",
-          "id": "cloudlobster",
-          "created": "2015-07-29T15:03:01.534+0000",
-          "scm_url": "https://github.bus.zalan.do/continuous-delivery/cloud-lobster",
-          "last_modified": "2015-08-05T12:15:50.696+0000"
-        },
-        {
-          "service_url": "https://api-doc.dz.zalan.do",
-          "subtitle": null,
-          "name": "Api doc",
-          "active": true,
-          "team_id": "dz",
-          "id": "api-doc",
-          "created": "2015-08-14T05:00:29.049+0000",
-          "scm_url": "ssh://git@stash.zalando.net:7999/shop-editorial/dz-api-doc.git",
-          "last_modified": "2015-08-14T05:00:29.049+0000"
-        }
-      ]
+          "last_modified" : "2015-07-30T16:53:32.857Z",
+          "documentation_url" : null,
+          "specification_url" : null,
+          "service_url" : null,
+          "name" : "project",
+          "scm_url" : "https://stash.zalando.net/scm/cd/cd-maven-assembly.git/src/test/resources/project",
+          "active" : false,
+          "id" : "project",
+          "subtitle" : "sample:project",
+          "team_id" : "missing-team"
+        }, {
+          "last_modified" : "2015-09-07T08:55:55.982Z",
+          "documentation_url" : null,
+          "specification_url" : null,
+          "service_url" : "https://lbwmg.cloudbusters.zalan.do",
+          "name" : "Lady Bugs with Machine Guns",
+          "scm_url" : null,
+          "active" : true,
+          "id" : "lbwmg",
+          "subtitle" : null,
+          "team_id" : "cloudbusters"
+        } ]
       """
 
   val cloudSearchAppsResult = """

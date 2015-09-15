@@ -51,7 +51,7 @@ class ImportTest extends FlatSpec with MockitoSugar with MockitoUtils {
 
     verify(oAuthClient, times(1)).accessToken()
     verify(kioClient, times(1)).apps(accessToken)
-    verify(appRepository, times(1)).save(List(validAppInfo))
+    verify(appRepository, times(1)).saveApps(List(validAppInfo))
   }
 
   "Synchronizer#synchCommits" should "store apps from kio in data-store" in {

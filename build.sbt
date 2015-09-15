@@ -35,6 +35,9 @@ libraryDependencies ++= {
 		,"com.typesafe.slick" 		%% "slick-codegen" 				% "3.0.1+"					withSources() withJavadoc()
 		,"com.github.tminglei" 		%% "slick-pg" 					% "0.9.1"					withSources() withJavadoc()
 		,"com.vividsolutions" 		% "jts" 						% "1.13" 					withSources() withJavadoc()
+		// Joda
+		,"joda-time" 				% "joda-time" 					% "2.7"					withSources() withJavadoc()
+  		,"org.joda" 				% "joda-convert" 				% "1.7"					withSources() withJavadoc()
 	  
 	)
 }

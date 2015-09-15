@@ -13,6 +13,7 @@ trait KontrollettiPostgresDriver extends ExPostgresDriver
     with PgLTreeSupport
     with PgRangeSupport
     with PgHStoreSupport
+    with PgDateSupportJoda
     with PgSearchSupport {
 
   override val pgjson = "jsonb"

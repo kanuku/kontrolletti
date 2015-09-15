@@ -7,19 +7,22 @@ import play.api.libs.functional.syntax.unlift
 import play.api.libs.json._
 import play.api.libs.json.Reads
 import play.api.libs.json.Writes
+import sun.security.krb5.internal.Ticket
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 /**
  * The models
  *
  */
 
 
-case class AppInfo(scmUrl: String, documentationUrl: Option[String], specificationUrl: Option[String], lastModified: Option[String])
+case class AppInfo(scmUrl:  String, documentationUrl: Option[String], specificationUrl: Option[String], lastModified: DateTime)
 case class Error(detail: String, status: Int, errorType: String)
 case class Link(href: String, method: String, rel: String, relType: String)
 case class Author(name: String, email: String, links: Option[List[Link]])
 
 //TODO: Add [specs] and [valid] properties 
-case class Commit(id: String, message: String, parentIds: List[String], author: Author, tickets: Option[List[Ticket]], valid: Option[Boolean], links: Option[List[Link]])
+case class Commit(id: String, message: String, parentIds: List[String], author: Author, tickets: Option[List[Ticket]], valid: Option[Boolean], links: Option[List[Link]], date: DateTime)
 case class Repository(html_url: String, project: String, host: String, repository: String, commits: Option[List[Commit]], links: Option[List[Link]])
 case class Ticket(name: String, href: String, links: List[Link])
 
@@ -36,7 +39,9 @@ case class CommitsResult(links: List[Link], result: List[Commit])
 
 object KontrollettiToModelParser {
 
-  
+   val dateReads = Reads.jodaDateReads("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+   
+ 
 
   implicit val linkReader: Reads[Link] = (
     (__ \ "href").read[String] and
@@ -64,7 +69,8 @@ object KontrollettiToModelParser {
     (__ \ "author").read[Author] and
     (__ \ "tickets").readNullable[List[Ticket]] and
     (__ \ "valid").readNullable[Boolean] and
-    (__ \ "links").readNullable[List[Link]] //
+    (__ \ "links").readNullable[List[Link]] and //
+    (__ \ "date").read[DateTime](dateReads) //
     )(Commit.apply _)
 
   implicit val repositoryReader: Reads[Repository] = (
@@ -95,6 +101,8 @@ object KontrollettiToModelParser {
 }
 object KontrollettiToJsonParser {
 
+  implicit val dateWrites = Writes.jodaDateWrites("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+  
   implicit val errorWriter: Writes[Error] = (
     (__ \ "detail").write[String] and
     (__ \ "status").write[Int] and
@@ -127,7 +135,8 @@ object KontrollettiToJsonParser {
     (__ \ "author").write[Author] and
     (__ \ "tickets").writeNullable[List[Ticket]] and
     (__ \ "valid").writeNullable[Boolean] and
-    (__ \ "links").writeNullable[List[Link]] //
+    (__ \ "links").writeNullable[List[Link]] and//
+    		(__ \ "date").write[DateTime](dateWrites) //
     )(unlift(Commit.unapply))
 
   implicit val repositoryWriter: Writes[Repository] = (
@@ -157,4 +166,4 @@ object KontrollettiToJsonParser {
 }
 
 
-
+ 

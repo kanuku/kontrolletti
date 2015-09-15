@@ -30,11 +30,21 @@ trait UrlParser {
    *  @return Either a [reason why it couldn't parse] left or a [result (`host`, `project` and `repo`)] right.
    */
   def extract(url: String): Either[String, HostProjectRepo] = {
-    logger.info(s" Parsing $url ")
+    logger.debug(s" Parsing $url ")
     transform(url, extracter)
   }
 
- 
+//  def extract(url: Option[String]): Either[String, HostProjectRepo] = url match {
+//
+//    case Some(link) if (Option(link) == None || link.isEmpty()) =>
+//      Left("Repository-url should not be empty/null")
+//    case Some(link) => extract(link)
+//    case _ =>
+//      logger.warn(s"Could not parse $url")
+//      Left(s"Could not parse $url")
+//
+//  }
+
   //General type for transformations
   type Transformer[A, B] = A => B
 
@@ -51,7 +61,7 @@ trait UrlParser {
       Left("Repository-url should not be empty/null")
 
     case urlRegex(protocol, user, host, prjAntecedent, project, repoAntecedent, repo, succeeder) =>
-      logger.info(s"Extracted ($host, $project, $repo)")
+      logger.debug(s"Extracted ($host, $project, $repo)")
       Right(transformer(protocol, user, host, prjAntecedent, project, repoAntecedent, repo, succeeder))
 
     case _ =>
