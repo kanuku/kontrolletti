@@ -10,11 +10,13 @@ import test.util.MockitoUtils
 import scala.concurrent.Await
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.BeforeAndAfter
+import org.joda.time.DateTime
 
 class AppInfoRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar with KontrollettiFakeApplication with BeforeAndAfter {
   withTestDatabaseConfigured {
-    val app1 = createAppInfo("scmUrl1", None, None, None)
-    val app2 = createAppInfo("scmUrl2", None, None, None)
+    val date1 = new DateTime
+    val app1 = createAppInfo("scmUrl1", None, None, date1)
+    val app2 = createAppInfo("scmUrl2", None, None, date1)
 
     before(appInfoRepository.initializeDatabase)
 

@@ -36,7 +36,7 @@ class CommitWS @Inject() (search: Search) extends Controller {
 
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]) = Action.async {
     logger.info("Request(commits) - host:$host, project:$project, repository:$repository, since:$since, until:$until")
-    search.commits(host, project, repository, since, until).map {
+    search.commits(host, project, repository, None, None).map {
       case Left(error) =>
         logger.info("Result 500: " + error)
         InternalServerError(defaultErrorResponse).as("application/problem+json")

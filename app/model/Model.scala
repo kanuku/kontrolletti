@@ -1,15 +1,13 @@
 package model
 
-import play.api.libs.functional.syntax._
+import org.joda.time.DateTime
+
 import play.api.libs.functional.syntax.functionalCanBuildApplicative
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.functional.syntax.unlift
-import play.api.libs.json._
 import play.api.libs.json.Reads
 import play.api.libs.json.Writes
-import sun.security.krb5.internal.Ticket
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
+import play.api.libs.json.__
 /**
  * The models
  *

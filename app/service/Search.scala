@@ -15,12 +15,12 @@ trait Search {
    * @param host hostname/IP-address-address of the SCM server <br/>
    * @param project name of the project
    * @param repository name of the repository
-   * @param since CommitId from where to start looking for commits
-   * @param until Until commits from this commit
+   * @param since commits made after this Commit
+   * @param until Until this commit
    * 
    * @return a future containing either the error(left) or list of commits(right)
    */
-  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Commit]]]]
+  def commits(host: String, project: String, repository: String, since: Option[Commit], until: Option[Commit]): Future[Either[String, Option[List[Commit]]]]
 
   /**
    * Returns a single commit from the given repository in the project on the given host.

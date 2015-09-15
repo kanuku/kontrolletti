@@ -45,9 +45,9 @@ class BootstrapImpl @Inject() (importJob: Import,
  
   
   def setup() = {
-    scheduleDatabaseBootstrap
-    scheduleSyncAppsJob
-//    scheduleSynchCommitsJobs
+//    scheduleDatabaseBootstrap
+//    scheduleSyncAppsJob
+    scheduleSynchCommitsJobs
   }
 
 }

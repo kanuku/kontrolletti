@@ -120,6 +120,17 @@ sealed trait SCMResolver {
   def accessTokenKey: String
 
   /**
+   * QueryParameter to get maximal number of Items in the response.
+   */
+  def maximumPerPageQueryPararmeter: (String, String)
+
+  /**
+   * Query parameter to retrieve commits after.
+   */
+  def sinceCommitQueryParameter(since: String): (String, String)
+
+  def isGithubServerType: Boolean
+  /**
    * The access-token value to use for accessing the SCM Rest api.
    */
   lazy val accessTokenValue = {
@@ -147,6 +158,11 @@ object GithubResolver extends SCMResolver {
 
   // Authorization variables
   def accessTokenKey = "access_token"
+  def maximumPerPageQueryPararmeter = ("per_page" -> "100")
+  
+  def sinceCommitQueryParameter(since: String) = ("date" -> since)
+
+  def isGithubServerType: Boolean = true
 }
 
 object StashResolver extends SCMResolver {
@@ -162,5 +178,8 @@ object StashResolver extends SCMResolver {
 
   // Authorization variables
   def accessTokenKey = "X-Auth-Token"
+  def maximumPerPageQueryPararmeter = ("limit" -> "10000")
+  def isGithubServerType: Boolean = false
+  def sinceCommitQueryParameter(since: String) = ("since" -> since)
 
 }

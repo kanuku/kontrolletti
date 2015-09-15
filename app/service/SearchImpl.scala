@@ -23,6 +23,7 @@ import play.api.libs.ws.WSResponse
 import utility.UrlParser
 import scala.Left
 import scala.Right
+import org.joda.time.format.DateTimeFormat
 
 /**
  * @author fbenjamin
@@ -40,13 +41,26 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
   private val logger: Logger = Logger(this.getClass())
   private val defaultError = Left("Something went wrong, check the logs!")
   private val acceptableCodes = List(200)
+  private val githubDateParser= DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ");
 
-  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Commit]]]] = {
+  def commits(host: String, project: String, repository: String, since: Option[Commit], until: Option[Commit]): Future[Either[String, Option[List[Commit]]]] = {
     logger.info(s"commits: $host - $project - $repository")
     resolveParser(host) match {
-      case Right(scmParser) => handleRequest(scmParser.commitToModel, client.commits(host, project, repository, since, until))
-      case Left(error)      => Future.successful(Left(error))
+      case Right(scmParser) =>
+
+        val sinceParam = limitCommits(host, since)
+        val untilParam = limitCommits(host, until)
+        handleRequest(scmParser.commitToModel, client.commits(host, project, repository, sinceParam, untilParam))
+      case Left(error) => Future.successful(Left(error))
     }
+  }
+
+  def limitCommits(host: String, since: Option[Commit]): Option[String] = since match {
+    case Some(commit) => if (client.isGithubServerType(host))
+      Some(githubDateParser.print(commit.date))
+    else
+      Some(commit.id)
+    case None => None
   }
 
   def commit(host: String, project: String, repository: String, id: String): Future[Either[String, Option[Commit]]] = {
@@ -135,7 +149,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
                 Left(error)
             }
           case status =>
-            logger.warn(s"Status $status was not hanled!")
+            logger.warn(s"Status $status was not handled!")
             Left("Unexpected SCM response: " + response.status)
         }
       }

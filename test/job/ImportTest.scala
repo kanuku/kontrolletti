@@ -18,6 +18,7 @@ import test.util.MockitoUtils
 import akka.actor.ActorSystem
 import akka.actor.Scheduler
 import dao.AppInfoRepository
+import org.joda.time.DateTime
 
 class ImportTest extends FlatSpec with MockitoSugar with MockitoUtils {
 
@@ -38,8 +39,8 @@ class ImportTest extends FlatSpec with MockitoSugar with MockitoUtils {
     val accessTokenResult = Future.successful { accessToken }
     val appIds = List("kontrolletti", "cloud-lobster")
     val appIdsResult = Future.successful(appIds)
-    val validAppInfo = createAppInfo("https://git-hub.com/zalando-bus/kontrolletti/", Option("specUrl1"), Option("docUrl1"),  Option("lastModified1"))
-    val unvalidAppInfo = createAppInfo("scmUrl2", Option("specUrl2"), Option("docUrl2"), Option("lastModified2"))
+    val unvalidAppInfo = createAppInfo("scmUrl2", Option("specUrl2"), Option("docUrl2"), new DateTime)
+    val validAppInfo = createAppInfo("https://git-hub.com/zalando-bus/kontrolletti/", Option("specUrl1"), Option("docUrl1"),   new DateTime)
     val apps = List(validAppInfo, unvalidAppInfo)
     val appsResult = Future.successful(apps)
 

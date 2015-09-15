@@ -37,6 +37,7 @@ import client.oauth.OAuthUserCredential
 import client.oauth.OAuthAccessToken
 import model.AppInfo
 import org.junit.internal.builders.AnnotatedBuilder
+import org.joda.time.DateTime
 
 trait MockitoUtils extends MockitoSugar {
 
@@ -95,7 +96,7 @@ trait MockitoUtils extends MockitoSugar {
 
   def createTicket(name: String = "name", description: String = "description", href: String = "href", links: List[Link] = List()) = new Ticket(name, href, links)
 
-  def createCommit(id: String = "id", message: String = "message", parentId: List[String] = List(), author: Author = createAuthor(), valid: Option[Boolean] = None, links: List[Link] = List()): Commit = new Commit(id, message, parentId, author, None, None, Option(links))
+  def createCommit(id: String = "id", message: String = "message", parentId: List[String] = List(), author: Author = createAuthor(), valid: Option[Boolean] = None, links: List[Link] = List(), date: DateTime=new DateTime): Commit = new Commit(id, message, parentId, author, None, None, Option(links),date)
 
   def createLink(href: String, method: String, rel: String, relType: String) = new Link(href, method, rel, relType)
 
@@ -107,5 +108,5 @@ trait MockitoUtils extends MockitoSugar {
 
   def createOAuthAccessToken(tokenType: String, accessToken: String, scope: String, expiresIn: Int) = new OAuthAccessToken(tokenType, accessToken, scope, expiresIn)
 
-  def createAppInfo(scmUrl: String, documentationUrl: Option[String], specificationUrl: Option[String], lastModified: Option[String]) = new AppInfo(scmUrl, documentationUrl, specificationUrl, lastModified)
+  def createAppInfo(scmUrl: String, documentationUrl: Option[String], specificationUrl: Option[String], lastModified: DateTime) = new AppInfo(scmUrl, documentationUrl, specificationUrl, lastModified)
 }

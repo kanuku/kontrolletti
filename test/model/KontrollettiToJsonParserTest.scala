@@ -9,6 +9,7 @@ import play.api.libs.json.Json
 import KontrollettiToJsonParser._
 import KontrollettiToModelParser._
 import org.scalatest.FunSuite
+import org.joda.time.DateTime
 
 /**
  * @author fbenjamin
@@ -22,7 +23,7 @@ class KontrollettiToJsonParserTest extends FunSuite with MockitoSugar with Mocki
   val link = new Link("href", "method", "rel", "relType")
   val links = List(link, link)
   val author = new Author("name", "email", Some(List(link, link)))
-  val commit = new Commit("id", "message", List("id-1", "id-2"), author, None, None, Some(links))
+  val commit = new Commit("id", "message", List("id-1", "id-2"), author, None, None, Some(links), new DateTime)
   val commits = List(commit, commit)
   val repository = new Repository("html_url", "project", "host", "repository", Some(commits), Some(links))
   val repositories = List(repository, repository)
