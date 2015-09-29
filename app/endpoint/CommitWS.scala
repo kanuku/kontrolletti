@@ -14,9 +14,10 @@ import play.api.mvc.Controller
 import service.Search
 import model.CommitResult
 import model.CommitsResult 
+import dao.CommitRepository
 
 @Singleton
-class CommitWS @Inject() (search: Search) extends Controller {
+class CommitWS @Inject() (search: Search,commitRepo:CommitRepository) extends Controller {
   private val defaultErrorResponse = Json.toJson(new Error("An error occurred, please check the logs", 500, "undefined"))
   val logger: Logger = Logger { this.getClass }
 
@@ -36,30 +37,25 @@ class CommitWS @Inject() (search: Search) extends Controller {
 
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]) = Action.async {
     logger.info("Request(commits) - host:$host, project:$project, repository:$repository, since:$since, until:$until")
-    search.commits(host, project, repository, None, None).map {
-      case Left(error) =>
-        logger.info("Result 500: " + error)
-        InternalServerError(defaultErrorResponse).as("application/problem+json")
-      case Right(None) =>
-        logger.info("Result 404")
+    
+    commitRepo.get(host, project, repository).map {
+      case Nil =>
+          logger.info("Result 404")
         NotFound
-      case Right(Some(result)) =>
+      case result =>
         logger.info("Result 200")
-        Ok(Json.toJson(new CommitsResult(List(), result))).as("application/x.zalando.commit+json")
+        Ok(Json.toJson(new CommitsResult(List(), result.toList))).as("application/x.zalando.commit+json")
     }
   }
 
   def byId(host: String, project: String, repository: String, id: String) = Action.async {
     logger.info("Request(byId) - host:$host, project:$project, repository:$repository, since:$since, until:$until")
-    search.commit(host, project, repository, id).map {
-      case Left(error) =>
-        logger.info("Result 500: " + error)
-        InternalServerError(defaultErrorResponse).as("application/problem+json")
-      case Right(None) =>
-        logger.info("Result 404")
+    commitRepo.byId(host, project, repository, id).map {
+      case None =>
+        logger.info("result")
         NotFound
-      case Right(Some(result)) =>
-        logger.info("Result 200") 
+      case Some(result) =>
+        logger.info("Result 200")       
         Ok(Json.toJson(new CommitResult(List(), result))).as("application/x.zalando.commit+json")
     }
 

@@ -21,11 +21,11 @@ import dao.AuthorRepositoryImpl
 import dao.RepoRepository
 import dao.RepoRepositoryImpl
 
-class Production extends AbstractModule {
+class Development extends AbstractModule {
 
   private val logger: Logger = Logger(this.getClass())
   def configure() {
-    logger.info("Configured with a production module")
+    logger.info("Configured with the Development module")
     bind(classOf[OAuth]).to(classOf[OAuthClientImpl])
     bind(classOf[RequestDispatcher]).to(classOf[RequestDispatcherImpl])
     bind(classOf[KioClientConfiguration]).to(classOf[KioClientConfigurationImpl])
@@ -34,7 +34,6 @@ class Production extends AbstractModule {
     bind(classOf[Import]).to(classOf[ImportImpl])
     bind(classOf[RepoRepository]).to(classOf[RepoRepositoryImpl])
     bind(classOf[CommitRepository]).to(classOf[CommitRepositoryImpl])
-    bind(classOf[AuthorRepository]).to(classOf[AuthorRepositoryImpl]).asEagerSingleton()
-    bind(classOf[Bootstrap]).to(classOf[BootstrapImpl]).asEagerSingleton()
+    bind(classOf[AuthorRepository]).to(classOf[AuthorRepositoryImpl])
   }
 }

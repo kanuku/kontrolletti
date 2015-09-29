@@ -13,16 +13,14 @@ import play.api.libs.json.__
  *
  */
 
-
-case class AppInfo(scmUrl:  String, documentationUrl: Option[String], specificationUrl: Option[String], lastModified: DateTime)
 case class Error(detail: String, status: Int, errorType: String)
 case class Link(href: String, method: String, rel: String, relType: String)
 case class Author(name: String, email: String, links: Option[List[Link]])
 
 //TODO: Add [specs] and [valid] properties 
-case class Commit(id: String, message: String, parentIds: List[String], author: Author, tickets: Option[List[Ticket]], valid: Option[Boolean], links: Option[List[Link]], date: DateTime)
-case class Repository(html_url: String, project: String, host: String, repository: String, commits: Option[List[Commit]], links: Option[List[Link]])
-case class Ticket(name: String, href: String, links: List[Link])
+case class Commit(id: String, message: String, parentIds: Option[List[String]], author: Author, childId: Option[String], tickets: Option[List[Ticket]], valid: Option[Boolean], links: Option[List[Link]], date: DateTime, repoUrl: String)
+case class Repository(url: String, host: String, project: String, repository: String, enabled: Boolean, lastSync:Option[DateTime], lastFailed:Option[DateTime], links: Option[List[Link]])
+case class Ticket(name: String, href: String, links: Option[List[Link]])
 
 //MUST HAVE HATEOAS RESULTS
 //FIXME: Create a generic Parent case class. This way you will only need one single writer :) for all Results.
@@ -37,10 +35,14 @@ case class CommitsResult(links: List[Link], result: List[Commit])
 
 object KontrollettiToModelParser {
 
-   val dateReads = Reads.jodaDateReads("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-   
- 
+  val dateReads = Reads.jodaDateReads("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
 
+   implicit val errorReader: Reads[Error] = (
+    (__ \ "detail").read[String] and
+    (__ \ "status").read[Int] and
+    (__ \ "errorType").read[String] //
+    )(Error.apply _)
+  
   implicit val linkReader: Reads[Link] = (
     (__ \ "href").read[String] and
     (__ \ "method").read[String] and
@@ -57,26 +59,30 @@ object KontrollettiToModelParser {
   implicit val ticketReader: Reads[Ticket] = (
     (__ \ "name").read[String] and
     (__ \ "href").read[String] and
-    (__ \ "links").read[List[Link]] //
+    (__ \ "links").readNullable[List[Link]] //
     )(Ticket.apply _)
 
   implicit val commitReader: Reads[Commit] = (
     (__ \ "id").read[String] and
     (__ \ "message").read[String] and
-    (__ \ "parentId").read[List[String]] and
+    (__ \ "parent_ids").readNullable[List[String]] and
     (__ \ "author").read[Author] and
+    Reads.pure(None) and //
     (__ \ "tickets").readNullable[List[Ticket]] and
     (__ \ "valid").readNullable[Boolean] and
     (__ \ "links").readNullable[List[Link]] and //
-    (__ \ "date").read[DateTime](dateReads) //
+    (__ \ "date").read[DateTime](dateReads) and //
+    (__ \ "repository_url").read[String] //
     )(Commit.apply _)
 
   implicit val repositoryReader: Reads[Repository] = (
-    (__ \ "href").read[String] and
+    (__ \ "url").read[String] and
     (__ \ "host").read[String] and
     (__ \ "project").read[String] and
     (__ \ "repository").read[String] and
-    (__ \ "commits").readNullable[List[Commit]] and
+    (__ \ "enabled").read[Boolean] and
+    (__ \ "last_synchronized").readNullable[DateTime](dateReads) and //
+    (__ \ "last_failed").readNullable[DateTime](dateReads) and //
     (__ \ "links").readNullable[List[Link]] //
     )(Repository.apply _)
 
@@ -100,7 +106,7 @@ object KontrollettiToModelParser {
 object KontrollettiToJsonParser {
 
   implicit val dateWrites = Writes.jodaDateWrites("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-  
+
   implicit val errorWriter: Writes[Error] = (
     (__ \ "detail").write[String] and
     (__ \ "status").write[Int] and
@@ -123,26 +129,29 @@ object KontrollettiToJsonParser {
   implicit val ticketWriter: Writes[Ticket] = (
     (__ \ "name").write[String] and
     (__ \ "href").write[String] and
-    (__ \ "links").write[List[Link]] //
+    (__ \ "links").writeNullable[List[Link]] //
     )(unlift(Ticket.unapply))
 
   implicit val commitWriter: Writes[Commit] = (
     (__ \ "id").write[String] and
     (__ \ "message").write[String] and
-    (__ \ "parentId").write[List[String]] and
+    (__ \ "parent_ids").writeNullable[List[String]] and
     (__ \ "author").write[Author] and
+    (__ \ "child_id").writeNullable[String] and
     (__ \ "tickets").writeNullable[List[Ticket]] and
     (__ \ "valid").writeNullable[Boolean] and
-    (__ \ "links").writeNullable[List[Link]] and//
-    		(__ \ "date").write[DateTime](dateWrites) //
-    )(unlift(Commit.unapply))
+    (__ \ "links").writeNullable[List[Link]] and //
+    (__ \ "date").write[DateTime](dateWrites) and //
+    (__ \ "repository_url").write[String])(unlift(Commit.unapply))
 
   implicit val repositoryWriter: Writes[Repository] = (
-    (__ \ "href").write[String] and
+    (__ \ "url").write[String] and
     (__ \ "host").write[String] and
     (__ \ "project").write[String] and
     (__ \ "repository").write[String] and
-    (__ \ "commits").writeNullable[List[Commit]] and
+    (__ \ "enabled").write[Boolean] and
+    (__ \ "last_synchronized").writeNullable[DateTime](dateWrites) and //
+    (__ \ "last_failed").writeNullable[DateTime](dateWrites) and //
     (__ \ "links").writeNullable[List[Link]] //
     )(unlift(Repository.unapply))
 

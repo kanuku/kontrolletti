@@ -17,10 +17,10 @@ trait Search {
    * @param repository name of the repository
    * @param since commits made after this Commit
    * @param until Until this commit
-   * 
+   * @param pageNr number of the page to retrieve 
    * @return a future containing either the error(left) or list of commits(right)
    */
-  def commits(host: String, project: String, repository: String, since: Option[Commit], until: Option[Commit]): Future[Either[String, Option[List[Commit]]]]
+  def commits(host: String, project: String, repository: String, since: Option[Commit], until: Option[Commit], pageNr:Int): Future[Either[String, Option[List[Commit]]]]
 
   /**
    * Returns a single commit from the given repository in the project on the given host.

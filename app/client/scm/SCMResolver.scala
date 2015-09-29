@@ -117,31 +117,42 @@ sealed trait SCMResolver {
   /**
    * The access-token key to use for accessing the SCM Rest api.
    */
-  def accessTokenKey: String
+  def accessTokenQueryParameter: (String, String)
 
   /**
-   * QueryParameter to get maximal number of Items in the response.
+   * Builds a QueryParameter to get maximal number of Items in the response.
+   *  @returns query parameter (Tupple)
    */
   def maximumPerPageQueryPararmeter: (String, String)
 
   /**
-   * Query parameter to retrieve commits after.
+   * Builds a Query parameter to retrieve commits after.
+   *  @param since since parameter
+   *  @returns query parameter (Tupple)
    */
   def sinceCommitQueryParameter(since: String): (String, String)
+
+  /**
+   * Builds a Query parameter that indicates which page number of the result Set should be returned.
+   *  @param pageNr page number
+   */
+  def startAtPageNumber(pageNr: Int): (String, String)
 
   def isGithubServerType: Boolean
   /**
    * The access-token value to use for accessing the SCM Rest api.
    */
-  lazy val accessTokenValue = {
-    val input = Option(play.Play.application.configuration.getString(accessTokenProperty))
-    if (input == None || input.get.isEmpty())
+  lazy val accessTokenValue: String = Option(play.Play.application.configuration.getString(accessTokenProperty)) match {
+    case None =>
       logger.error(s"Configuration($accessTokenProperty) for the client is missing")
-    else
-      logger.info(s"Loaded Token configuration for $accessTokenProperty")
-    input.getOrElse("ERROR")
+      "Error"
+    case Some(token) if token.isEmpty =>
+      logger.warn(s"$accessTokenProperty property is empty, configure a token -> $accessTokenProperty=token")
+      token
+    case Some(token) =>
+      logger.info(s"Loaded Token configuration from $accessTokenProperty")
+      token
   }
-
 }
 
 object GithubResolver extends SCMResolver {
@@ -156,13 +167,12 @@ object GithubResolver extends SCMResolver {
   def repoUrl(host: String, project: String, repository: String) = s"$antecedent$host/$project/$repository"
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"$antecedent$host/$project/$repository/compare/$source...$target"
 
-  // Authorization variables
-  def accessTokenKey = "access_token"
+  def accessTokenQueryParameter = ("access_token" -> accessTokenValue)
+  // SCM Specific mappings
   def maximumPerPageQueryPararmeter = ("per_page" -> "100")
-  
-  def sinceCommitQueryParameter(since: String) = ("date" -> since)
-
   def isGithubServerType: Boolean = true
+  def sinceCommitQueryParameter(since: String) = ("date" -> since)
+  def startAtPageNumber(pageNr: Int) = ("page" -> pageNr.toString())
 }
 
 object StashResolver extends SCMResolver {
@@ -177,9 +187,10 @@ object StashResolver extends SCMResolver {
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
 
   // Authorization variables
-  def accessTokenKey = "X-Auth-Token"
+  def accessTokenQueryParameter = ("X-Auth-Token" -> accessTokenValue)
   def maximumPerPageQueryPararmeter = ("limit" -> "10000")
   def isGithubServerType: Boolean = false
   def sinceCommitQueryParameter(since: String) = ("since" -> since)
+  def startAtPageNumber(pageNr: Int) = ("start" -> (pageNr - 1).toString())
 
 }

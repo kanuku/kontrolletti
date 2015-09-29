@@ -41,16 +41,15 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
   private val logger: Logger = Logger(this.getClass())
   private val defaultError = Left("Something went wrong, check the logs!")
   private val acceptableCodes = List(200)
-  private val githubDateParser= DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ");
+  private val githubDateParser = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ");
 
-  def commits(host: String, project: String, repository: String, since: Option[Commit], until: Option[Commit]): Future[Either[String, Option[List[Commit]]]] = {
-    logger.info(s"commits: $host - $project - $repository")
+  def commits(host: String, project: String, repository: String, since: Option[Commit], until: Option[Commit], pageNr: Int): Future[Either[String, Option[List[Commit]]]] = {
+    logger.info(s"commits: $host - $project - $repository - $pageNr")
     resolveParser(host) match {
       case Right(scmParser) =>
-
         val sinceParam = limitCommits(host, since)
         val untilParam = limitCommits(host, until)
-        handleRequest(scmParser.commitToModel, client.commits(host, project, repository, sinceParam, untilParam))
+        handleRequest(scmParser.commitToModel, client.commits(host, project, repository, sinceParam, untilParam, pageNr))
       case Left(error) => Future.successful(Left(error))
     }
   }
@@ -149,7 +148,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
                 Left(error)
             }
           case status =>
-            logger.warn(s"Status $status was not handled!")
+            logger.warn(s"Status $status was not handled! ->"+response.body)
             Left("Unexpected SCM response: " + response.status)
         }
       }

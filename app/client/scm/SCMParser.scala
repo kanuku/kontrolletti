@@ -83,13 +83,13 @@ object GithubToJsonParser extends SCMParser {
   private val transformer = Transformer
   def domains = GithubResolver.hosts
   val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => transformer.deserialize2Either[List[Commit]](value)
-  val singleCommitToModel: Parser[JsValue, Either[String, Commit]] = (value) => transformer.deserialize2Either[Commit](value)
+  val singleCommitToModel: Parser[JsValue, Either[String, Commit]] = (value) => transformer.deserialize2Either[Commit](value)(commitReader)
   val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (author) => transformer.deserialize2Either[List[Author]](author)
   val ticketToModel: Parser[JsValue, Either[String, List[Ticket]]] = (value) => transformer.deserialize2Either[List[Ticket]](value)
   val repoToModel: Parser[JsValue, Either[String, Repository]] = (value) => transformer.deserialize2Either[Repository](value)
 
   implicit val dateReads = Reads.jodaDateReads("yyyy-MM-dd'T'HH:mm:ssZ")
-  
+
   implicit val authorReader: Reads[Author] = (
     (JsPath \ "name").read[String] and
     (JsPath \ "email").read[String] and
@@ -101,27 +101,31 @@ object GithubToJsonParser extends SCMParser {
     and (JsPath \ "commit" \ "message").read[String] // message
     and readUrls
     and (JsPath \ "commit" \ "committer").read[Author]
+    and Reads.pure(None) // ch 
     and Reads.pure(None) // tickets 
-    and Reads.pure(None) // valid
+    and Reads.pure(None) // childId
     and Reads.pure(None) //0 links
     and (JsPath \ "commit" \ "author" \ "date").read[DateTime](dateReads)
+    and Reads.pure("") //0 links
     )(Commit.apply _)
 
-  def readUrls(implicit rt: Reads[String]) = Reads[List[String]] { js =>
-    val l: List[JsValue] = (JsPath \ "parents" \\ "sha")(js)
-    Json.fromJson[List[String]](JsArray(l))
+  def readUrls(implicit rt: Reads[String]) = Reads[Option[List[String]]] { js =>
+    val pList: List[JsValue] = (JsPath \ "parents" \\ "sha")(js)
+    Json.fromJson[List[String]](JsArray(pList)).map(Option(_))
   }
 
   implicit val ticketReader: Reads[Ticket] = (
     Reads.pure("")
     and Reads.pure("")
-    and Reads.pure(List()))(Ticket.apply _)
+    and Reads.pure(None))(Ticket.apply _)
 
   implicit val repoReader: Reads[Repository] = (
     (JsPath \ "html_url").read[String]
     and Reads.pure("")
     and Reads.pure("")
     and Reads.pure("")
+    and Reads.pure(true)
+    and Reads.pure(None)
     and Reads.pure(None)
     and Reads.pure(None))(Repository.apply _)
 
@@ -162,26 +166,29 @@ object StashToJsonParser extends SCMParser {
     and readUrls
     and (JsPath \ "author").read[Author] // author
     and Reads.pure(None) // tickets
+    and Reads.pure(None) // childId
     and Reads.pure(None) // valid
     and Reads.pure(None) //0 links
     and (JsPath \ "authorTimestamp").read[DateTime]
-    )(Commit.apply _)
+    and Reads.pure(""))(Commit.apply _)
 
-  def readUrls(implicit rt: Reads[String]) = Reads[List[String]] { js =>
+  def readUrls(implicit rt: Reads[String]) = Reads[Option[List[String]]] { js =>
     val l = (JsPath \ "parents" \\ "id")
     val b: List[JsValue] = l(js)
-    Json.fromJson[List[String]](JsArray(b))
+    Json.fromJson[List[String]](JsArray(b)).map(Option(_))
   }
   implicit val ticketReader: Reads[Ticket] = (
     Reads.pure("")
     and Reads.pure("")
-    and Reads.pure(List()))(Ticket.apply _)
+    and Reads.pure(None))(Ticket.apply _)
 
   implicit val repoReader: Reads[Repository] = (
     (JsPath \ "links" \ "self" \\ "href").read[String]
     and Reads.pure("")
     and Reads.pure("")
     and Reads.pure("")
+    and Reads.pure(true)
+    and Reads.pure(None)
     and Reads.pure(None)
     and Reads.pure(None))(Repository.apply _)
 

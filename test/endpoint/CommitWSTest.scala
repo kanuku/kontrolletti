@@ -21,8 +21,9 @@ import test.util.MockitoUtils
 import model.KontrollettiToJsonParser._
 import model.CommitResult
 import org.scalatest.Ignore
-@Ignore
-class CommitWSTest extends PlaySpec with OneAppPerSuite with MockitoSugar with MockitoUtils {
+import test.util.FakeApplicationWithDB
+//@Ignore
+class CommitWSTest extends PlaySpec with FakeApplicationWithDB with MockitoSugar with MockitoUtils {
   val host = "github.com"
   val project = "zalando"
   val repository = "kontrolletti"
@@ -120,7 +121,7 @@ class CommitWSTest extends PlaySpec with OneAppPerSuite with MockitoSugar with M
         val response = new CommitsResult(List(), commits)
         val commitResult = Future.successful(Right(Some(commits)))
         val url = commitsRoute(sinceId = sinceId, untilId = untilId)
-        when(search.commits(host, project, repository, None, None)).thenReturn(commitResult)
+        when(search.commits(host, project, repository, None, None,1)).thenReturn(commitResult)
         withFakeApplication(new FakeGlobalWithSearchService(search)) {
           val result = route(FakeRequest(GET, url)).get
           status(result) mustEqual OK
@@ -133,7 +134,7 @@ class CommitWSTest extends PlaySpec with OneAppPerSuite with MockitoSugar with M
         val search = mock[Search]
         val commitResult = Future.successful(Right(None))
         val url = commitsRoute(sinceId = sinceId, untilId = untilId)
-        when(search.commits(host, project, repository, None, None)).thenReturn(commitResult)
+        when(search.commits(host, project, repository, None, None,1)).thenReturn(commitResult)
         withFakeApplication(new FakeGlobalWithSearchService(search)) {
           val Some(result) = route(FakeRequest(GET, url))
           status(result) mustEqual NOT_FOUND
@@ -145,7 +146,7 @@ class CommitWSTest extends PlaySpec with OneAppPerSuite with MockitoSugar with M
         val response = new Error("An error occurred, please check the logs", 500, "undefined")
         val commitResult = Future.successful(Left("error"))
         val url = commitsRoute(sinceId = sinceId, untilId = untilId)
-        when(search.commits(host, project, repository, None, None)).thenReturn(commitResult)
+        when(search.commits(host, project, repository, None, None, 1)).thenReturn(commitResult)
         withFakeApplication(new FakeGlobalWithSearchService(search)) {
           val result = route(FakeRequest(GET, url)).get
           status(result) mustEqual INTERNAL_SERVER_ERROR

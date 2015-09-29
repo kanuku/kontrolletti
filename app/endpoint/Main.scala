@@ -7,10 +7,9 @@ import play.api.Play
 import play.api.Play.current
 import play.api.mvc.Action
 import play.api.mvc.Controller
-import dao.AppInfoRepository
 import scala.concurrent.ExecutionContext
 @Singleton
-class Main @Inject() (repo:AppInfoRepository)  (implicit ex: ExecutionContext)  extends Controller {
+class Main @Inject() extends Controller {
   private val file = scala.io.Source.fromFile(Play.application.getFile("conf/swagger.json")).mkString
   val logger: Logger = Logger { this.getClass }
 

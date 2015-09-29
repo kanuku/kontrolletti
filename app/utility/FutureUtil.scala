@@ -4,6 +4,7 @@ import scala.annotation.implicitNotFound
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import play.api.Logger
+import java.sql.SQLException
 
 /**
  * @author fbenjamin
@@ -17,6 +18,16 @@ object FutureUtil {
 
     }
     f
+  }
+  
+  def handleError[T](f:Future[T])(implicit ec: ExecutionContext):Future[T] = {
+     f recoverWith {
+      case ex: SQLException =>
+        logger.error(ex.getNextException.getMessage)
+        logger.error(ex.getMessage)
+        Future.failed(new Exception("Save operation failed!"))
+    }
+     f
   }
 
 }

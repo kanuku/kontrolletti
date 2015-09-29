@@ -14,13 +14,14 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.libs.json.Reads
+import play.api.libs.json.Writes
 
 /**
  * @author fbenjamin
  */
 
 case class JsonParseException(message: String) extends Exception(message)
-case class LoadConfigurationException(message: String) extends Exception(message)
+
 object Transformer {
 
   val logger: Logger = Logger { this.getClass }
@@ -84,6 +85,29 @@ object Transformer {
         None
     }
   }
+  /**
+   * Deserializes an optional JsValue into an optional concrete object of type T. 
+   * instance of  [T] type wrapped in an option.
+   * @param input is an optional JsValue
+   * @return Option[T] - Contains the an optional deserialized Object
+   */
+  def deserializeFromOption2Option[T](input: Option[JsValue])(implicit rds: Reads[T]): Option[T] = {
+    input.flatMap { jasonBourne => deserialize2Option(jasonBourne)
+    }
+  }
+  
+  
+  /**
+   * Deserializes a JsValue into an instance of type T.
+   * @param input is an optional JsValue
+   * @return T - An instance of type T 
+   */
+  def deserialize[T](input:JsValue)(implicit rds: Reads[T]): T = {
+    deserialize2Option(input) match {
+      case Some(result) => result
+      case None => throw new JsonParseException("Failed to parse the input")
+    }
+  }
 
   /**
    * Unwraps the result from the JsResult and returns the successfully deserialized
@@ -97,7 +121,23 @@ object Transformer {
       logger.error("Failed to parse:" + e.errors)
       Future.failed(new JsonParseException("Failed to parse the json-object"))
   }
-  
-  
-  
+  /**
+   * Serializes an object to a JsValue.
+   * @param obj object to be serialized
+   * @return JsValue
+   */
+  def serialize[A](obj: A)(implicit rds: Writes[A]): JsValue = {
+    Json.toJson(obj)
+  }
+
+  /**
+   * Serializes an object to a JsValue.
+   * @param obj object to be serialized
+   * @return JsValue - Optional JsValue
+   */
+  def serializeFromOption2Option[A](obj: Option[A])(implicit rds: Writes[A]): Option[JsValue] = {
+    obj.map { x =>
+      Json.toJson(x)
+    }
+  }
 }
