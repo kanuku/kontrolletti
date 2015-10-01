@@ -16,12 +16,7 @@ import utility.UrlParser
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 
-/**
- * @author fbenjamin
- */
-
 trait Import {
-
   def syncApps(): Future[Unit]
   def synchCommits(): Future[Unit]
 }
@@ -65,12 +60,14 @@ class ImportImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
     }
   } yield repo.copy(host = host, project = project, repository = repository)
 
-  def synchCommits(): Future[Unit] = repoRepo.enabled().map { repos =>
-    logger.info("Started the job for synchronizing Commits from " + repos.size + " Repositories")
-    repos.map { repo =>
-      commitRepo.youngest(repo.url).flatMap { lastCommit =>
-        logger.info("Last commit:" + lastCommit)
-        synchCommit(repo, lastCommit)
+  def synchCommits(): Future[Unit] = Future {
+    repoRepo.enabled().map { repos =>
+      logger.info("Started the job for synchronizing Commits from " + repos.size + " Repositories")
+      repos.map { repo =>
+        commitRepo.youngest(repo.url).map { lastCommit =>
+          logger.info("Last commit:" + lastCommit)
+          synchCommit(repo, lastCommit)
+        }
       }
     }
   }
@@ -100,7 +97,6 @@ class ImportImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
 
   }
 
-  
   def updateChildIds(repo: Repository, commits: List[Commit]): List[Commit] = for {
     parent <- commits
     result <- commits.find { _.parentIds.contains(parent.id) } match {

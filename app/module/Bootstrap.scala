@@ -34,14 +34,15 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
   def scheduleSyncAppsJob() = actorSystem.scheduler.schedule(12 seconds, 4 minutes) {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
     Await.result(importJob.syncApps(), 120 seconds)
+    logger.info("Finished the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
+    
   }
 
   def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(12 seconds, 1 minutes) {
     logger.info("Started the job for synchronizing Commits from the SCM's")
-    Await.result(importJob.synchCommits(), 8 minutes)
+    Await.result(importJob.synchCommits(), 20 seconds)
   }
   
-
   def scheduleDatabaseBootstrap() =
     actorSystem.scheduler.scheduleOnce(7 seconds) {
       logger.info("Started bootstrapping initial database")
@@ -52,22 +53,12 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
       } yield (authorsResult)
     }
 
-  def saveAuthor() = actorSystem.scheduler.schedule(10 seconds, 5 minutes ) {
-    //    val link1 = new Link("href1", "method", "rel", "relType")
-    //    val link2 = new Link("href2", "method", "rel", "relType")
-    //    val link3 = new Link("href3", "method", "rel", "relType")
-    //    val author = new Author("I. Should", "IShouldNot@name.it", Some(List(link1, link2, link3)))
-    //    authorRepo.save(List(author))
-    authorRepo.list().map { x =>
-      println(x)
-    }
-  }
+ 
 
   def setup() = {
-//    scheduleDatabaseBootstrap
-//            saveAuthor 
-    scheduleSyncAppsJob
-    scheduleSynchCommitsJobs
+//    scheduleSyncAppsJob
+//    scheduleSynchCommitsJobs
+    
   }
 
 }

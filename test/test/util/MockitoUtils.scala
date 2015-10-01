@@ -59,34 +59,7 @@ trait MockitoUtils extends MockitoSugar {
     when(wsResponse.body).thenReturn(result)
     wsResponse
   }
-  def withFakeApplication(block: => Unit): Unit = {
-    running(FakeApplication()) {
-      block
-    }
-  }
-  def withFakeApplication(global: GlobalSettings)(block: => Unit): Unit = {
-    running(FakeApplication(withGlobal = Option(global))) {
-      block
-    }
-  }
-
-  class FakeGlobalWithSearchService(service: Search) extends play.api.GlobalSettings {
-    private lazy val injector = Guice.createInjector(new AbstractModule {
-      def configure() {
-        bind(classOf[Search]).toInstance(service)
-
-      }
-    })
-  }
-
-  class FakeGlobalWithFakeClient(client: SCM) extends play.api.GlobalSettings {
-    lazy val injector = Guice.createInjector(new AbstractModule {
-      def configure() {
-        bind(classOf[Search]).toInstance(new SearchImpl(client))
-      }
-    })
-  }
-
+   
   def createCommitsResult(links: List[Link] = List(), commits: List[Commit] = List(createCommit())): CommitsResult = new CommitsResult(links, commits)
 
   def createRepository(url: String="url", host: String="host", project: String="project", repository: String="repository", enabled: Boolean=true, lastSync:Option[DateTime]=None, lastFailed:Option[DateTime]=None, links: Option[List[Link]]=None): Repository = new Repository( url , host , project , repository , enabled, lastSync, lastFailed, links)

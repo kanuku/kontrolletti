@@ -22,10 +22,11 @@ object FutureUtil {
   
   def handleError[T](f:Future[T])(implicit ec: ExecutionContext):Future[T] = {
      f recoverWith {
+       
       case ex: SQLException =>
         logger.error(ex.getNextException.getMessage)
         logger.error(ex.getMessage)
-        Future.failed(new Exception("Save operation failed!"))
+        Future.failed(new Exception("Database operation failed!"))
     }
      f
   }

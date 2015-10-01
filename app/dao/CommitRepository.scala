@@ -45,7 +45,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     }
   }
 
-  def all(): Future[Seq[Commit]] = db.run(commits.result)
+  def all(): Future[Seq[Commit]] =   handleError(db.run(commits.result))
 
   def save(input: List[Commit]): Future[Unit] = {
     logger.info("saving " + input.size + " commits")
@@ -60,18 +60,17 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     repo <- repos.filter { repo => repo.host === host && repo.project === project && repo.repository === repository }
     commit <- commits.filter { _.repoURL === repo.url }
   } yield commit
-//
-//  private def findParentId(query: Query[Tables.CommitTable, Commit, Seq], next: String, Untill: String): Query[Tables.CommitTable, Commit, Seq] = for {
-//       commit <- query.filter { x => x.n }
-//    
-//  }
-//
-//  private def getByRepositoryWithSinceWithUntillQuery(host: String, project: String, repository: String, since: String, until: String): Query[Tables.CommitTable, Commit, Seq] = {
-//    val commits = getByRepositoryQuery(host, project, repository)
-//    commits.filter { x => x.id === since &&   }
-//  }
+  //
+  //  private def findParentId(query: Query[Tables.CommitTable, Commit, Seq], next: String, Untill: String): Query[Tables.CommitTable, Commit, Seq] = for {
+  //       commit <- query.filter { x => x.n }
+  //    
+  //  }
+  //
+  //  private def getByRepositoryWithSinceWithUntillQuery(host: String, project: String, repository: String, since: String, until: String): Query[Tables.CommitTable, Commit, Seq] = {
+  //    val commits = getByRepositoryQuery(host, project, repository)
+  //    commits.filter { x => x.id === since &&   }
+  //  }
 
-  
   def get(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Int, maxPerPage: Int): Future[Seq[Commit]] = {
     logger.info(s"host($host) - project($project) - repository($repository) - since($since) - untill($until) pageNumber($pageNumber) - maxPerPage($maxPerPage)")
     val query = (since, until) match {
@@ -86,7 +85,14 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     else
       handleError(db.run(query.result))
   }
-  def youngest(repoUrl: String): Future[Option[Commit]] = db.run(commits.filter { x => x.repoURL === repoUrl }.sortBy(_.date.desc).result.headOption)
-  def oldest(repoUrl: String): Future[Option[Commit]] = db.run(commits.filter { x => x.repoURL === repoUrl }.sortBy(_.date.asc).result.headOption)
+  def youngest(repoUrl: String): Future[Option[Commit]] = {
+    logger.debug(s"Getting youngest commit for $repoUrl")
+    handleError(db.run(commits.filter { x => x.repoURL === repoUrl }.sortBy(_.date.desc).result.headOption))
+  }
+  
+  def oldest(repoUrl: String): Future[Option[Commit]] = {
+    logger.debug(s"Getting oldest commit for $repoUrl")
+    handleError(db.run(commits.filter { x => x.repoURL === repoUrl }.sortBy(_.date.asc).result.headOption))
+  }
 
 }

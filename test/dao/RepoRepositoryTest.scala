@@ -7,7 +7,7 @@ import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.inject.guice.GuiceApplicationBuilder
-import test.util.FakeApplicationWithDB
+import test.util.ApplicationWithDB
 import scala.concurrent.Await
 import play.api.db.evolutions.Evolutions
 import play.api.db.DBApi
@@ -18,7 +18,7 @@ import play.api.Configuration
 import module.Development
 import org.scalatest.BeforeAndAfterAll
 
-class RepoRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar with FakeApplicationWithDB with BeforeAndAfterAll {
+class RepoRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar with ApplicationWithDB with BeforeAndAfterAll {
 
   val date1 = new DateTime
   val repo1 = createRepository(url = "url1", host = "host1", project = "project1", repository = "repository")

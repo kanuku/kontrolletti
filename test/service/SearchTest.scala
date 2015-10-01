@@ -18,10 +18,15 @@ import test.util.MockitoUtils
 import client.RequestDispatcherImpl
 import test.util.TestUtils._
 import model.Link
+import test.util.ApplicationWithCustomModule
+import org.scalatestplus.play.OneAppPerSuite
+import play.api.inject.Module
+import play.api.Environment
+import play.api.Configuration
 /**
  * This class tests the interaction between the Service and the Client(mock).
  */
-class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with MockitoUtils with BeforeAndAfter {
+class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPerSuite with BeforeAndAfter with ApplicationWithCustomModule  {
 
   val defaultError = "Something went wrong, check the logs!"
   val host = "github.com"
@@ -42,6 +47,7 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
     when(client.commits(host, project, repository, None, None, 1)).thenReturn(response)
     val result = Await.result(search.commits(host, project, repository, None, None, 1), Duration("5 seconds"))
+    println(">>>>>>  "+result)
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
     assert(!result.right.get.isEmpty, "Result must not be empty")
@@ -235,4 +241,5 @@ class SearchTest extends FlatSpec with OneAppPerTest with MockitoSugar with Mock
     verify(client, times(1)).tickets(host, project, repository)
   }
 
+  
 }

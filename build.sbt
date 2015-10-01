@@ -21,7 +21,7 @@ libraryDependencies ++= {
 		"com.google.inject"  		% "guice" 						% "3.0" 					withSources() withJavadoc(),
 		"javax.inject" 				% "javax.inject" 				% "1" 						withSources() withJavadoc(),
 		"org.scalatest"				% "scalatest_2.11"  			% "2.2.5"  		% "test" 	withSources() withJavadoc(),
-		"org.scalatestplus" 		%% "play" 						% "1.4.0-M4" 	% "test"	withSources() withJavadoc(),
+		"org.scalatestplus" 		%% "play" 						% "1.4.0-M3" 	% "test"	withSources() withJavadoc(),
 		"org.mockito" 				% "mockito-core" 				% "1.9.5" 		% "test" 	withSources() withJavadoc()
 	
 		// Database

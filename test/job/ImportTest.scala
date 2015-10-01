@@ -21,7 +21,6 @@ import dao.CommitRepository
 import dao.RepoRepository
 import org.scalatest.Ignore
 
-@Ignore
 class ImportTest extends FlatSpec with MockitoSugar with MockitoUtils {
 //
 //  private val kioClient = mock[KioClient]

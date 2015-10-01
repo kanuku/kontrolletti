@@ -34,16 +34,19 @@ class RepoRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseConf
 
   def initializeDatabase = {
     logger.info("Started initializing table for Repositories")
-    db.run { repos.schema.create }.map { x =>
+    handleError(db.run { repos.schema.create }.map { x =>
       logger.info("Fisnihed initializing table for Repositories")
-    }
+    })
   }
 
   def save(input: List[Repository]): Future[Unit] = {
     logger.info(s"Number of AppInfo's to save:" + input.size)
     handleError(db.run(repos ++= input).map(_ => ()))
   }
-  def enabled(): Future[Seq[Repository]] = db.run(repos.filter { x => x.synch === true }.result)
-  def all(): Future[Seq[Repository]] = db.run(repos.result)
+  def enabled(): Future[Seq[Repository]] = {
+    logger.info("Getting enabled Repositories")
+    handleError(db.run(repos.filter { x => x.synch === true }.result))
+  }
+  def all(): Future[Seq[Repository]] = handleError(db.run(repos.result))
 
 }

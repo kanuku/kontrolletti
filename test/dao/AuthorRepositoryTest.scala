@@ -6,14 +6,14 @@ import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.inject.guice.GuiceApplicationBuilder
-import test.util.FakeApplicationWithDB
+import test.util.ApplicationWithDB
 import test.util.MockitoUtils
 import scala.concurrent.Await
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Ignore
 
 @Ignore
-class AuthorRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar with FakeApplicationWithDB with BeforeAndAfterAll {
+class AuthorRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar with ApplicationWithDB with BeforeAndAfterAll {
   val link1 = createLink("href", "method", "rel", "relType")
   val link2 = createLink("href2", "method", "rel", "relType")
   val links = List(link1, link2)

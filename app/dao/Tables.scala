@@ -80,7 +80,7 @@ object Tables { self: HasDatabaseConfigProvider[KontrollettiPostgresDriver] =>
    */
   class CommitTable(tag: Tag) extends Table[Commit](tag, schema, "COMMITS") {
     def id = column[String]("id", O.PrimaryKey)
-    def parentIds = column[Option[List[String]]]("parent_id")
+    def parentIds = column[Option[List[String]]]("parent_ids")
     def date = column[DateTime]("date")
     def repoURL = column[String]("repository_url")
     def jsonValue = column[JsValue]("json_value")

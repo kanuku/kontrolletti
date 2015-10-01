@@ -12,14 +12,12 @@ import org.scalatest._
 import play.api.test._
 import play.api.test.Helpers._
 import org.scalatestplus.play._
+import module.Development
 
 /**
  * @author fbenjamin
- *
- * This Trait is ment for separating database tests from the production database during development/it-testing.
- * It loads its own separate
  */
-trait FakeApplicationWithNoDB { //}extends OneAppPerSuite {
+trait ApplicationWithCustomModule {
 
   def configuration() = Configuration.load(Environment.simple(), Map("config.resource" -> "application.test.conf") ++ customConfiguration)
 
@@ -27,10 +25,13 @@ trait FakeApplicationWithNoDB { //}extends OneAppPerSuite {
 
   val application = new GuiceApplicationBuilder() //
     .configure(configuration()) //
-//              .bindings(new Development())
-    .bindings(customModule())
+    //    .bindings(new Development()) //
+    .bindings(customModule()) //
     .build()
 
-  def customModule(): Module
+  def customModule():Module = new Module {
+    def bindings(env: Environment, conf: Configuration) = Seq()
+  }
   def customConfiguration: Map[String, String] = Map()
+
 }

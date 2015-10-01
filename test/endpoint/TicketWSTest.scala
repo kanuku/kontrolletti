@@ -18,54 +18,56 @@ import org.scalatest.concurrent.ScalaFutures
 import scala.concurrent.duration.Duration
 import play.api.libs.json.Json
 import java.net.URLEncoder
+import play.api.inject.bind
 import model.KontrollettiToJsonParser._
 import org.scalatest.Ignore
-@Ignore
-class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
+import test.util.KontrollettiOneAppPerTestWithOverrides
+import org.scalatest.BeforeAndAfter
+
+class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with KontrollettiOneAppPerTestWithOverrides with BeforeAndAfter {
   val reposRoute = "/api/repos/"
   val host = "github.com"
   val project = "zalando"
   val repo = "kontrolletti"
   val sinceId = Some("sinceId")
   val untilId = Some("untilId")
+  val search = mock[Search]
+
+  before {
+    reset(search)
+  }
 
   def ticketRoute(host: String = host, project: String = project, repository: String = repo, sinceId: Option[String], untilId: Option[String]) = {
     val since = sinceId.getOrElse("default")
     val until = untilId.getOrElse("default")
     s"/api/hosts/$host/projects/$project/repos/$repository/tickets?since=$since&until=$until"
   }
-   
+
   "GET /api/hosts/{host}/projects/{project}/repos/{repository}/tickets" should {
     "Return 200 when tickets are found" in {
       val url = ticketRoute(sinceId = sinceId, untilId = untilId)
       val ticket = createTicket()
       val tickets = List(ticket)
-      val search = mock[Search]
       val ticketResult = Future.successful(Right(Some(tickets)))
 
       when(search.tickets(host, project, repo, sinceId, untilId)).thenReturn(ticketResult)
 
-      withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val result = route(FakeRequest(GET, url)).get
-        status(result) mustEqual OK
-        contentType(result) mustEqual Some("application/x.zalando.ticket+json")
-        contentAsString(result) mustEqual Json.stringify(Json.toJson(List(ticket)))
-      }
+      val result = route(FakeRequest(GET, url)).get
+      status(result) mustEqual OK
+      contentType(result) mustEqual Some("application/x.zalando.ticket+json")
+      contentAsString(result) mustEqual Json.stringify(Json.toJson(List(ticket)))
 
       verify(search, times(1)).tickets(host, project, repo, sinceId, untilId)
     }
 
     "Return 404 when the result is empty" in {
       val url = ticketRoute(sinceId = sinceId, untilId = untilId)
-      val search = mock[Search]
       val ticketResult = Future.successful(Right(None))
 
       when(search.tickets(host, project, repo, sinceId, untilId)).thenReturn(ticketResult)
 
-      withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val result = route(FakeRequest(GET, url)).get
-        status(result) mustEqual NOT_FOUND
-      }
+      val result = route(FakeRequest(GET, url)).get
+      status(result) mustEqual NOT_FOUND
 
       verify(search, times(1)).tickets(host, project, repo, sinceId, untilId)
     }
@@ -73,18 +75,20 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
     "Return 500 when the result is an error" in {
       val url = ticketRoute(sinceId = sinceId, untilId = untilId)
       val error = "Some Error"
-      val search = mock[Search]
       val ticketResult = Future.successful(Left(error))
 
       when(search.tickets(host, project, repo, sinceId, untilId)).thenReturn(ticketResult)
 
-      withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val result = route(FakeRequest(GET, url)).get
-        status(result) mustEqual INTERNAL_SERVER_ERROR
-        contentType(result) mustEqual Some("application/problem+json")
-      }
+      val result = route(FakeRequest(GET, url)).get
+      status(result) mustEqual INTERNAL_SERVER_ERROR
+      contentType(result) mustEqual Some("application/problem+json")
 
       verify(search, times(1)).tickets(host, project, repo, sinceId, untilId)
     }
   }
+    override def overrideModules = {
+    Seq(
+      bind[Search].toInstance(search))
+  }
+
 }

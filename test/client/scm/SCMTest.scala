@@ -18,7 +18,7 @@ import javax.inject.Singleton
 import play.api.inject.Module
 import play.api.libs.ws.WSRequest
 import play.api.libs.ws.WSResponse
-import test.util.FakeApplicationWithNoDB
+import test.util.ApplicationWithCustomModule
 import test.util.MockitoUtils
 import com.google.inject.AbstractModule
 import play.api.Environment
@@ -33,7 +33,7 @@ import org.scalatestplus.play.OneAppPerTest
  *
  *
  */
-class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPerTest with BeforeAndAfter with FakeApplicationWithNoDB {
+class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPerSuite with BeforeAndAfter with ApplicationWithCustomModule {
 
   val mockedRequestHolder = mock[WSRequest]
   val mockedDispatcher = mock[RequestDispatcher]
@@ -152,7 +152,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
   override def customConfiguration: Map[String, String] = {
     Map("client.github.host" -> "github.com", "client.stash.host" -> "stash.zalando.net")
   }
-  def customModule() = new Module {
+  override def customModule(): Module = new Module {
     def bindings(env: Environment, conf: Configuration) = Seq(
       bind[RequestDispatcher].to(mockedDispatcher))
   }

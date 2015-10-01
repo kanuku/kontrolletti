@@ -7,14 +7,15 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
-import test.util.FakeApplicationWithDB
+import test.util.ApplicationWithDB
 import test.util.MockitoUtils
 
 /**
  * @author fbenjamin
  */
-class CommitRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar with FakeApplicationWithDB with BeforeAndAfterAll with BeforeAndAfter {
-  val repo1 = createRepository(url = "url1", host = "host1", project = "project1", repository = "repository")
+class CommitRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar with ApplicationWithDB with BeforeAndAfterAll with BeforeAndAfter {
+  val prefix ="CommitRepositoryTest"
+  val repo1 = createRepository(url = s"$prefix-url1", host = "host1", project = "project1", repository = "repository")
   val dateToday = new DateTime
   val dateYesterday = dateToday.minusDays(1)
   val dateBeforeYesterday = dateToday.minusDays(2)
@@ -22,14 +23,15 @@ class CommitRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar 
   val dateOneMonthAgo = dateToday.minusMonths((1))
 
   val author1 = createAuthor("Author1name", "email", None)
-  val commitToday = createCommit("id1", "message", Option(List("id2")), author1, None, None, None, None, dateToday, repo1.url)
-  val commitYesterday = createCommit("id2", "message", Option(List("id3")), author1, None, None, None, None, dateYesterday, repo1.url)
-  val commitBeforeYesterday = createCommit("id3", "message", Option(List("id4")), author1, None, None, None, None, dateBeforeYesterday, repo1.url)
-  val commitOneWeekAgo = createCommit("id4", "message", None, author1, None, None, None, None, dateOneWeekAgo, repo1.url)
-  val commitOneMonthAgo = createCommit("id5", "message", None, author1, None, None, None, None, dateOneMonthAgo, repo1.url)
+  val commitToday = createCommit(s"$prefix-id1", "message", Option(List("id2")), author1, None, None, None, None, dateToday, repo1.url)
+  val commitYesterday = createCommit(s"$prefix-id2", "message", Option(List("id3")), author1, None, None, None, None, dateYesterday, repo1.url)
+  val commitBeforeYesterday = createCommit(s"$prefix-id3", "message", Option(List("id4")), author1, None, None, None, None, dateBeforeYesterday, repo1.url)
+  val commitOneWeekAgo = createCommit(s"$prefix-id4", "message", None, author1, None, None, None, None, dateOneWeekAgo, repo1.url)
+  val commitOneMonthAgo = createCommit(s"$prefix-id5", "message", None, author1, None, None, None, None, dateOneMonthAgo, repo1.url)
 
   override def beforeAll {
     //Insert data first
+//        cleanupEvolutions
     Await.result(repoRepository.save(List(repo1)), 5 seconds)
     Await.result(commitRepository.save(List(commitToday, commitYesterday, commitBeforeYesterday, commitOneWeekAgo, commitOneMonthAgo)), 5 seconds)
   }

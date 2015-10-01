@@ -32,8 +32,8 @@ class Production extends AbstractModule {
     bind(classOf[KioClient]).to(classOf[KioClientImpl])
     bind(classOf[Search]).to(classOf[SearchImpl])
     bind(classOf[Import]).to(classOf[ImportImpl])
-    bind(classOf[RepoRepository]).to(classOf[RepoRepositoryImpl])
-    bind(classOf[CommitRepository]).to(classOf[CommitRepositoryImpl])
+    bind(classOf[CommitRepository]).to(classOf[CommitRepositoryImpl]).asEagerSingleton()
+    bind(classOf[RepoRepository]).to(classOf[RepoRepositoryImpl]).asEagerSingleton()
     bind(classOf[AuthorRepository]).to(classOf[AuthorRepositoryImpl]).asEagerSingleton()
     bind(classOf[Bootstrap]).to(classOf[BootstrapImpl]).asEagerSingleton()
   }

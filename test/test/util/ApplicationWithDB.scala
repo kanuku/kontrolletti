@@ -16,7 +16,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
  * This Trait is ment for separating database tests from the production database during development/it-testing.
  * It loads its own separate
  */
-trait FakeApplicationWithDB { //}extends OneAppPerSuite {
+trait ApplicationWithDB { //}extends OneAppPerSuite {
 
   private def configuration() = Configuration.load(Environment.simple(), Map("config.resource" -> "application.test.db.conf"))
   
@@ -35,9 +35,5 @@ trait FakeApplicationWithDB { //}extends OneAppPerSuite {
     true
   }
 
-  def withApplicationAndDatabase(block: Unit) {
-
-    block
-  }
-
+ 
 }
