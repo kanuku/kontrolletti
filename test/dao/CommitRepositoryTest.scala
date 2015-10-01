@@ -9,10 +9,12 @@ import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 import test.util.ApplicationWithDB
 import test.util.MockitoUtils
+import org.scalatest.Ignore
 
 /**
  * @author fbenjamin
  */
+@Ignore
 class CommitRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar with ApplicationWithDB with BeforeAndAfterAll with BeforeAndAfter {
   val prefix ="CommitRepositoryTest"
   val repo1 = createRepository(url = s"$prefix-url1", host = "host1", project = "project1", repository = "repository")
