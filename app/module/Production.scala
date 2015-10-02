@@ -1,39 +1,40 @@
 package module
 
 import com.google.inject.AbstractModule
-import client.RequestDispatcher
-import client.RequestDispatcherImpl
 import client.kio.KioClient
 import client.kio.KioClientConfiguration
+import client.kio.KioClientConfigurationImpl
 import client.kio.KioClientImpl
 import client.oauth.OAuth
 import client.oauth.OAuthClientImpl
-import client.oauth.OAuthConfiguration
-import client.oauth.OAuthConfigurationImpl
-import client.scm.SCM
-import client.scm.SCMImpl
+import service.Import
+import service.ImportImpl
 import play.api.Logger
 import service.Search
 import service.SearchImpl
-import jobs.Import
-import jobs.ImportImpl
-import client.kio.KioClientConfigurationImpl
-import service.DataStore
-import service.DataStoreImpl
+import client.RequestDispatcherImpl
+import client.RequestDispatcher
+import dao.CommitRepositoryImpl
+import dao.CommitRepository
+import dao.AuthorRepository
+import dao.AuthorRepositoryImpl
+import dao.RepoRepository
+import dao.RepoRepositoryImpl
 
 class Production extends AbstractModule {
+
   private val logger: Logger = Logger(this.getClass())
   def configure() {
     logger.info("Configured with a production module")
-    bind(classOf[Search]).to(classOf[SearchImpl])
-    bind(classOf[SCM]).to(classOf[SCMImpl])
-    bind(classOf[RequestDispatcher]).to(classOf[RequestDispatcherImpl])
-    bind(classOf[Import]).to(classOf[ImportImpl])
     bind(classOf[OAuth]).to(classOf[OAuthClientImpl])
-    bind(classOf[OAuthConfiguration]).to(classOf[OAuthConfigurationImpl])
-    bind(classOf[KioClient]).to(classOf[KioClientImpl])
+    bind(classOf[RequestDispatcher]).to(classOf[RequestDispatcherImpl])
     bind(classOf[KioClientConfiguration]).to(classOf[KioClientConfigurationImpl])
-    bind(classOf[DataStore]).to(classOf[DataStoreImpl])
-
+    bind(classOf[KioClient]).to(classOf[KioClientImpl])
+    bind(classOf[Search]).to(classOf[SearchImpl])
+    bind(classOf[Import]).to(classOf[ImportImpl])
+    bind(classOf[CommitRepository]).to(classOf[CommitRepositoryImpl]).asEagerSingleton()
+    bind(classOf[RepoRepository]).to(classOf[RepoRepositoryImpl]).asEagerSingleton()
+    bind(classOf[AuthorRepository]).to(classOf[AuthorRepositoryImpl]).asEagerSingleton()
+    bind(classOf[Bootstrap]).to(classOf[BootstrapImpl]).asEagerSingleton()
   }
 }

@@ -2,11 +2,11 @@ package client.scm
 
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
-
 import model.Commit
 import play.api.libs.json._
 import play.api.libs.json.Json._
 import test.util.FakeResponseData
+import org.joda.time.DateTime
 
 /**
  * This class tests the Parsing process implemented in SCMParser file.
@@ -27,10 +27,12 @@ class SCMParserTest extends FunSuite with Matchers {
     assert(Option(commit0.author) != None, "Author should not be empty")
     assert(commit0.author.email == "kanuku@users.noreply.github.com")
     assert(commit0.author.name == "Fernando Benjamin")
-    assert(commit0.parentIds.size == 2, "Expected two parent-id's")
-    assert(commit0.parentIds(0) == "88c31c976507b32574bb9c76311da1cfc4832d1d")
-    assert(commit0.parentIds(1) == "2ead1df4182c33bbca16768e4200a09ce3b6e68d")
+    val Some(parentIds0)= commit0.parentIds
+    assert(parentIds0.size == 2, "Expected two parent-id's")
+    assert(parentIds0(0) == "88c31c976507b32574bb9c76311da1cfc4832d1d")
+    assert(parentIds0(1) == "2ead1df4182c33bbca16768e4200a09ce3b6e68d")
     assert(commit0.links == None)
+    assert(commit0.date === new DateTime("2015-05-11T08:33:24Z"))
 
     assert(Option(commit1) != None)
     assert(commit1.id == "2ead1df4182c33bbca16768e4200a09ce3b6e68d")
@@ -39,8 +41,9 @@ class SCMParserTest extends FunSuite with Matchers {
     assert(Option(commit1.author) != None, "Author should not be empty")
     assert(commit1.author.email == "benibadboy@hotmail.com")
     assert(commit1.author.name == "Fernando Benjamin")
-    assert(commit1.parentIds.size == 1, "Expected single parent-id")
-    assert(commit1.parentIds(0) == "ca0003e2beba64c96150f03a3cd1d84c58c6a469")
+    val Some(parentIds1)= commit1.parentIds
+    assert(parentIds1.size == 1, "Expected single parent-id")
+    assert(parentIds1(0) == "ca0003e2beba64c96150f03a3cd1d84c58c6a469")
     assert(commit1.links == None)
   }
   test("Deserialize multiple json Commits with the StashParser") {
@@ -57,10 +60,12 @@ class SCMParserTest extends FunSuite with Matchers {
     assert(Option(commit0.author) != None, "Author should not be empty")
     assert(commit0.author.email == "benibadboy@hotmail.com")
     assert(commit0.author.name == "Fernando Benjamin")
-    assert(commit0.parentIds.size == 2, "Expected two parent-id's")
-    assert(commit0.parentIds(0) == "9405c626889dbe91694c7dab33eb091a9483317e")
-    assert(commit0.parentIds(1) == "ab33eb091a9483317e9405c626889dbe91694c7d")
+    val Some(parentIds0)=commit0.parentIds
+    assert(parentIds0.size == 2, "Expected two parent-id's")
+    assert(parentIds0(0) == "9405c626889dbe91694c7dab33eb091a9483317e")
+    assert(parentIds0(1) == "ab33eb091a9483317e9405c626889dbe91694c7d")
     assert(commit0.links == None)
+    assert(commit0.date === new DateTime("2015-05-04T17:27:40.000+02:00"))
 
     assert(Option(commit1) != None)
     assert(commit1.id == "9405c626889dbe91694c7dab33eb091a9483317e")
@@ -69,8 +74,9 @@ class SCMParserTest extends FunSuite with Matchers {
     assert(Option(commit1.author) != None, "Author should not be empty")
     assert(commit1.author.email == "benibadboy@hotmail.com")
     assert(commit1.author.name == "Fernando Benjamin")
-    assert(commit1.parentIds.size == 1, "Expected single parent-id")
-    assert(commit1.parentIds(0) == "1a4ed65260f854d35c1ab01a6113964f8fc24414")
+    val Some(parentIds1)=commit1.parentIds
+    assert(parentIds1.size == 1, "Expected single parent-id")
+    assert(parentIds1(0) == "1a4ed65260f854d35c1ab01a6113964f8fc24414")
     assert(commit1.links == None)
   }
   test("Deserialize single jsonObject(Repo) with the GithubParser") {
@@ -79,11 +85,7 @@ class SCMParserTest extends FunSuite with Matchers {
     assert(result.isRight, "Failed to parse!!")
     val repo = result.right.get
     assert(Option(repo) != None)
-    assert(repo.html_url == "https://github.com/zalando/kontrolletti")
-    assert(repo.project == "")
-    assert(repo.host == "")
-    assert(repo.repository == "")
-    assert(repo.commits == None)
+    assert(repo.url == "https://github.com/zalando/kontrolletti")
     assert(repo.links == None)
   }
   test("Deserialize single jsonObject(Repo) with the StashParser") {
@@ -92,11 +94,7 @@ class SCMParserTest extends FunSuite with Matchers {
     assert(result.isRight, "Failed to parse!!")
     val repo = result.right.get
     assert(Option(repo) != None)
-    assert(repo.html_url == "https://stash.zalando.net/projects/DOC/repos/ci-cd/browse")
-    assert(repo.project == "")
-    assert(repo.host == "")
-    assert(repo.repository == "")
-    assert(repo.commits == None)
+    assert(repo.url == "https://stash.zalando.net/projects/DOC/repos/ci-cd/browse")
     assert(repo.links == None)
   }
 
@@ -108,14 +106,15 @@ class SCMParserTest extends FunSuite with Matchers {
     assert(Option(commit) != None)
     assert(commit.id == "50cea1156ca558eb6c67e78ca7e5dabc570ea99a")
     assert(commit.message == "Merge pull request #8 from zalando-bus/feature-swagger-first\n\nApi Specification in Swagger")
-    assert(commit.parentIds.size == 2, "Expected two parent-id's")
+    val Some(parentIds)= commit.parentIds
+    assert(parentIds.size == 2, "Expected two parent-id's")
     assert(commit.author.email == "kanuku@users.noreply.github.com")
     assert(commit.author.name == "Fernando Benjamin")
     assert(commit.links == None)
 
   }
 
-  ignore("Deserialize a single commit with the Stashparser") {
+  test("Deserialize a single commit with the Stashparser") {
     val jsonData = Json.parse(FakeResponseData.singleStashCommit)
     val result = StashToJsonParser.singleCommitToModel(jsonData)
     assert(result.isRight, "Failed to parse!!")

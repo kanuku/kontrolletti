@@ -1,19 +1,30 @@
 package client.scm
 
-import org.scalatest.FlatSpec
-import org.scalatest.mock.MockitoSugar
-import org.scalatestplus.play.OneAppPerSuite
-import org.mockito.Mockito._
-import org.mockito.Matchers._
-import test.util.MockitoUtils
-import org.scalatest.BeforeAndAfter
-import play.api.libs.ws.WSRequestHolder
-import play.api.libs.ws.WSResponse
 import scala.concurrent.Future
 import org.mockito.ArgumentCaptor
+import org.mockito.Matchers.any
+import org.mockito.Matchers.anyString
+import org.mockito.Mockito.reset
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.when
+import org.scalatest.BeforeAndAfter
+import org.scalatest.FlatSpec
+import org.scalatest.mock.MockitoSugar
+import com.google.inject.ImplementedBy
 import client.RequestDispatcher
 import javax.inject.Inject
 import javax.inject.Singleton
+import play.api.inject.Module
+import play.api.libs.ws.WSRequest
+import play.api.libs.ws.WSResponse
+import test.util.ApplicationWithCustomModule
+import test.util.MockitoUtils
+import com.google.inject.AbstractModule
+import play.api.Environment
+import play.api.Configuration
+import org.scalatestplus.play.OneAppPerSuite
+import org.scalatestplus.play.OneAppPerTest
 
 /**
  * The tests in this class will assure:
@@ -22,20 +33,17 @@ import javax.inject.Singleton
  *
  *
  */
-class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with MockitoUtils with BeforeAndAfter {
+class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPerSuite with BeforeAndAfter with ApplicationWithCustomModule {
 
-  val mockedRequestHolder = mock[WSRequestHolder]
+  val mockedRequestHolder = mock[WSRequest]
   val mockedDispatcher = mock[RequestDispatcher]
-  
   val mockedResponse = mockSuccessfullParsableFutureWSResponse("", 200)
-  val client = new SCMImpl(mockedDispatcher)
-
   val github = "github.com"
   val stash = "stash.zalando.net"
   val project = "project"
   val repository = "repository"
-  val since = Some("since")
-  val until = Some("until")
+  //  val since = Some("since")
+  //  val until = Some("until")
   val id = "id"
   val source = "source"
   val target = "target"
@@ -43,16 +51,15 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
   before {
     reset(mockedRequestHolder)
     reset(mockedDispatcher)
-//    reset(mockedWSResponse)
   }
 
   "SCM#commits" should "request commits from github API" in {
     val url = s"https://api.$github/repos/$project/$repository/commits"
-    testGET(url, client.commits(github, project, repository, since, until))
+    testGET(url, client.commits(github, project, repository, None, None, 1))
   }
   it should "request commits from stash API" in {
     val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits"
-    testGET(url, client.commits(stash, project, repository, since, until))
+    testGET(url, client.commits(stash, project, repository, None, None, 1))
   }
 
   "SCM#commit" should "request a single commit from github API" in {
@@ -109,27 +116,29 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
     when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.head()).thenReturn(mockedResponse)
-    val result = client.head(github,url)
+    val result = client.head(github, url)
     assert(result == mockedResponse)
     val urlCap = ArgumentCaptor.forClass(classOf[String])
     verify(mockedDispatcher, times(1)).requestHolder(urlCap.capture())
     assert(url == urlCap.getValue)
   }
   "SCM#head" should "HEAD stash url" in {
-	  val url = s"Test"
-			  when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
-        when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
-			  when(mockedRequestHolder.get()).thenReturn(mockedResponse)
-			  val result = client.get(stash,url)
-			  assert(result == mockedResponse)
-			  val urlCap = ArgumentCaptor.forClass(classOf[String])
-			  verify(mockedDispatcher, times(1)).requestHolder(urlCap.capture())
-			  assert(url == urlCap.getValue)
+    val url = s"Test"
+    when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withQueryString(any())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.get()).thenReturn(mockedResponse)
+    val result = client.head(stash, url)
+    assert(result == mockedResponse)
+    val urlCap = ArgumentCaptor.forClass(classOf[String])
+    verify(mockedDispatcher, times(1)).requestHolder(urlCap.capture())
+    assert(url == urlCap.getValue)
   }
 
   def testGET(url: String, call: => Future[WSResponse]) = {
     when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withQueryString(any())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.get()).thenReturn(mockedResponse)
     val result = call
     assert(result == mockedResponse)
@@ -138,4 +147,15 @@ class SCMTest extends FlatSpec with OneAppPerSuite with MockitoSugar with Mockit
     verify(mockedDispatcher, times(1)).requestHolder(urlCap.capture())
     assert(url == urlCap.getValue)
   }
+
+  //Custom settings
+  override def customConfiguration: Map[String, String] = {
+    Map("client.github.host" -> "github.com", "client.stash.host" -> "stash.zalando.net")
+  }
+  override def customModule(): Module = new Module {
+    def bindings(env: Environment, conf: Configuration) = Seq(
+      bind[RequestDispatcher].to(mockedDispatcher))
+  }
+  def client = application.injector.instanceOf[SCM]
+
 }

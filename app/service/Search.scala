@@ -5,7 +5,8 @@ import model.Commit
 import model.Repository
 import model.Link
 import model.Ticket
-
+import com.google.inject.ImplementedBy
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 trait Search {
 
@@ -14,12 +15,12 @@ trait Search {
    * @param host hostname/IP-address-address of the SCM server <br/>
    * @param project name of the project
    * @param repository name of the repository
-   * @param since CommitId from where to start looking for commits
-   * @param until Until commits from this commit
-   * 
+   * @param since commits made after this Commit
+   * @param until Until this commit
+   * @param pageNr number of the page to retrieve 
    * @return a future containing either the error(left) or list of commits(right)
    */
-  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Commit]]]]
+  def commits(host: String, project: String, repository: String, since: Option[Commit], until: Option[Commit], pageNr:Int): Future[Either[String, Option[List[Commit]]]]
 
   /**
    * Returns a single commit from the given repository in the project on the given host.
@@ -50,6 +51,15 @@ trait Search {
    *  @return Either a [reason why it couldn't parse] left or a [result (`host`, `project` and `repo`)] right.
    */
   def parse(url: String): Either[String, (String, String, String)]
+  
+  /**
+   * Parse a url into 3 separate parameters, the `host`, `project` and `repo` from a repository-url of a github or stash project
+   *
+   *  @param url URL of the repository
+   *
+   *  @return Either a [reason why it couldn't parse] left or a [result (`host`, `project` and `repo`)] right.
+   */
+  def parse2Future(url: String): Future[Either[String, (String, String, String)]]= Future { parse(url) }
 
   /**
    * Parses and returns the normalized URI for a github/stash repository-URL.

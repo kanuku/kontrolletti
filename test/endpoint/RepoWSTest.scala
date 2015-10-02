@@ -6,12 +6,12 @@ import play.api.test._
 import play.api.test.Helpers._
 import test.util.MockitoUtils
 import java.net.URLEncoder
-import org.specs2.matcher.MustExpectable
 import org.scalatest.Matchers
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import client.scm.SCM
 import play.api.Logger
+import play.api.inject.bind
 import service.Search
 import org.mockito.Matchers._
 import scala.concurrent.Future
@@ -19,7 +19,12 @@ import model.Repository
 import test.util.MockitoUtils
 import play.api.libs.json.Json
 import model.KontrollettiToJsonParser._
-class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
+import org.scalatest.Ignore
+import test.util.KontrollettiOneAppPerTestWithOverrides
+import org.scalatest.BeforeAndAfter
+import dao.CommitRepository
+
+class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides with MockitoSugar with MockitoUtils with BeforeAndAfter {
   private val X_NORMALIZED_REPOSITORY_URL_HEADER = "X-Normalized-Repository-URL"
   private val alternativeUrl = "git@github.com:zalando/kontrolletti.git"
   private val reposRoute = "/api/repos/"
@@ -30,25 +35,27 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
   private val host = "github.com"
   private val project = "zalando"
   private val repoName = "kontrolletti"
+  val search = mock[Search]
+
+  before {
+    reset(search)
+  }
 
   "HEAD /api/repos" should {
 
     "Return 200 when the repository-parameter is normalized and the resource can be found" in {
-      val search = mock[Search]
       val response = Right((host, project, repoName))
       val url = reposRoute + encodedDefaultUrl
 
-      withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        when(search.parse(defaultUrl)).thenReturn(response)
-        when(search.normalize(host, project, repoName)).thenReturn(defaultUrl)
-        when(search.isRepo(host, project, repoName)).thenReturn(Future.successful(Right(true)))
+      when(search.parse(defaultUrl)).thenReturn(response)
+      when(search.normalize(host, project, repoName)).thenReturn(defaultUrl)
+      when(search.isRepo(host, project, repoName)).thenReturn(Future.successful(Right(true)))
 
-        val result = route(FakeRequest(HEAD, url)).get
-        status(result) mustEqual OK
-        header(LOCATION, result) mustBe empty
-        header(X_NORMALIZED_REPOSITORY_URL_HEADER, result) === Some(X_NORMALIZED_REPOSITORY_URL_HEADER -> defaultUrl)
-        contentAsString(result) mustBe empty
-      }
+      val result = route(FakeRequest(HEAD, url)).get
+      status(result) mustEqual OK
+      header(LOCATION, result) mustBe empty
+      header(X_NORMALIZED_REPOSITORY_URL_HEADER, result) === Some(X_NORMALIZED_REPOSITORY_URL_HEADER -> defaultUrl)
+      contentAsString(result) mustBe empty
 
       verify(search, times(1)).parse(defaultUrl)
       verify(search, times(1)).normalize(host, project, repoName)
@@ -56,19 +63,16 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
     }
 
     "Return 400 (Bad Request) on invalid(not parsable) URI" in {
-      val search = mock[Search]
       val response = Left("Your input was not parsable")
       val url = reposRoute + erraneousUrl
 
-      withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        when(search.parse(erraneousUrl)).thenReturn(response)
-        //Let Guice return mocked searchService
+      when(search.parse(erraneousUrl)).thenReturn(response)
+      //Let Guice return mocked searchService
 
-        val result = route(FakeRequest(HEAD, url)).get
-        status(result) mustEqual BAD_REQUEST
-        header(LOCATION, result) mustBe empty
-        contentAsString(result) mustBe empty
-      }
+      val result = route(FakeRequest(HEAD, url)).get
+      status(result) mustEqual BAD_REQUEST
+      header(LOCATION, result) mustBe empty
+      contentAsString(result) mustBe empty
 
       verify(search, times(1)).parse(erraneousUrl)
     }
@@ -77,19 +81,16 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       val parsedResponse = Right((host, project, repoName))
       val existsResponse = Future.successful(Right(true))
-      val search = mock[Search]
 
       when(search.parse(alternativeUrl)).thenReturn(parsedResponse)
       when(search.normalize(host, project, repoName)).thenReturn(s"/projects/$project/repos/$repoName")
       when(search.isRepo(host, project, repoName)).thenReturn(existsResponse)
 
-      withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl")).get
-        status(result) mustEqual MOVED_PERMANENTLY
-        header(X_NORMALIZED_REPOSITORY_URL_HEADER, result) === Some(X_NORMALIZED_REPOSITORY_URL_HEADER -> defaultUrl)
-        header(LOCATION, result) === Some(LOCATION -> s"$reposRoute$encodedAlternativeUrl")
-        contentAsString(result) mustBe empty
-      }
+      val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl")).get
+      status(result) mustEqual MOVED_PERMANENTLY
+      header(X_NORMALIZED_REPOSITORY_URL_HEADER, result) === Some(X_NORMALIZED_REPOSITORY_URL_HEADER -> defaultUrl)
+      header(LOCATION, result) === Some(LOCATION -> s"$reposRoute$encodedAlternativeUrl")
+      contentAsString(result) mustBe empty
 
       verify(search, times(1)).parse(alternativeUrl)
       verify(search, times(1)).normalize(host, project, repoName)
@@ -100,19 +101,16 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
 
       val parsedResponse = Right((host, project, repoName))
       val existsResponse = Future.successful(Right(false))
-      val search = mock[Search]
 
       when(search.parse(alternativeUrl)).thenReturn(parsedResponse)
       when(search.normalize(host, project, repoName)).thenReturn(s"/projects/$project/repos/$repoName")
       when(search.isRepo(host, project, repoName)).thenReturn(existsResponse)
 
-      withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl")).get
-        status(result) mustEqual NOT_FOUND
-        header(LOCATION, result) mustBe empty
+      val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl")).get
+      status(result) mustEqual NOT_FOUND
+      header(LOCATION, result) mustBe empty
 
-        contentAsString(result) mustBe empty
-      }
+      contentAsString(result) mustBe empty
 
       verify(search, times(1)).parse(alternativeUrl)
       verify(search, times(1)).normalize(host, project, repoName)
@@ -122,19 +120,16 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
     "Return 500 on a URI when the Service returns 500" in {
       val parsedResponse = Right((host, project, repoName))
       val existsResponse = Future.successful(Left("Some error happend"))
-      val search = mock[Search]
 
       when(search.parse(alternativeUrl)).thenReturn(parsedResponse)
       when(search.normalize(host, project, repoName)).thenReturn(s"/projects/$project/repos/$repoName")
       when(search.isRepo(host, project, repoName)).thenReturn(existsResponse)
 
-      withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl")).get
-        status(result) mustEqual INTERNAL_SERVER_ERROR
-        header(LOCATION, result) mustBe empty
-        contentAsString(result) mustBe empty
-        contentType(result) mustEqual Some("application/problem+json")
-      }
+      val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl")).get
+      status(result) mustEqual INTERNAL_SERVER_ERROR
+      header(LOCATION, result) mustBe empty
+      contentAsString(result) mustBe empty
+      contentType(result) mustEqual Some("application/problem+json")
 
       verify(search, times(1)).parse(alternativeUrl)
       verify(search, times(1)).normalize(host, project, repoName)
@@ -148,69 +143,61 @@ class RepoWSTest extends PlaySpec with MockitoSugar with MockitoUtils {
       val parsedResponse = Right((host, project, repoName))
       val repository = createRepository()
       val repoResponse = Future.successful(Right(Some(repository)))
-      val search = mock[Search]
 
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
       when(search.repo(host, project, repoName)).thenReturn(repoResponse)
 
-      withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
-        status(result) mustEqual OK
+      val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
+      status(result) mustEqual OK
 
-        contentAsString(result) mustEqual Json.stringify(Json.toJson(repository))
-        contentType(result) mustEqual Some("application/x.zalando.repository+json")
-      }
+      contentAsString(result) mustEqual Json.stringify(Json.toJson(repository))
+      contentType(result) mustEqual Some("application/x.zalando.repository+json")
 
       verify(search, times(1)).parse(defaultUrl)
       verify(search, times(1)).repo(host, project, repoName)
     }
 
     "Return 400 when called with erraneous url" in {
-      val search = mock[Search]
       val parsedResponse = Left("Some error happend")
 
       when(search.parse(erraneousUrl)).thenReturn(parsedResponse)
 
-      withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val result = route(FakeRequest(GET, s"$reposRoute$erraneousUrl")).get
-        status(result) mustEqual BAD_REQUEST
-        contentAsString(result) mustEqual parsedResponse.left.get
-        contentType(result) mustEqual Some("application/problem+json")
-      }
+      val result = route(FakeRequest(GET, s"$reposRoute$erraneousUrl")).get
+      status(result) mustEqual BAD_REQUEST
+      contentAsString(result) mustEqual parsedResponse.left.get
+      contentType(result) mustEqual Some("application/problem+json")
       verify(search, times(1)).parse(erraneousUrl)
     }
 
     "Return 404 when it results in a None" in {
-      val search = mock[Search]
       val parsedResponse = Right((host, project, repoName))
       val repoResponse = Future.successful(Right(None))
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
       when(search.repo(host, project, repoName)).thenReturn(repoResponse)
 
-      withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
-        status(result) mustEqual NOT_FOUND
-        contentAsString(result) mustBe empty
+      val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
+      status(result) mustEqual NOT_FOUND
+      contentAsString(result) mustBe empty
 
-      }
       verify(search, times(1)).parse(defaultUrl)
     }
 
     "Return 500 when it results in an error" in {
-      val search = mock[Search]
       val parsedResponse = Right((host, project, repoName))
       val error = Left("someError")
       val repoResponse = Future.successful(error)
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
       when(search.repo(host, project, repoName)).thenReturn(repoResponse)
 
-      withFakeApplication(new FakeGlobalWithSearchService(search)) {
-        val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
-        status(result) mustEqual INTERNAL_SERVER_ERROR
-        contentAsString(result) mustBe empty
-        contentType(result) mustEqual Some("application/problem+json")
-      }
+      val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
+      status(result) mustEqual INTERNAL_SERVER_ERROR
+      contentAsString(result) mustBe empty
+      contentType(result) mustEqual Some("application/problem+json")
       verify(search, times(1)).parse(defaultUrl)
     }
+  }
+  override def overrideModules = {
+    Seq(
+      bind[Search].toInstance(search))
   }
 }

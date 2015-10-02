@@ -5,8 +5,9 @@ import play.api.Logger
 import play.api.libs.ws.WSResponse
 import javax.inject._
 import client.RequestDispatcher
+import com.google.inject.ImplementedBy
 
-
+@ImplementedBy(classOf[SCMImpl])
 sealed trait SCM {
 
   /**
@@ -14,9 +15,11 @@ sealed trait SCM {
    * @param host DNS/IP of the SCM server <br/>
    * @param project name of the project
    * @param repo name of the repository
+   * @param pageNr number of the page to retrieve
    * @return The future with the response of the call
    */
-  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[WSResponse]
+  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNr: Int): Future[WSResponse]
+
   /**
    * Issues a GET call against the commit-endpoint on the SCM.
    * @param host DNS/IP of the SCM server <br/>
@@ -75,29 +78,32 @@ sealed trait SCM {
 
   def resolver(host: String): SCMResolver
 
+  def isGithubServerType(host: String): Boolean
+
 }
 @Singleton
 class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
   private val logger: Logger = Logger(this.getClass())
-  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[WSResponse] = {
+  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNr: Int): Future[WSResponse] = {
     //FIXME! resolver.get should be best avoided. 
+
     val res: SCMResolver = resolver(host)
     val url = res.commits(host, project, repository)
-    get(host, url)
+    get(host, url, since, pageNr)
   }
   def commit(host: String, project: String, repository: String, id: String): Future[WSResponse] = {
     val res: SCMResolver = resolver(host)
-    get(host, res.commit(host, project, repository, id))
+    get(host, res.commit(host, project, repository, id), None)
   }
   def repo(host: String, project: String, repository: String): Future[WSResponse] = {
     val res: SCMResolver = resolver(host)
     val url = res.repo(host, project, repository)
-    get(host, url)
+    get(host, url, None)
   }
   def tickets(host: String, project: String, repository: String): Future[WSResponse] = {
     val res: SCMResolver = resolver(host)
     val url = res.tickets(host, project, repository)
-    get(host, url)
+    get(host, url, None)
   }
   def repoUrl(host: String, project: String, repository: String): String = {
     val res: SCMResolver = resolver(host)
@@ -107,28 +113,51 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
     val res: SCMResolver = resolver(host)
     res.diffUrl(host, project, repository, source, target)
   }
-  def get(host: String, url: String): Future[WSResponse] = {
-    logger.info(s"Issuing a GET on $url")
+  def get(host: String, url: String, since: Option[String], pageNr: Int = 1): Future[WSResponse] = {
+    logger.info(s"Issuing a GET on $url starting at page $pageNr")
     val res = resolver(host)
-    dispatcher //
-      .requestHolder(url) //
-      .withHeaders(res.accessTokenKey -> res.accessTokenValue) //
-      .get()
 
+    val call = if (res.isGithubServerType) {
+      logger.info("Putting the access-token is in url")
+      dispatcher //
+        .requestHolder(url) //
+        .withQueryString(res.maximumPerPageQueryPararmeter) //
+        .withQueryString(res.startAtPageNumber(pageNr))
+        .withQueryString(res.accessTokenQueryParameter)
+    } else {
+    	logger.info("Putting the access-token is in head")
+      dispatcher //
+        .requestHolder(url) //
+        .withQueryString(res.maximumPerPageQueryPararmeter) //
+        .withQueryString(res.startAtPageNumber(pageNr))
+        .withHeaders(res.accessTokenQueryParameter)
+    }
+
+    if (res.accessTokenValue == null || res.accessTokenValue.isEmpty()) {
+      logger.error("No tokens configured for host " + host)
+    }
+    if (since.isDefined) {
+      logger.info("Using since parameter " + since)
+      call.withQueryString(res.sinceCommitQueryParameter(since.get))
+    }
+    call.get()
   }
+
   def head(host: String, url: String): Future[WSResponse] = {
     logger.info(s"Issuing a HEAD on $url")
     resolver(host) match {
       case resolver if resolver.name == "github" =>
         logger.info(s"Calling(github) HEAD on $url")
         dispatcher.requestHolder(url) //
-          .withHeaders(resolver.accessTokenKey -> resolver.accessTokenValue)
+          .withHeaders(resolver.accessTokenQueryParameter)
           .head()
       case resolver if resolver.name == "stash" =>
         logger.info(s"Calling(stash) GET on $url")
-        get(host, url)
+        get(host, url, None)
     }
   }
+
+  def isGithubServerType(host: String): Boolean = resolver(host).isGithubServerType
 
   def resolver(host: String): SCMResolver = GithubResolver.resolve(host) match {
     case Some(resolver) => resolver
@@ -137,4 +166,5 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
       case _              => throw new IllegalStateException(s"Could not resolve SCM context for $host")
     }
   }
+
 }

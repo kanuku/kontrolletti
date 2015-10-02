@@ -14,12 +14,8 @@ import model.KontrollettiToModelParser._
 
 @Singleton
 class TicketWS @Inject() (searchService: Search) extends Controller {
-
-
   private val logger: Logger = Logger(this.getClass())
-
   def tickets(host: String, project: String, repository: String, sinceId: Option[String], untilId: Option[String]) = Action.async {
-
     logger.info(s"host: $host, project: $project repository: $repository, sinceId: $sinceId, untilId: $untilId")
     val result = searchService.tickets(host, project, repository, sinceId, untilId)
     logger.info("Information: " + result)
@@ -35,5 +31,4 @@ class TicketWS @Inject() (searchService: Search) extends Controller {
         InternalServerError.as("application/problem+json")
     }
   }
-
 }

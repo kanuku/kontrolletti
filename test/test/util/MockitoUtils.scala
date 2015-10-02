@@ -19,10 +19,11 @@ import play.api.GlobalSettings
 import play.api.libs.json.JsResult
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
-import play.api.libs.ws.WSRequestHolder
 import play.api.libs.ws.WSResponse
-import play.api.test.FakeApplication
+import org.scalatest._
+import play.api.test._
 import play.api.test.Helpers._
+import org.scalatestplus.play._
 import service.Search
 import service.SearchImpl
 import model.Ticket
@@ -34,8 +35,8 @@ import play.api.libs.json.JsPath
 import client.oauth.OAuthClientCredential
 import client.oauth.OAuthUserCredential
 import client.oauth.OAuthAccessToken
-import model.AppInfo
-import client.cloudsearch.DocumentStore
+import org.junit.internal.builders.AnnotatedBuilder
+import org.joda.time.DateTime
 
 trait MockitoUtils extends MockitoSugar {
 
@@ -58,62 +59,18 @@ trait MockitoUtils extends MockitoSugar {
     when(wsResponse.body).thenReturn(result)
     wsResponse
   }
-  def withFakeApplication(block: => Unit): Unit = {
-    running(FakeApplication()) {
-      block
-    }
-  }
-  def withFakeApplication(global: GlobalSettings)(block: => Unit): Unit = {
-    running(FakeApplication(withGlobal = Option(global))) {
-      block
-    }
-  }
-
-  class FakeCloudSearchConfiguration(cloudSearch: DocumentStore) extends play.api.GlobalSettings {
-    private lazy val injector = Guice.createInjector(new AbstractModule {
-      def configure() {
-        bind(classOf[DocumentStore]).toInstance(cloudSearch)
-      }
-    })
-    override def getControllerInstance[A](clazz: Class[A]) = {
-      injector.getInstance(clazz)
-    }
-  }
-
-  class FakeGlobalWithSearchService(service: Search) extends play.api.GlobalSettings {
-    private lazy val injector = Guice.createInjector(new AbstractModule {
-      def configure() {
-        bind(classOf[Search]).toInstance(service)
-      }
-    })
-    override def getControllerInstance[A](clazz: Class[A]) = {
-      injector.getInstance(clazz)
-    }
-  }
-
-  class FakeGlobalWithFakeClient(client: SCM) extends play.api.GlobalSettings {
-    lazy val injector = Guice.createInjector(new AbstractModule {
-      def configure() {
-        bind(classOf[Search]).toInstance(new SearchImpl(client))
-      }
-    })
-    override def getControllerInstance[A](clazz: Class[A]) = {
-      injector.getInstance(clazz)
-    }
-
-  }
-
+   
   def createCommitsResult(links: List[Link] = List(), commits: List[Commit] = List(createCommit())): CommitsResult = new CommitsResult(links, commits)
 
-  def createRepository(href: String = "href", project: String = "project", host: String = "host", repository: String = "repo", commits: List[Commit] = List(), links: List[Link] = List()): Repository = new Repository(href, project, host, repository, Option(commits), Option(links))
+  def createRepository(url: String="url", host: String="host", project: String="project", repository: String="repository", enabled: Boolean=true, lastSync:Option[DateTime]=None, lastFailed:Option[DateTime]=None, links: Option[List[Link]]=None): Repository = new Repository( url , host , project , repository , enabled, lastSync, lastFailed, links)
 
-  def createTicket(name: String = "name", description: String = "description", href: String = "href", links: List[Link] = List()) = new Ticket(name, href, links)
+  def createTicket(name: String = "name", description: String = "description", href: String = "href", links: List[Link] = List()) = new Ticket(name, href, Option(links))
 
-  def createCommit(id: String = "id", message: String = "message", parentId: List[String] = List(), author: Author = createAuthor(), valid: Option[Boolean] = None, links: List[Link] = List()): Commit = new Commit(id, message, parentId, author, None, None, Option(links))
+  def createCommit(id: String="id", message: String="message", parentIds: Option[List[String]]=None, author: Author=createAuthor(), childId: Option[String]=None, tickets: Option[List[Ticket]]=None, valid: Option[Boolean]=None, links: Option[List[Link]]=None, date: DateTime=new DateTime, repoUrl: String="repoUrl"): Commit = new Commit(id, message, parentIds, author, childId, tickets, valid, links, date, repoUrl)
 
   def createLink(href: String, method: String, rel: String, relType: String) = new Link(href, method, rel, relType)
 
-  def createAuthor(name: String = "name", email: String = "email", links: List[Link] = List()): Author = new Author(name, email, Option(links))
+  def createAuthor(name: String = "name", email: String = "email", links: Option[List[Link]] = None): Author = new Author(name, email, links)
 
   def createOAuthClientCredential(id: String, secret: String) = new OAuthClientCredential(id, secret)
 
@@ -121,5 +78,4 @@ trait MockitoUtils extends MockitoSugar {
 
   def createOAuthAccessToken(tokenType: String, accessToken: String, scope: String, expiresIn: Int) = new OAuthAccessToken(tokenType, accessToken, scope, expiresIn)
 
-  def createAppInfo(scmUrl: String, specificationUrl: String, documentationUrl: String, serviceUrl: String, created: String, lastModified: String) = new AppInfo(scmUrl, serviceUrl, created, lastModified)
 }

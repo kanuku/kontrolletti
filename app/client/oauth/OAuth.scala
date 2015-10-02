@@ -27,7 +27,7 @@ import utility.Transformer
 case class OAuthClientCredential(id: String, secret: String)
 case class OAuthUserCredential(username: String, password: String)
 case class OAuthAccessToken(tokenType: String, accessToken: String, scope: String, expiresIn: Int)
-
+case class OAuthClientException(message: String) extends Exception(message)
 sealed trait OAuth {
 
   def clientCredentials(): Future[OAuthClientCredential]
@@ -67,9 +67,9 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
   private val transformer = Transformer
 
   def accessToken(client: OAuthClientCredential, serviceUser: OAuthUserCredential): Future[OAuthAccessToken] = {
-    logger.info(s"Configuration:$config")
-    val result = dispatcher.requestHolder(config.endpointAccessTokenRequest) //
-      .withRequestTimeout(config.timeoutRequestClient)
+    logger.info("OAuth endpoint:" + config.accessTokenRequestEndpoint)
+    val result = dispatcher.requestHolder(config.accessTokenRequestEndpoint) //
+      .withRequestTimeout(config.requestClientTimeout)
       .withHeaders(("Content-Type", "application/x-www-form-urlencoded"))
       .withAuth(client.id, client.secret, WSAuthScheme.BASIC)
       .withQueryString(("grant_type", "password"))
@@ -80,17 +80,20 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
       .post("")
     result.flatMap {
       x =>
-        logger.info("Oauth-endpoint return http-code: " + x.status)
-        transformer.transform(x.body)(OAuthParser.oAuthAccessTokenReader)
+        logger.info("Oauth-endpoint returned http-code: " + x.status)
+        if (x.status == 200)
+          transformer.parse2Future(x.body).flatMap(transformer.deserialize2Future(_)(OAuthParser.oAuthAccessTokenReader))
+        else
+          Future.failed(new OAuthClientException("Oauth server responded with an unexpected http-code:" + x.status))
     }
   }
 
-  def clientCredentials(): Future[OAuthClientCredential] = get(config.fileNameClientCredentials)(oAuthClientCredentialReader)
+  def clientCredentials(): Future[OAuthClientCredential] = get(config.clientCredentialsFilename)(oAuthClientCredentialReader)
 
-  def userCredentials(): Future[OAuthUserCredential] = get(config.fileNameUserCredentials)(oAuthUserCredentialReader)
+  def userCredentials(): Future[OAuthUserCredential] = get(config.userCredentialsFileName)(oAuthUserCredentialReader)
 
   def accessToken(): Future[OAuthAccessToken] = {
-    logger.info("Getting access token from OAuth service")
+    logger.info(s"Getting access token from OAuth service with config $config")
     for {
       client: OAuthClientCredential <- clientCredentials()
       user: OAuthUserCredential <- userCredentials()
@@ -98,13 +101,14 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
     } yield result
   }
   def get[T](file: String)(implicit rds: Reads[T]): Future[T] = readFile(file).flatMap { x =>
-    transformer.parse(x).flatMap { x =>
-      transformer.extract2Future(x.validate(rds))
+    transformer.parse2Future(x).flatMap { x =>
+      transformer.deserialize2Future(x)(rds)
     }
   }
 
   def readFile(file: String): Future[String] = {
-    val fileName: String = config.directoryCredentials.replaceFirst("~", System.getProperty("user.home")) + "/" + file
+    logger.info(s"Reading file: $file")
+    val fileName: String = config.credentialsDirectory.replaceFirst("~", System.getProperty("user.home")) + "/" + file
 
     logger.info(s"Reading credentials file $fileName")
 
