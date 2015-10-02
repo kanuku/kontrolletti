@@ -13,7 +13,7 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Ignore
 
 @Ignore
-class AuthorRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar with ApplicationWithDB with BeforeAndAfterAll {
+class AuthorRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar with ApplicationWithDB {
   val link1 = createLink("href", "method", "rel", "relType")
   val link2 = createLink("href2", "method", "rel", "relType")
   val links = List(link1, link2)
@@ -21,15 +21,7 @@ class AuthorRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar 
   val author2 = createAuthor("name", "email2", Option(links))
   val author3 = createAuthor("name", "email2", Option(links))
 
-  override def beforeAll {
-    cleanupEvolutions
-
-  }
-
-  override def afterAll {
-    cleanupEvolutions
-  }
-
+ 
   "AuthorRepository#list" should {
     "be empty initially" in {
       val result = Await.result(authorRepo.list(), 15 seconds)
@@ -44,7 +36,7 @@ class AuthorRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar 
       assert(result.size == 2, "The number of inserted authors does not match!!")
       assert(result.contains(author1), "author1 should be returned")
       assert(result.contains(author2), "author1 should be returned")
-      assert(result(0).links === links, "links should be exact the same")
+      assert(result(0).links == links, "links should be exact the same")
     }
   }
   "AuthorRepository#list" should {

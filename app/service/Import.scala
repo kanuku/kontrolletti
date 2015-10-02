@@ -34,22 +34,24 @@ class ImportImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
     for {
       accessToken <- logErrorOnFailure(oAuthclient.accessToken())
-      kioRepos <- kioClient.apps(accessToken)
+      kioRepos <- kioClient.repositories(accessToken)
       savedRepos <- repoRepo.all()
       result <- {
-        val notInDb = kioRepos.filter { n => !savedRepos.toList.exists { s => (s.url == n.url) } }
-        val filtered = filterValidRepos(notInDb)
-        val valid = filtered.map { x => (x.url -> x) }.toMap
-        logger.info("from " + kioRepos.size + " Repositories(Kio) only " + valid.size + " are usable and " + savedRepos.size + " are already in database")
-        repoRepo.save(valid.values.toList).map { x =>
-          logger.info("Finished saving apps")
+        val reposNotInDatabase = kioRepos.filter { n => !savedRepos.toList.exists { s => (s.url == n.url) } }
+        val filtered = filterValidRepos(reposNotInDatabase)
+        filtered.map { x => (x.url -> x) } match {
+          case Nil => Future.successful{}
+          case valid =>
+            repoRepo.save(valid.toMap.values.toList).map { _ =>
+              logger.info("Finished saving apps")
+            }
         }
       }
     } yield (savedRepos, result)
   }
 
   /**
-   * Filter apps that have a parsable scm-url. And are not already in the datastore.
+   * Filter apps that have a parsable scm-url.
    */
   private def filterValidRepos(repositories: List[Repository]): List[Repository] = for {
     repo <- repositories

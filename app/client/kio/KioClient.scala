@@ -25,7 +25,7 @@ import play.api.libs.json.Format
 case class KioClientException(message: String) extends Exception(message)
 
 trait KioClient {
-  def apps(accessToken: OAuthAccessToken): Future[List[Repository]]
+  def repositories(accessToken: OAuthAccessToken): Future[List[Repository]]
 }
 @Singleton
 class KioClientImpl @Inject() (dispatcher: RequestDispatcher, //
@@ -46,7 +46,7 @@ class KioClientImpl @Inject() (dispatcher: RequestDispatcher, //
     and Reads.pure(None) //
     )(Repository.apply _)
 
-  def apps(accessToken: OAuthAccessToken): Future[List[Repository]] = {
+  def repositories(accessToken: OAuthAccessToken): Future[List[Repository]] = {
     logger.info("Kio client is calling endpoint" + config.serviceUrl)
     logErrorOnFailure {
       dispatcher.requestHolder(config.serviceUrl) //

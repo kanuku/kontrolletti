@@ -18,16 +18,14 @@ import play.api.Configuration
 import module.Development
 import org.scalatest.BeforeAndAfterAll
 
-class RepoRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar with ApplicationWithDB with BeforeAndAfterAll {
+class RepoRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar with ApplicationWithDB {
 
   val date1 = new DateTime
   val repo1 = createRepository(url = "url1", host = "host1", project = "project1", repository = "repository")
   val repo2 = createRepository(url = "url2", host = "host2", project = "project2", repository = "repository")
 
  
-  override def afterAll {
-    cleanupEvolutions
-  }
+ 
 
   "RepoRepository#list" should {
     "be empty initially" in {

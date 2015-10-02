@@ -1,27 +1,22 @@
 package test.util
 
-import com.google.inject.Guice
-
 import module.Development
-import play.api.Configuration
-import play.api.Environment
-import play.api.GlobalSettings
 import play.api.db.DBApi
-import play.api.db.evolutions.Evolutions
 import play.api.inject.guice.GuiceApplicationBuilder
+import org.scalatest.SuiteMixin
+import org.scalatest.Suite
+import play.api.Environment
+import play.api.db.evolutions.Evolutions
+import play.api.Configuration
+import org.scalatest.BeforeAndAfterAll
 
 /**
  * @author fbenjamin
- *
- * This Trait is ment for separating database tests from the production database during development/it-testing.
- * It loads its own separate
  */
-trait ApplicationWithDB { //}extends OneAppPerSuite {
+trait ApplicationWithDB extends SuiteMixin with BeforeAndAfterAll { this: Suite =>
 
   private def configuration() = Configuration.load(Environment.simple(), Map("config.resource" -> "application.test.db.conf"))
-  
-  
-  
+
   val application = new GuiceApplicationBuilder() //
     .configure(configuration()) //
     .bindings(new Development())
@@ -34,6 +29,9 @@ trait ApplicationWithDB { //}extends OneAppPerSuite {
     database.shutdown()
     true
   }
+  
 
- 
+  override def afterAll {
+    cleanupEvolutions
+  }
 }
