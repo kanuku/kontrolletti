@@ -1,4 +1,3 @@
-EXEC SQL INCLUDE conf/Initizalize.sql;
 ﻿DROP DATABASE IF EXISTS kontrolletti_test;
 DROP ROLE IF EXISTS kontrolletti_test;
 CREATE ROLE kontrolletti_test WITH LOGIN PASSWORD 'kontrolletti_test';
