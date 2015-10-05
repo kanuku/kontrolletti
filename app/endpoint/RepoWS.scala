@@ -16,10 +16,10 @@ import scala.concurrent.future
 import scala.concurrent.Future
 import model.RepositoryResult
 import model.KontrollettiToJsonParser._
+import dao.RepoRepository
 
 @Singleton
-class RepoWS @Inject() (searchService: Search) extends Controller {
-
+class RepoWS @Inject() (searchService: Search, repoRepository: RepoRepository) extends Controller {
   val logger: Logger = Logger { this.getClass }
 
   def normalize(repositoryUrl: String) = Action.async {
@@ -48,7 +48,6 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
             logger.info(s"Result: 404 $normalizedUrl")
             NotFound
         }
-
     }
   }
 
@@ -57,17 +56,14 @@ class RepoWS @Inject() (searchService: Search) extends Controller {
     logger.info(s"Request(By URL): $url")
 
     searchService.parse(url) match {
-      case Right((host, project, repo)) => 
-        searchService.repo(host, project, repo).map {
-          case Right(None) =>
+      case Right((host, project, repo)) =>
+        repoRepository.byParameters(host, project, repo).map {
+          case Some(result) =>
+            logger.info(s"Result: 200 " + Json.toJson(result))
+            Ok(Json.toJson(result)).as("application/x.zalando.repository+json")
+          case None =>
             logger.info(s"Result: 404 ")
             NotFound
-          case Right(Some(result)) =>
-            logger.info(s"Result: 200 "+Json.toJson(result))
-            Ok(Json.toJson(result)).as("application/x.zalando.repository+json")
-          case Left(error) =>
-            logger.info(s"Result: 500 ")
-            InternalServerError.as("application/problem+json")
         }
       case Left(error) =>
         logger.info(s"Result: 400 $error")

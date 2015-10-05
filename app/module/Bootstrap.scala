@@ -57,7 +57,7 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
 
   def setup() = {
 //    scheduleSyncAppsJob
-//    scheduleSynchCommitsJobs
+    scheduleSynchCommitsJobs
     
   }
 
