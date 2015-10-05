@@ -18,7 +18,6 @@ import test.util.MockitoUtils
 import client.RequestDispatcherImpl
 import test.util.TestUtils._
 import model.Link
-import test.util.ApplicationWithCustomModule
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.inject.Module
 import play.api.Environment
@@ -26,7 +25,7 @@ import play.api.Configuration
 /**
  * This class tests the interaction between the Service and the Client(mock).
  */
-class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPerSuite with BeforeAndAfter with ApplicationWithCustomModule  {
+class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPerSuite with BeforeAndAfter {
 
   val defaultError = "Something went wrong, check the logs!"
   val host = "github.com"

@@ -2,6 +2,8 @@ package client.oauth
 
 import javax.inject.Singleton
 import com.google.inject.ImplementedBy
+import play.api.Logger
+import play.api.Play
 
 /**
  * @author fbenjamin
@@ -21,10 +23,14 @@ trait OAuthConfiguration {
 
 @Singleton
 class OAuthConfigurationImpl extends OAuthConfiguration {
-  def credentialsDirectory = play.Play.application.configuration.getString("client.oauth.credentials.dir")
-  def requestClientTimeout = play.Play.application.configuration.getInt("client.oauth.request.timeout.ms")
-  def clientCredentialsFilename: String = play.Play.application.configuration.getString("client.oauth.client.credentials.file")
-  def userCredentialsFileName: String = play.Play.application.configuration.getString("client.oauth.service.credentials.file")
-  def accessTokenRequestEndpoint: String = play.Play.application.configuration.getString("client.oauth.access.token.service.url")
-  def tokenInfoRequestEndpoint: String = play.Play.application.configuration.getString("client.oauth.token.info.service.url")
+
+  val logger: Logger = Logger { this.getClass }
+
+  def credentialsDirectory = Play.current.configuration.getString("client.oauth.credentials.dir").get
+  def requestClientTimeout = Play.current.configuration.getInt("client.oauth.request.timeout.ms").get
+  def clientCredentialsFilename: String = Play.current.configuration.getString("client.oauth.client.credentials.file").get
+  def userCredentialsFileName: String = Play.current.configuration.getString("client.oauth.user.credentials.file").get
+  def accessTokenRequestEndpoint: String = Play.current.configuration.getString("client.oauth.access.token.service.url").get
+  def tokenInfoRequestEndpoint: String = Play.current.configuration.getString("client.oauth.token.info.service.url").get
+
 }
