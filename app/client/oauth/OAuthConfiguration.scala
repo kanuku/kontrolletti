@@ -13,6 +13,7 @@ trait OAuthConfiguration {
   def clientCredentialsFilename: String
   def userCredentialsFileName: String
   def accessTokenRequestEndpoint: String
+  def tokenInfoRequestEndpoint: String
 
   override def toString = s"([credentials-directory=$credentialsDirectory], [request-client-timeout=$requestClientTimeout], [client-credentials-filename=$clientCredentialsFilename], [user-credentials-filename=$userCredentialsFileName],[access-token-request-endpoint=$accessTokenRequestEndpoint])"
 
@@ -24,5 +25,6 @@ class OAuthConfigurationImpl extends OAuthConfiguration {
   def requestClientTimeout = play.Play.application.configuration.getInt("client.oauth.request.timeout.ms")
   def clientCredentialsFilename: String = play.Play.application.configuration.getString("client.oauth.client.credentials.file")
   def userCredentialsFileName: String = play.Play.application.configuration.getString("client.oauth.service.credentials.file")
-  def accessTokenRequestEndpoint: String = play.Play.application.configuration.getString("client.oauth.token.service.url")
+  def accessTokenRequestEndpoint: String = play.Play.application.configuration.getString("client.oauth.access.token.service.url")
+  def tokenInfoRequestEndpoint: String = play.Play.application.configuration.getString("client.oauth.token.info.service.url")
 }
