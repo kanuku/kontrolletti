@@ -12,7 +12,7 @@ before_script:
   - psql -f 'conf/db-setup/initialize-test-db.sql' -U postgres 
 
 script:
-  - sbt clean coverage test -Dconfig.file=conf/application.test.conf
+  - sbt clean coverage test -Dslick.dbs.default.db.url="jdbc:postgresql://localhost:5432/kontrolletti_test?characterEncoding=UTF-8"
   - sbt coverageReport
 
 after_success:
