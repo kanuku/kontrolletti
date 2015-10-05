@@ -21,28 +21,32 @@ import org.scalatest.BeforeAndAfterAll
 class RepoRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar with ApplicationWithDB {
 
   val date1 = new DateTime
-  val repo1 = createRepository(url = "url1", host = "host1", project = "project1", repository = "repository")
-  val repo2 = createRepository(url = "url2", host = "host2", project = "project2", repository = "repository")
+  val enabledRepo1 = createRepository(url = "url1", host = "host1", project = "RepoRepositoryTest-project1", repository = "repository")
+  val disabledRepo2 = createRepository(url = "url2", host = "host2", project = "RepoRepositoryTest-project2", repository = "repository",enabled=false)
 
- 
- 
 
-  "RepoRepository#list" should {
-    "be empty initially" in {
-      val result = Await.result(repoRepository.all(), 5 seconds)
-      assert(result.size == 0)
-    }
-  }
-
-  "RepoRepository#save" should {
+  "RepoRepository" should {
+	  Await.result(repoRepository.save(List(enabledRepo1, disabledRepo2)), 5 seconds)
     "store data in the database" in {
-      Await.result(repoRepository.save(List(repo1, repo2)), 5 seconds)
       val result = Await.result(repoRepository.all(), 15 seconds)
-      assert(result.size == 2)
-      assert(result.contains(repo1))
-      assert(result.contains(repo2))
+      assert(result.size >= 2)
+      assert(result.contains(enabledRepo1))
+      assert(result.contains(disabledRepo2))
     }
+	  
+	  "return enabled repositories" in {
+		  val result = Await.result(repoRepository.enabled(), 15 seconds)
+				  assert(result.size > 0)
+				  assert(result.contains(enabledRepo1), "Enabled repository should be in the result")
+				  assert(!result.contains(disabledRepo2), "Disabled repository should not be in the result")
+	    
+	  }
+	  "return single result by parameters" in {
+		  val Some(result) = Await.result(repoRepository.byParameters(enabledRepo1.host, enabledRepo1.project, enabledRepo1.repository), 15 seconds)
+		  assert(result === enabledRepo1,"Enabled repository should be the only returned result")
+	  }
   }
+  
 
   def repoRepository = application.injector.instanceOf[RepoRepository]
 }

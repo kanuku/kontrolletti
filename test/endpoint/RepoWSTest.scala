@@ -23,6 +23,7 @@ import org.scalatest.Ignore
 import test.util.KontrollettiOneAppPerTestWithOverrides
 import org.scalatest.BeforeAndAfter
 import dao.CommitRepository
+import dao.RepoRepository
 
 class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides with MockitoSugar with MockitoUtils with BeforeAndAfter {
   private val X_NORMALIZED_REPOSITORY_URL_HEADER = "X-Normalized-Repository-URL"
@@ -35,10 +36,11 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
   private val host = "github.com"
   private val project = "zalando"
   private val repoName = "kontrolletti"
-  val search = mock[Search]
+  private val search = mock[Search]
+  private val repoRepository = mock[RepoRepository]
 
   before {
-    reset(search)
+    reset(search,repoRepository)
   }
 
   "HEAD /api/repos" should {
@@ -142,11 +144,10 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
 
       val parsedResponse = Right((host, project, repoName))
       val repository = createRepository()
-      val repoResponse = Future.successful(Right(Some(repository)))
+      val repoResponse = Future.successful(Some(repository))
 
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
-      when(search.repo(host, project, repoName)).thenReturn(repoResponse)
-
+     when(repoRepository.byParameters(host, project, repoName)).thenReturn(repoResponse)
       val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
       status(result) mustEqual OK
 
@@ -154,7 +155,7 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
       contentType(result) mustEqual Some("application/x.zalando.repository+json")
 
       verify(search, times(1)).parse(defaultUrl)
-      verify(search, times(1)).repo(host, project, repoName)
+      verify(repoRepository, times(1)).byParameters(host, project, repoName)
     }
 
     "Return 400 when called with erraneous url" in {
@@ -171,33 +172,21 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
 
     "Return 404 when it results in a None" in {
       val parsedResponse = Right((host, project, repoName))
-      val repoResponse = Future.successful(Right(None))
+      val repoResponse = Future.successful(None)
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
-      when(search.repo(host, project, repoName)).thenReturn(repoResponse)
+      when(repoRepository.byParameters(host, project, repoName)).thenReturn(repoResponse)
 
       val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
       status(result) mustEqual NOT_FOUND
       contentAsString(result) mustBe empty
 
       verify(search, times(1)).parse(defaultUrl)
+      verify(repoRepository, times(1)).byParameters(host, project, repoName)
     }
 
-    "Return 500 when it results in an error" in {
-      val parsedResponse = Right((host, project, repoName))
-      val error = Left("someError")
-      val repoResponse = Future.successful(error)
-      when(search.parse(defaultUrl)).thenReturn(parsedResponse)
-      when(search.repo(host, project, repoName)).thenReturn(repoResponse)
-
-      val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
-      status(result) mustEqual INTERNAL_SERVER_ERROR
-      contentAsString(result) mustBe empty
-      contentType(result) mustEqual Some("application/problem+json")
-      verify(search, times(1)).parse(defaultUrl)
-    }
   }
   override def overrideModules = {
-    Seq(
-      bind[Search].toInstance(search))
+    Seq(bind[Search].toInstance(search),
+      bind[RepoRepository].toInstance(repoRepository))
   }
 }
