@@ -9,7 +9,7 @@ addon:
   postgresql: "9.4"
 
 before_script:
-  - psql -U postgres -f conf/db-setup/initialize-test-db.sql
+  - psql -f 'conf/db-setup/initialize-test-db.sql' -U postgres 
 
 script:
   - sbt clean coverage test -Dconfig.file=conf/application.test.conf
