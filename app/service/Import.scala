@@ -37,10 +37,12 @@ class ImportImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
       kioRepos <- kioClient.repositories(accessToken)
       savedRepos <- repoRepo.all()
       result <- {
-        val reposNotInDatabase = kioRepos.filter { n => !savedRepos.toList.exists { s => (s.url == n.url) } }
-        val filtered = filterValidRepos(reposNotInDatabase)
+        val filtered = filterValidRepos(kioRepos)
+        val reposNotInDatabase = filtered.filter {
+          n => !savedRepos.toList.exists { s => (s.host == n.host && s.project == n.project && s.repository == n.repository) }
+        }
         filtered.map { x => (x.url -> x) } match {
-          case Nil => Future.successful{}
+          case Nil => Future.successful {}
           case valid =>
             repoRepo.save(valid.toMap.values.toList).map { _ =>
               logger.info("Finished saving apps")
@@ -48,7 +50,7 @@ class ImportImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
         }
       }
     } yield (savedRepos, result)
-  }
+  } 
 
   /**
    * Filter apps that have a parsable scm-url.
