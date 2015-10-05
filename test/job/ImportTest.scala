@@ -14,7 +14,6 @@ import client.oauth.OAuth
 import service.ImportImpl
 import service.Search
 import test.util.MockitoUtils
-import test.util.DBModels
 import akka.actor.ActorSystem
 import akka.actor.Scheduler
 import org.joda.time.DateTime
