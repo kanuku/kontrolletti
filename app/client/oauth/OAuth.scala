@@ -4,7 +4,6 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import OAuthParser.oAuthAccessTokenReader
 import OAuthParser.oAuthClientCredentialReader
 import OAuthParser.oAuthUserCredentialReader
@@ -19,6 +18,7 @@ import play.api.libs.json.JsPath
 import play.api.libs.json.Reads
 import play.api.libs.ws.WSAuthScheme
 import utility.Transformer
+import configuration.OAuthConfiguration
 /**
  * @author fbenjamin
  */

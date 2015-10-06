@@ -10,6 +10,7 @@ import org.mockito.Matchers._
 import org.scalatest.TestData
 import test.util.FakeResponseData
 import scala.concurrent.Future
+import configuration.GeneralConfigurationImpl
 
 /**
  * @author fbenjamin
@@ -18,8 +19,8 @@ class KioClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
 
   private val dispatcher = mock[RequestDispatcher]
   private val requestHolder = mock[WSRequest]
-  private val config = new KioClientConfigurationImpl {
-    override def serviceUrl = "thisUrlSucks"
+  private val config = new GeneralConfigurationImpl {
+    override def kioServiceAppsEndpoint = "thisUrlSucks"
   }
   private val client = new KioClientImpl(dispatcher, config)
   private val oAuthAccessToken = createOAuthAccessToken("token_type", "access_token", "scope", 3599)
@@ -27,13 +28,13 @@ class KioClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
   "KioClient#apps" should "return fully parsed App objects " in {
     val wsResult = createMockedWSResponse(FakeResponseData.kioApps, 200)
 
-    when(dispatcher.requestHolder(config.serviceUrl)).thenReturn(requestHolder)
+    when(dispatcher.requestHolder(config.kioServiceAppsEndpoint)).thenReturn(requestHolder)
     when(requestHolder.withHeaders(("Authorization", "Bearer " + oAuthAccessToken.accessToken))).thenReturn(requestHolder)
     when(requestHolder.get()).thenReturn(Future.successful(wsResult))
 
     val result = client.repositories(oAuthAccessToken)
 
-    verify(dispatcher, times(1)).requestHolder(config.serviceUrl)
+    verify(dispatcher, times(1)).requestHolder(config.kioServiceAppsEndpoint)
     verify(requestHolder, times(1)).withHeaders(("Authorization", "Bearer " + oAuthAccessToken.accessToken))
     verify(requestHolder, times(1)).get()
 

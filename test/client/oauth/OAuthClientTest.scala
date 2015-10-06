@@ -17,6 +17,8 @@ import test.util.MockitoUtils
 import test.util.TestUtils._
 import utility.Transformer
 import scala.concurrent.ExecutionContext.Implicits.global
+import configuration.OAuthConfigurationImpl
+import configuration.OAuthConfiguration
 /**
  * @author fbenjamin
  */

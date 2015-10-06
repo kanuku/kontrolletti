@@ -40,7 +40,7 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
   private val repoRepository = mock[RepoRepository]
 
   before {
-    reset(search,repoRepository)
+    reset(search, repoRepository)
   }
 
   "HEAD /api/repos" should {
@@ -147,7 +147,7 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
       val repoResponse = Future.successful(Some(repository))
 
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
-     when(repoRepository.byParameters(host, project, repoName)).thenReturn(repoResponse)
+      when(repoRepository.byParameters(host, project, repoName)).thenReturn(repoResponse)
       val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
       status(result) mustEqual OK
 

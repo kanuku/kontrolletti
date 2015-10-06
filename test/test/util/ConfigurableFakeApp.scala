@@ -7,7 +7,7 @@ import play.api.test.Helpers._
 trait ConfigurableFakeApp {
 
   def routes: PartialFunction[Tuple2[String, String], Handler ] = {
-    case ("GET", "/access_token") => Action { Results.Ok("") }
+    case _ => Action { Results.NotFound }
   }
 
   def configuration: Map[String, _] = Map()

@@ -22,6 +22,9 @@ import org.scalatestplus.play.OneAppPerSuite
 import play.api.inject.Module
 import play.api.Environment
 import play.api.Configuration
+import configuration.GeneralConfiguration
+import client.RequestDispatcher
+import play.api.libs.ws.WSClient
 /**
  * This class tests the interaction between the Service and the Client(mock).
  */
@@ -46,7 +49,7 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
     when(client.commits(host, project, repository, None, None, 1)).thenReturn(response)
     val result = Await.result(search.commits(host, project, repository, None, None, 1), Duration("5 seconds"))
-    println(">>>>>>  "+result)
+    println(">>>>>>  " + result)
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
     assert(!result.right.get.isEmpty, "Result must not be empty")
@@ -133,13 +136,13 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
 
   "Search#normalize" should "normalize the github URL" in {
     val url = "https://github.com/zalando-bus/kontrolletti"
-    val client = new SCMImpl(new RequestDispatcherImpl(null))
+    val client = new SCMImpl(new RequestDispatcherImpl(mock[WSClient], mock[GeneralConfiguration]))
     val search = new SearchImpl(client)
     assert(search.normalize(host, project, repository) == url)
   }
   "Search#normalize" should "normalize the stash URL" in {
     val url = "https://stash.zalando.net/rest/api/1.0/projects/zalando-bus/repos/kontrolletti"
-    val client = new SCMImpl(new RequestDispatcherImpl(null))
+    val client = new SCMImpl(new RequestDispatcherImpl(mock[WSClient], mock[GeneralConfiguration]))
     val search = new SearchImpl(client)
     assert(search.normalize("stash.zalando.net", project, repository) == url)
   }
@@ -240,5 +243,4 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
     verify(client, times(1)).tickets(host, project, repository)
   }
 
-  
 }

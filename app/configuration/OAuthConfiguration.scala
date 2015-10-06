@@ -1,4 +1,4 @@
-package client.oauth
+package configuration
 
 import javax.inject.Singleton
 import com.google.inject.ImplementedBy
@@ -8,7 +8,7 @@ import play.api.Play
 /**
  * @author fbenjamin
  */
-@ImplementedBy(classOf[OAuthConfigurationImpl])
+
 trait OAuthConfiguration {
   def credentialsDirectory: String
   def requestClientTimeout: Int

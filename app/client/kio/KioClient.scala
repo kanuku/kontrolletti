@@ -18,6 +18,7 @@ import utility.FutureUtil._
 import play.api.libs.json.Json
 import org.joda.time.DateTime
 import play.api.libs.json.Format
+import configuration.GeneralConfiguration
 /**
  * @author fbenjamin
  */
@@ -29,7 +30,7 @@ trait KioClient {
 }
 @Singleton
 class KioClientImpl @Inject() (dispatcher: RequestDispatcher, //
-                               config: KioClientConfiguration) extends KioClient {
+                               config: GeneralConfiguration) extends KioClient {
 
   private val dateWrites = KontrollettiToJsonParser.dateWrites
   private val dateReads = KontrollettiToModelParser.dateReads
@@ -47,9 +48,9 @@ class KioClientImpl @Inject() (dispatcher: RequestDispatcher, //
     )(Repository.apply _)
 
   def repositories(accessToken: OAuthAccessToken): Future[List[Repository]] = {
-    logger.info("Kio client is calling endpoint" + config.serviceUrl)
+    logger.info("Kio client is calling endpoint" + config.kioServiceAppsEndpoint)
     logErrorOnFailure {
-      dispatcher.requestHolder(config.serviceUrl) //
+      dispatcher.requestHolder(config.kioServiceAppsEndpoint) //
         .withHeaders(("Authorization", "Bearer " + accessToken.accessToken)).get()
         .flatMap { response =>
           if (response.status == 200) {

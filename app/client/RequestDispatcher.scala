@@ -8,17 +8,17 @@ import play.api.libs.ws.WSClient
 import play.api.libs.ws.WSRequest
 import com.google.inject.ImplementedBy
 import play.api.Logger
+import configuration.GeneralConfiguration
+
 /**
  * @author fbenjamin
  *
  * This class has been created to simplify unit-tests.
  * Motivation: <br>
- * SCMImpl was using play's @play.api.libs.ws.WS(Singleton) directly
+ * Kontrolletti was using play's @play.api.libs.ws.WS(Singleton) directly
  * which forced us to make complex unit-tests.
  * By exporting those same calls to this separate trait(interface),
  * we(you) can easily mock the calls to isolate and simplify the unit tests.
- *
- *
  */
 trait RequestDispatcher {
 
@@ -26,13 +26,10 @@ trait RequestDispatcher {
 }
 
 @Singleton
-class RequestDispatcherImpl @Inject() (client: WSClient) extends RequestDispatcher {
+class RequestDispatcherImpl @Inject() (client: WSClient, config: GeneralConfiguration) extends RequestDispatcher {
   val logger: Logger = Logger(this.getClass())
   def requestHolder(url: String): WSRequest = {
     logger.info(s"Creating an dispatcher for $url")
-    client.url(url).withRequestTimeout(30000)
+    client.url(url).withRequestTimeout(config.defaultClientTimeout)
   }
 }
-
-
-
