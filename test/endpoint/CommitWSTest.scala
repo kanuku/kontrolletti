@@ -49,8 +49,12 @@ import test.util.MockitoUtils
 import model.KontrollettiToJsonParser._
 import model.CommitResult
 import test.util.KontrollettiOneAppPerTestWithOverrides
+import test.util.OAuthTestBuilder
+import dao.RepoRepository
+import client.RequestDispatcher
+import configuration.OAuthConfiguration
 
-class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides with MockitoSugar with MockitoUtils with BeforeAndAfter {
+class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides with MockitoSugar with MockitoUtils with BeforeAndAfter with OAuthTestBuilder {
   val host = "github.com"
   val project = "zalando"
   val repository = "kontrolletti"
@@ -61,6 +65,11 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
 
   before {
     reset(search, commitRepository)
+    recordOAuthBehaviour
+  }
+
+  after {
+    verifyOAuthBehaviour
   }
 
   def diffRoute(host: String = host, project: String = project, repository: String = repository, source: String, target: String) = s"/api/hosts/$host/projects/$project/repos/$repository/diff/$source...$target"
@@ -184,13 +193,14 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       contentAsString(result) mustBe empty
     }
 
- 
-
   }
 
   override def overrideModules = {
     Seq(
       bind[Search].toInstance(search),
-      bind[CommitRepository].toInstance(commitRepository))
+      bind[CommitRepository].toInstance(commitRepository), //
+      bind[OAuthConfiguration].toInstance(oauthConfig), //
+      bind[RequestDispatcher].toInstance(dispatcher) //
+      )
   }
 }

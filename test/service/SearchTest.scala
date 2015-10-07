@@ -1,34 +1,40 @@
 package service
 
+import scala.Left
+import scala.Right
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
-import org.mockito.Mockito._
+
+import org.mockito.Mockito.reset
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfter
 import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
-import org.scalatestplus.play.OneAppPerTest
-import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.OneAppPerSuite
+
+import com.google.inject.ImplementedBy
+
+import client.RequestDispatcherImpl
 import client.scm.SCM
 import client.scm.SCMImpl
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.libs.json.JsValue
-import play.api.libs.ws.WSResponse
-import test.util.MockitoUtils
-import client.RequestDispatcherImpl
-import test.util.TestUtils._
-import model.Link
-import org.scalatestplus.play.OneAppPerSuite
-import play.api.inject.Module
-import play.api.Environment
-import play.api.Configuration
 import configuration.GeneralConfiguration
-import client.RequestDispatcher
+import javax.inject.Inject
+import javax.inject.Singleton
+import model.Link
 import play.api.libs.ws.WSClient
+import play.api.libs.ws.WSResponse
+import test.util.ConfigurableFakeApp
+import test.util.MockitoUtils
+import test.util.TestUtils.assertEitherIsLeft
+import test.util.TestUtils.assertEitherIsNotNull
+import test.util.TestUtils.assertEitherIsRight
 /**
  * This class tests the interaction between the Service and the Client(mock).
  */
-class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPerSuite with BeforeAndAfter {
+class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPerSuite with ConfigurableFakeApp with BeforeAndAfter {
 
   val defaultError = "Something went wrong, check the logs!"
   val host = "github.com"
@@ -40,6 +46,8 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
   val commitId = "commitId"
   val client = mock[SCM]
   val search: Search = new SearchImpl(client)
+
+  implicit override lazy val app = fakeApplication
 
   before {
     reset(client)

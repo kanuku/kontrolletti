@@ -24,8 +24,12 @@ import test.util.KontrollettiOneAppPerTestWithOverrides
 import org.scalatest.BeforeAndAfter
 import dao.CommitRepository
 import dao.RepoRepository
+import module.Development
+import client.RequestDispatcher
+import configuration.OAuthConfiguration
+import test.util.OAuthTestBuilder
 
-class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides with MockitoSugar with MockitoUtils with BeforeAndAfter {
+class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides with MockitoSugar with MockitoUtils with BeforeAndAfter with OAuthTestBuilder {
   private val X_NORMALIZED_REPOSITORY_URL_HEADER = "X-Normalized-Repository-URL"
   private val alternativeUrl = "git@github.com:zalando/kontrolletti.git"
   private val reposRoute = "/api/repos/"
@@ -41,6 +45,11 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
 
   before {
     reset(search, repoRepository)
+    recordOAuthBehaviour
+  }
+
+  after {
+    verifyOAuthBehaviour
   }
 
   "HEAD /api/repos" should {
@@ -186,7 +195,10 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
 
   }
   override def overrideModules = {
-    Seq(bind[Search].toInstance(search),
-      bind[RepoRepository].toInstance(repoRepository))
+    Seq(bind[Search].toInstance(search), //
+      bind[RepoRepository].toInstance(repoRepository), //
+      bind[OAuthConfiguration].toInstance(oauthConfig), //
+      bind[RequestDispatcher].toInstance(dispatcher) //
+      )
   }
 }

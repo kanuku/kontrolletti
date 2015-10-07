@@ -19,6 +19,9 @@ import play.api.libs.json.Reads
 import play.api.libs.ws.WSAuthScheme
 import utility.Transformer
 import configuration.OAuthConfiguration
+import play.api.libs.json.Format
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 /**
  * @author fbenjamin
  */
@@ -27,6 +30,10 @@ import configuration.OAuthConfiguration
 case class OAuthClientCredential(id: String, secret: String)
 case class OAuthUserCredential(username: String, password: String)
 case class OAuthAccessToken(tokenType: String, accessToken: String, scope: String, expiresIn: Int)
+case class OAuthTokenInfo(uid: String, scope: Option[List[String]], //
+                          grantType: String, realm: String, //
+                          tokenType: String, expiresIn: Int, accessToken: String)
+
 case class OAuthClientException(message: String) extends Exception(message)
 sealed trait OAuth {
 
@@ -55,6 +62,15 @@ object OAuthParser {
     (JsPath \ "access_token").read[String] and
     (JsPath \ "scope").read[String] and
     (JsPath \ "expires_in").read[Int])(OAuthAccessToken.apply _)
+
+  implicit val oAuthOAuthTokenInfoFormatter: Format[OAuthTokenInfo] = (
+    (JsPath \ "uid").format[String] and
+    (JsPath \ "scope").formatNullable[List[String]] and
+    (JsPath \ "grant_type").format[String] and
+    (JsPath \ "realm").format[String] and
+    (JsPath \ "token_type").format[String] and
+    (JsPath \ "expires_in").format[Int] and
+    (JsPath \ "access_token").format[String])(OAuthTokenInfo.apply, unlift(OAuthTokenInfo.unapply))
 
 }
 
@@ -123,4 +139,3 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
   }
 
 }
-

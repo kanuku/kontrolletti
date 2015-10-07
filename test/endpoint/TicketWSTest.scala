@@ -23,8 +23,11 @@ import model.KontrollettiToJsonParser._
 import org.scalatest.Ignore
 import test.util.KontrollettiOneAppPerTestWithOverrides
 import org.scalatest.BeforeAndAfter
+import test.util.OAuthTestBuilder
+import client.RequestDispatcher
+import configuration.OAuthConfiguration
 
-class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with KontrollettiOneAppPerTestWithOverrides with BeforeAndAfter {
+class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with KontrollettiOneAppPerTestWithOverrides with OAuthTestBuilder with BeforeAndAfter {
   val reposRoute = "/api/repos/"
   val host = "github.com"
   val project = "zalando"
@@ -35,6 +38,11 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with Kon
 
   before {
     reset(search)
+    recordOAuthBehaviour
+  }
+
+  after {
+    verifyOAuthBehaviour
   }
 
   def ticketRoute(host: String = host, project: String = project, repository: String = repo, sinceId: Option[String], untilId: Option[String]) = {
@@ -86,9 +94,9 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with Kon
       verify(search, times(1)).tickets(host, project, repo, sinceId, untilId)
     }
   }
-    override def overrideModules = {
-    Seq(
-      bind[Search].toInstance(search))
-  }
+  Seq(
+    bind[Search].toInstance(search), //
+    bind[OAuthConfiguration].toInstance(oauthConfig), //
+    bind[RequestDispatcher].toInstance(dispatcher))
 
 }
