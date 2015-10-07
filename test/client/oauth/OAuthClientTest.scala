@@ -110,16 +110,16 @@ class OAuthClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
     val token = "e27bac64-3d89-4b99-94d4-3bf15e7dada2"
     val tokenInfo = new OAuthTokenInfo("username", Option(List("uid", "cn")), "password", "/employees", "Bearer", 3564, token)
     val requestReponse = """{"uid":"username","scope":["uid","cn"],"grant_type":"password","cn":"","realm":"/employees","token_type":"Bearer","expires_in":3564,"access_token":"e27bac64-3d89-4b99-94d4-3bf15e7dada2"}"""
-    val mockedTokenInfoWSResponse = createMockedWSResponse(token, 200)
+    val mockedTokenInfoWSResponse = createMockedWSResponse(requestReponse, 200)
     val mockedResponse = Future.successful(mockedTokenInfoWSResponse)
 
     when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.withQueryString(any())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.get()).thenReturn(mockedResponse)
 
-    Await.result(client.tokenInfo(token), Duration("5 seconds")) match {
-      case Some(value) => assert(value === tokenInfo)
-      case None        => fail("Result should not be None");
+    Await.result(client.tokenInfo(token), Duration("50 seconds")) match {
+      case Some(result) => assert(result === tokenInfo, "Result is not equal to expected")
+      case None         => fail("Result should not be None");
     }
     verify(mockedDispatcher, times(1)).requestHolder(config.tokenInfoRequestEndpoint)
     verify(mockedRequestHolder, times(1)).withQueryString(("access_token", token))

@@ -140,6 +140,26 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
     }
   }
 
-  def tokenInfo(token: String): Future[Option[OAuthTokenInfo]] = ???
+  def tokenInfo(token: String): Future[Option[OAuthTokenInfo]] = {
+    logger.info("Requesting OAuth-Token-Info from oauthEndpoint: " + config.tokenInfoRequestEndpoint)
+    dispatcher.requestHolder(config.tokenInfoRequestEndpoint) //
+      .withQueryString(("access_token", token))
+      .get().map { x =>
+        x.status match {
+          case 200 =>
+            logger.info("OAuth-token does exist")
+            val Some(result: OAuthTokenInfo) = transformer.deserialize2Option[OAuthTokenInfo](Json.parse(x.body))(OAuthParser.oAuthOAuthTokenInfoFormatter)
+            logger.info("OAuth-token does exist" + result)
+            Option(result)
+          case 400 =>
+            logger.warn("OAuth-token is not valid:" + x.body)
+            None
+          case _ =>
+            logger.warn("OAuth-token-endpoint responded with unexpected http-code:" + x.status + " - " + x.body)
+            None
+        }
+
+      }
+  }
 
 }

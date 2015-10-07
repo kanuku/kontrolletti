@@ -94,9 +94,10 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with Kon
       verify(search, times(1)).tickets(host, project, repo, sinceId, untilId)
     }
   }
-  Seq(
-    bind[Search].toInstance(search), //
-    bind[OAuthConfiguration].toInstance(oauthConfig), //
-    bind[RequestDispatcher].toInstance(dispatcher))
-
+  override def overrideModules = {
+    Seq(
+      bind[Search].toInstance(search), //
+      bind[OAuthConfiguration].toInstance(oauthConfig), //
+      bind[RequestDispatcher].toInstance(dispatcher))
+  }
 }
