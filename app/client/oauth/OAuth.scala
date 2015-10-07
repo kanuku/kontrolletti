@@ -33,8 +33,8 @@ case class OAuthAccessToken(tokenType: String, accessToken: String, scope: Strin
 case class OAuthTokenInfo(uid: String, scope: Option[List[String]], //
                           grantType: String, realm: String, //
                           tokenType: String, expiresIn: Int, accessToken: String)
-
 case class OAuthClientException(message: String) extends Exception(message)
+
 sealed trait OAuth {
 
   def clientCredentials(): Future[OAuthClientCredential]
@@ -42,6 +42,8 @@ sealed trait OAuth {
   def userCredentials(): Future[OAuthUserCredential]
 
   def accessToken(): Future[OAuthAccessToken]
+
+  def tokenInfo(token: String): Future[Option[OAuthTokenInfo]]
 }
 
 /**
@@ -137,5 +139,7 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
         Future.failed(ex)
     }
   }
+
+  def tokenInfo(token: String): Future[Option[OAuthTokenInfo]] = ???
 
 }
