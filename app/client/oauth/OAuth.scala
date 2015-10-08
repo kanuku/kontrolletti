@@ -87,7 +87,7 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
   def accessToken(client: OAuthClientCredential, serviceUser: OAuthUserCredential): Future[OAuthAccessToken] = {
     logger.info("OAuth endpoint:" + config.accessTokenRequestEndpoint)
     val result = dispatcher.requestHolder(config.accessTokenRequestEndpoint) //
-      .withRequestTimeout(config.requestClientTimeout)
+      .withRequestTimeout(config.requestClientTimeout.toLong)
       .withHeaders(("Content-Type", "application/x-www-form-urlencoded"))
       .withAuth(client.id, client.secret, WSAuthScheme.BASIC)
       .withQueryString(("grant_type", "password"))
@@ -141,15 +141,15 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
   }
 
   def tokenInfo(token: String): Future[Option[OAuthTokenInfo]] = {
-    logger.info("Requesting OAuth-Token-Info from oauthEndpoint: " + config.tokenInfoRequestEndpoint)
-    dispatcher.requestHolder(config.tokenInfoRequestEndpoint) //
+    lazy val tokenEndpoint = config.tokenInfoRequestEndpoint
+    logger.info("Requesting OAuth-Token-Info from oauthEndpoint: " + tokenEndpoint)
+    dispatcher.requestHolder(tokenEndpoint) //
       .withQueryString(("access_token", token))
       .get().map { x =>
         x.status match {
           case 200 =>
-            logger.info("OAuth-token does exist")
             val Some(result: OAuthTokenInfo) = transformer.deserialize2Option[OAuthTokenInfo](Json.parse(x.body))(OAuthParser.oAuthOAuthTokenInfoFormatter)
-            logger.info("OAuth-token does exist" + result)
+            logger.info("OAuth-token expires in " + result.expiresIn)
             Option(result)
           case 400 =>
             logger.warn("OAuth-token is not valid:" + x.body)

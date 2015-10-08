@@ -1,52 +1,71 @@
 package test.util
 
-import org.mockito.Mockito._
-import org.mockito.Matchers._
-import client.RequestDispatcher
-import client.oauth.OAuthTokenInfo
-import play.api.libs.ws.WSRequest
-import configuration.OAuthConfiguration
-import play.api.test.FakeHeaders
-import play.api.libs.json.Json
-import org.scalatest.BeforeAndAfter
-import org.scalatest.mock.MockitoSugar
-import org.scalatest.Suite
 import scala.concurrent.Future
-import client.oauth.OAuthParser._
+
+import org.mockito.Matchers.anyString
+import org.mockito.Mockito.{ reset, times, verify, when }
+
+import client.RequestDispatcher
+import client.oauth.OAuthClientImpl
+import client.oauth.OAuthParser.oAuthOAuthTokenInfoFormatter
+import client.oauth.OAuthTokenInfo
+import configuration.OAuthConfiguration
+import javax.inject.{ Inject, Singleton }
+import play.api.libs.json.Json
+import play.api.libs.ws.WSRequest
 
 trait OAuthTestBuilder extends MockitoUtils {
   /**
-   * The following mocks need not to be private.
-   *  Those mocks should be accessible, for flexibility purposes,
-   *  for using it with Guice during the execution of tests.
-   *  If necessary of course!
+   * Non private variables were defined as such for flexibility purposes i.o.w. for usage in the mixed in classes.
+   * I.e.: The authorizationHeader should always be used by any fake request, that has OAuth enabled.
    *
    */
   val oauthConfig = mock[OAuthConfiguration]
   val dispatcher = mock[RequestDispatcher]
+  val oauthClient = new OAuthClientImpl(dispatcher, oauthConfig)
 
   private val requestHolder = mock[WSRequest]
   private val oauthToken = "98266616-5ad5-4326-b3d6-c049ad51831d"
   private val tokenInfoEndpoint = "tokenInfoEndpoint"
   private val oauthTokenInfo = new OAuthTokenInfo("username", None, "password", "/services", "Bearer", 1200, oauthToken)
-  private val defaultOauthHeader = FakeHeaders(List(("Authorization" -> oauthToken)))
   private val requestResult = createMockedWSResponse(Json.stringify(Json.toJson(oauthTokenInfo)), 200)
+  private val oauthEnpointError = createMockedWSResponse("""{"error":"invalid_request","error_description":"Access Token not valid"}""", 400)
 
-  def recordOAuthBehaviour() = {
+  val authorizationHeader = ("Authorization", s"Bearer " + oauthToken)
+
+  def recordOAuthPassAuthenticationBehaviour() = {
     reset(oauthConfig, dispatcher, requestHolder)
     //Make sure you mock the expected Behaviour from the MockedObject
     when(oauthConfig.excludedPaths).thenReturn(Set[String]())
     when(oauthConfig.tokenInfoRequestEndpoint).thenReturn(tokenInfoEndpoint)
     when(dispatcher.requestHolder(anyString())).thenReturn(requestHolder)
-    when(requestHolder.withHeaders(("Authorization", "Bearer " + oauthToken))).thenReturn(requestHolder)
+    when(requestHolder.withQueryString(("access_token", oauthToken))).thenReturn(requestHolder)
     when(requestHolder.get()).thenReturn(Future.successful(requestResult))
   }
 
-  def verifyOAuthBehaviour() = {
+  def verifyOAuthPassAuthenticationBehaviour() = {
     verify(oauthConfig, times(1)).excludedPaths
     verify(oauthConfig, times(1)).tokenInfoRequestEndpoint
     verify(dispatcher, times(1)).requestHolder(tokenInfoEndpoint)
-    verify(requestHolder, times(1)).withHeaders(("Authorization", "Bearer " + oauthToken))
+    verify(requestHolder, times(1)).withQueryString(("access_token", oauthToken))
+    verify(requestHolder, times(1)).get()
+  }
+
+  def recordOAuthFailingTokenAuthenticationBehaviour() = {
+    reset(oauthConfig, dispatcher, requestHolder)
+    //Make sure you mock the expected Behaviour from the MockedObject
+    when(oauthConfig.excludedPaths).thenReturn(Set[String]())
+    when(oauthConfig.tokenInfoRequestEndpoint).thenReturn(tokenInfoEndpoint)
+    when(dispatcher.requestHolder(anyString())).thenReturn(requestHolder)
+    when(requestHolder.withQueryString(("access_token", oauthToken))).thenReturn(requestHolder)
+    when(requestHolder.get()).thenReturn(Future.successful(oauthEnpointError))
+  }
+
+  def verifyOAuthFailingTokenAuthenticationBehaviour() = {
+    verify(oauthConfig, times(1)).excludedPaths
+    verify(oauthConfig, times(1)).tokenInfoRequestEndpoint
+    verify(dispatcher, times(1)).requestHolder(tokenInfoEndpoint)
+    verify(requestHolder, times(1)).withQueryString(("access_token", oauthToken))
     verify(requestHolder, times(1)).get()
   }
 }

@@ -1,15 +1,15 @@
 package test.util
 
+import org.scalatest.{ Suite, SuiteMixin, TestData }
 import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.inject.bind
-import play.api.inject.guice.GuiceableModule
-import play.api.test._
-import org.scalatest._
-import module.Development
+import play.api.inject.guice.{ GuiceApplicationBuilder, GuiceableModule }
+import play.api.test.Helpers
 
 /**
  * @author fbenjamin
+ * Executes a single at time, but if it fails it will stop executing other tests.
+ * Mix'in this trait will cause your tests to run slower!!
+ *
  */
 trait KontrollettiOneAppPerTestWithOverrides extends SuiteMixin { this: Suite ⇒
   def overrideModules: Seq[GuiceableModule] = Nil

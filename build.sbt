@@ -8,7 +8,7 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala).enablePlugins(Do
 
 scalaVersion := "2.11.1"
 
-scalacOptions ++= Seq(
+/*scalacOptions ++= Seq(
   "-deprecation", // Emit warning and location for usages of deprecated APIs.
   "-feature", // Emit warning and location for usages of features that should be imported explicitly.
   "-unchecked", // Enable additional warnings where generated code depends on assumptions.
@@ -19,7 +19,7 @@ scalacOptions ++= Seq(
   "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures.
   "-Ywarn-nullary-override", // Warn when non-nullary overrides nullary, e.g. def foo() over def foo.
   "-Ywarn-numeric-widen" // Warn when numerics are widened.
-)
+)*/
 
 ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 15
 	

@@ -1,32 +1,35 @@
 package filter
 
-import org.mockito.Mockito._
-import org.mockito.Matchers._
-import org.scalatestplus.play.PlaySpec
-import org.scalatest.mock.MockitoSugar
-import configuration.OAuthConfiguration
-import client.RequestDispatcher
-import play.api.inject.bind
-import test.util.KontrollettiOneAppPerTestWithOverrides
+import org.mockito.Matchers.anyString
+import org.mockito.Mockito.{ reset, times, verify, when }
 import org.scalatest.BeforeAndAfter
-import play.api.test.Helpers._
-import play.api.test._
-class OAuth2FilterTest extends PlaySpec with MockitoSugar with KontrollettiOneAppPerTestWithOverrides with BeforeAndAfter {
+import org.scalatest.mock.MockitoSugar
+import org.scalatestplus.play.PlaySpec
 
-  private val oauth2Configuration: OAuthConfiguration = mock[OAuthConfiguration]
-  private val dispatcher = mock[RequestDispatcher]
+import client.RequestDispatcher
+import client.oauth.OAuth
+import configuration.OAuthConfiguration
+import play.api.inject.bind
+import play.api.inject.guice.GuiceableModule.fromPlayBinding
+import play.api.test.FakeRequest
+import play.api.test.Helpers.{ GET, NOT_FOUND, OK, UNAUTHORIZED, defaultAwaitTimeout, route, status, writeableOf_AnyContentAsEmpty }
+import test.util.{ KontrollettiOneAppPerTestWithOverrides, OAuthTestBuilder }
+class OAuth2FilterTest extends PlaySpec with MockitoSugar with KontrollettiOneAppPerTestWithOverrides with BeforeAndAfter with OAuthTestBuilder {
+
   private val swaggerUrl = "/swagger"
   private val assetsUrl = "/assets"
   private val statusUrl = "/status"
   private val specsUrl = "/specs"
-
+  private val excludes = Set(swaggerUrl, assetsUrl, statusUrl, specsUrl)
   before {
-    reset(dispatcher, oauth2Configuration)
+    reset(dispatcher, oauthConfig)
+    when(oauthConfig.excludedPaths).thenReturn(excludes)
   }
 
   override def overrideModules = {
-    Seq(bind[OAuthConfiguration].toInstance(oauth2Configuration),
-      bind[RequestDispatcher].toInstance(dispatcher))
+    Seq(bind[OAuthConfiguration].toInstance(oauthConfig),
+      bind[RequestDispatcher].toInstance(dispatcher),
+      bind[OAuth].toInstance(oauthClient))
   }
 
   "OAuth2ServiceFilter" should {
@@ -50,11 +53,26 @@ class OAuth2FilterTest extends PlaySpec with MockitoSugar with KontrollettiOneAp
       status(result) mustEqual OK
       assertNoMocksCalled()
     }
+    "Fail on /api endpoint with no Authorization header at all" in {
+      val result = route(FakeRequest(GET, "/api")).get
+      status(result) mustEqual UNAUTHORIZED
+      assertNoMocksCalled()
+    }
+    "Fail on /api endpoint with an invalid Authorization header" in {
+      val tokenInfoEndpoint = "TokenInfoEndpoint"
+      recordOAuthFailingTokenAuthenticationBehaviour()
+
+      val result = route(FakeRequest(GET, "/api").withHeaders(authorizationHeader)).get
+      status(result) mustEqual UNAUTHORIZED
+
+      verifyOAuthFailingTokenAuthenticationBehaviour
+    }
 
   }
 
   def assertNoMocksCalled() = {
     verify(dispatcher, times(0)).requestHolder(anyString())
-    verify(oauth2Configuration, times(0)).tokenInfoRequestEndpoint
+    verify(oauthConfig, times(0)).tokenInfoRequestEndpoint
+    verify(oauthConfig, times(1)).excludedPaths
   }
 }
