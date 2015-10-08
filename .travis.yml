@@ -8,14 +8,11 @@ jdk:
 addon:
   postgresql: "9.4"
 
-env:
-- DATABASE_URL="jdbc:postgresql://localhost:5432/kontrolletti_test?characterEncoding=UTF-8"
-
 before_script:
   - psql -f 'conf/db-setup/initialize-test-db.sql' -U postgres 
 
 script:
-  - sbt clean coverage test
+  - sbt clean coverage test -Dconfig.resource=application.travis.conf
   - sbt coverageReport
 
 after_success:
