@@ -4,7 +4,6 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import OAuthParser.oAuthAccessTokenReader
 import OAuthParser.oAuthClientCredentialReader
 import OAuthParser.oAuthUserCredentialReader
@@ -19,6 +18,10 @@ import play.api.libs.json.JsPath
 import play.api.libs.json.Reads
 import play.api.libs.ws.WSAuthScheme
 import utility.Transformer
+import configuration.OAuthConfiguration
+import play.api.libs.json.Format
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 /**
  * @author fbenjamin
  */
@@ -27,7 +30,11 @@ import utility.Transformer
 case class OAuthClientCredential(id: String, secret: String)
 case class OAuthUserCredential(username: String, password: String)
 case class OAuthAccessToken(tokenType: String, accessToken: String, scope: String, expiresIn: Int)
+case class OAuthTokenInfo(uid: String, scope: Option[List[String]], //
+                          grantType: String, realm: String, //
+                          tokenType: String, expiresIn: Int, accessToken: String)
 case class OAuthClientException(message: String) extends Exception(message)
+
 sealed trait OAuth {
 
   def clientCredentials(): Future[OAuthClientCredential]
@@ -35,6 +42,8 @@ sealed trait OAuth {
   def userCredentials(): Future[OAuthUserCredential]
 
   def accessToken(): Future[OAuthAccessToken]
+
+  def tokenInfo(token: String): Future[Option[OAuthTokenInfo]]
 }
 
 /**
@@ -56,6 +65,15 @@ object OAuthParser {
     (JsPath \ "scope").read[String] and
     (JsPath \ "expires_in").read[Int])(OAuthAccessToken.apply _)
 
+  implicit val oAuthOAuthTokenInfoFormatter: Format[OAuthTokenInfo] = (
+    (JsPath \ "uid").format[String] and
+    (JsPath \ "scope").formatNullable[List[String]] and
+    (JsPath \ "grant_type").format[String] and
+    (JsPath \ "realm").format[String] and
+    (JsPath \ "token_type").format[String] and
+    (JsPath \ "expires_in").format[Int] and
+    (JsPath \ "access_token").format[String])(OAuthTokenInfo.apply, unlift(OAuthTokenInfo.unapply))
+
 }
 
 @Singleton
@@ -69,7 +87,7 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
   def accessToken(client: OAuthClientCredential, serviceUser: OAuthUserCredential): Future[OAuthAccessToken] = {
     logger.info("OAuth endpoint:" + config.accessTokenRequestEndpoint)
     val result = dispatcher.requestHolder(config.accessTokenRequestEndpoint) //
-      .withRequestTimeout(config.requestClientTimeout)
+      .withRequestTimeout(config.requestClientTimeout.toLong)
       .withHeaders(("Content-Type", "application/x-www-form-urlencoded"))
       .withAuth(client.id, client.secret, WSAuthScheme.BASIC)
       .withQueryString(("grant_type", "password"))
@@ -122,5 +140,26 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
     }
   }
 
-}
+  def tokenInfo(token: String): Future[Option[OAuthTokenInfo]] = {
+    lazy val tokenEndpoint = config.tokenInfoRequestEndpoint
+    logger.info("Requesting OAuth-Token-Info from oauthEndpoint: " + tokenEndpoint)
+    dispatcher.requestHolder(tokenEndpoint) //
+      .withQueryString(("access_token", token))
+      .get().map { x =>
+        x.status match {
+          case 200 =>
+            val Some(result: OAuthTokenInfo) = transformer.deserialize2Option[OAuthTokenInfo](Json.parse(x.body))(OAuthParser.oAuthOAuthTokenInfoFormatter)
+            logger.info("OAuth-token expires in " + result.expiresIn)
+            Option(result)
+          case 400 =>
+            logger.warn("OAuth-token is not valid:" + x.body)
+            None
+          case _ =>
+            logger.warn("OAuth-token-endpoint responded with unexpected http-code:" + x.status + " - " + x.body)
+            None
+        }
 
+      }
+  }
+
+}

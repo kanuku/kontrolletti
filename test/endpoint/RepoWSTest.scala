@@ -1,31 +1,29 @@
 package endpoint
 
-import org.scalatestplus.play.OneAppPerSuite
-import org.scalatestplus.play.PlaySpec
-import play.api.test._
-import play.api.test.Helpers._
-import test.util.MockitoUtils
 import java.net.URLEncoder
-import org.scalatest.Matchers
-import org.mockito.Mockito._
-import org.scalatest.mock.MockitoSugar
-import client.scm.SCM
-import play.api.Logger
-import play.api.inject.bind
-import service.Search
-import org.mockito.Matchers._
-import scala.concurrent.Future
-import model.Repository
-import test.util.MockitoUtils
-import play.api.libs.json.Json
-import model.KontrollettiToJsonParser._
-import org.scalatest.Ignore
-import test.util.KontrollettiOneAppPerTestWithOverrides
-import org.scalatest.BeforeAndAfter
-import dao.CommitRepository
-import dao.RepoRepository
 
-class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides with MockitoSugar with MockitoUtils with BeforeAndAfter {
+import scala.{ Left, Right }
+import scala.concurrent.Future
+
+import org.mockito.Mockito.{ reset, times, verify, when }
+import org.scalatest.BeforeAndAfter
+import org.scalatest.mock.MockitoSugar
+import org.scalatestplus.play.PlaySpec
+
+import client.RequestDispatcher
+import client.oauth.OAuth
+import configuration.OAuthConfiguration
+import dao.RepoRepository
+import model.KontrollettiToJsonParser.repositoryWriter
+import play.api.inject.bind
+import play.api.inject.guice.GuiceableModule.fromPlayBinding
+import play.api.libs.json.Json
+import play.api.test.FakeRequest
+import play.api.test.Helpers.{ BAD_REQUEST, GET, HEAD, INTERNAL_SERVER_ERROR, LOCATION, MOVED_PERMANENTLY, NOT_FOUND, OK, contentAsString, contentType, defaultAwaitTimeout, header, route, status, writeableOf_AnyContentAsEmpty }
+import service.Search
+import test.util.{ KontrollettiOneAppPerTestWithOverrides, MockitoUtils, OAuthTestBuilder }
+
+class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides with MockitoSugar with MockitoUtils with BeforeAndAfter with OAuthTestBuilder {
   private val X_NORMALIZED_REPOSITORY_URL_HEADER = "X-Normalized-Repository-URL"
   private val alternativeUrl = "git@github.com:zalando/kontrolletti.git"
   private val reposRoute = "/api/repos/"
@@ -40,7 +38,12 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
   private val repoRepository = mock[RepoRepository]
 
   before {
-    reset(search,repoRepository)
+    reset(search, repoRepository)
+    recordOAuthPassAuthenticationBehaviour
+  }
+
+  after {
+    verifyOAuthPassAuthenticationBehaviour
   }
 
   "HEAD /api/repos" should {
@@ -53,7 +56,7 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
       when(search.normalize(host, project, repoName)).thenReturn(defaultUrl)
       when(search.isRepo(host, project, repoName)).thenReturn(Future.successful(Right(true)))
 
-      val result = route(FakeRequest(HEAD, url)).get
+      val result = route(FakeRequest(HEAD, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual OK
       header(LOCATION, result) mustBe empty
       header(X_NORMALIZED_REPOSITORY_URL_HEADER, result) === Some(X_NORMALIZED_REPOSITORY_URL_HEADER -> defaultUrl)
@@ -62,6 +65,7 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
       verify(search, times(1)).parse(defaultUrl)
       verify(search, times(1)).normalize(host, project, repoName)
       verify(search, times(1)).isRepo(host, project, repoName)
+
     }
 
     "Return 400 (Bad Request) on invalid(not parsable) URI" in {
@@ -71,7 +75,7 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
       when(search.parse(erraneousUrl)).thenReturn(response)
       //Let Guice return mocked searchService
 
-      val result = route(FakeRequest(HEAD, url)).get
+      val result = route(FakeRequest(HEAD, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual BAD_REQUEST
       header(LOCATION, result) mustBe empty
       contentAsString(result) mustBe empty
@@ -88,7 +92,7 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
       when(search.normalize(host, project, repoName)).thenReturn(s"/projects/$project/repos/$repoName")
       when(search.isRepo(host, project, repoName)).thenReturn(existsResponse)
 
-      val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl")).get
+      val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl").withHeaders(authorizationHeader)).get
       status(result) mustEqual MOVED_PERMANENTLY
       header(X_NORMALIZED_REPOSITORY_URL_HEADER, result) === Some(X_NORMALIZED_REPOSITORY_URL_HEADER -> defaultUrl)
       header(LOCATION, result) === Some(LOCATION -> s"$reposRoute$encodedAlternativeUrl")
@@ -108,7 +112,7 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
       when(search.normalize(host, project, repoName)).thenReturn(s"/projects/$project/repos/$repoName")
       when(search.isRepo(host, project, repoName)).thenReturn(existsResponse)
 
-      val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl")).get
+      val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl").withHeaders(authorizationHeader)).get
       status(result) mustEqual NOT_FOUND
       header(LOCATION, result) mustBe empty
 
@@ -127,7 +131,7 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
       when(search.normalize(host, project, repoName)).thenReturn(s"/projects/$project/repos/$repoName")
       when(search.isRepo(host, project, repoName)).thenReturn(existsResponse)
 
-      val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl")).get
+      val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl").withHeaders(authorizationHeader)).get
       status(result) mustEqual INTERNAL_SERVER_ERROR
       header(LOCATION, result) mustBe empty
       contentAsString(result) mustBe empty
@@ -147,8 +151,8 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
       val repoResponse = Future.successful(Some(repository))
 
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
-     when(repoRepository.byParameters(host, project, repoName)).thenReturn(repoResponse)
-      val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
+      when(repoRepository.byParameters(host, project, repoName)).thenReturn(repoResponse)
+      val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl").withHeaders(authorizationHeader)).get
       status(result) mustEqual OK
 
       contentAsString(result) mustEqual Json.stringify(Json.toJson(repository))
@@ -163,7 +167,7 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
 
       when(search.parse(erraneousUrl)).thenReturn(parsedResponse)
 
-      val result = route(FakeRequest(GET, s"$reposRoute$erraneousUrl")).get
+      val result = route(FakeRequest(GET, s"$reposRoute$erraneousUrl").withHeaders(authorizationHeader)).get
       status(result) mustEqual BAD_REQUEST
       contentAsString(result) mustEqual parsedResponse.left.get
       contentType(result) mustEqual Some("application/problem+json")
@@ -176,7 +180,7 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
       when(repoRepository.byParameters(host, project, repoName)).thenReturn(repoResponse)
 
-      val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl")).get
+      val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl").withHeaders(authorizationHeader)).get
       status(result) mustEqual NOT_FOUND
       contentAsString(result) mustBe empty
 
@@ -186,7 +190,11 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
 
   }
   override def overrideModules = {
-    Seq(bind[Search].toInstance(search),
-      bind[RepoRepository].toInstance(repoRepository))
+    Seq(bind[Search].toInstance(search), //
+      bind[RepoRepository].toInstance(repoRepository), //
+      bind[OAuthConfiguration].toInstance(oauthConfig), //
+      bind[RequestDispatcher].toInstance(dispatcher), //
+      bind[OAuth].toInstance(oauthClient) //
+      )
   }
 }

@@ -1,6 +1,7 @@
 package client.scm
 
 import scala.concurrent.Future
+
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.any
 import org.mockito.Matchers.anyString
@@ -11,20 +12,15 @@ import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfter
 import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
-import com.google.inject.ImplementedBy
+import org.scalatestplus.play.OneAppPerSuite
+import org.scalatestplus.play.OneAppPerTest
+
 import client.RequestDispatcher
-import javax.inject.Inject
-import javax.inject.Singleton
 import play.api.inject.Module
 import play.api.libs.ws.WSRequest
 import play.api.libs.ws.WSResponse
-import test.util.ApplicationWithCustomModule
+import test.util.ConfigurableFakeApp
 import test.util.MockitoUtils
-import com.google.inject.AbstractModule
-import play.api.Environment
-import play.api.Configuration
-import org.scalatestplus.play.OneAppPerSuite
-import org.scalatestplus.play.OneAppPerTest
 
 /**
  * The tests in this class will assure:
@@ -33,7 +29,9 @@ import org.scalatestplus.play.OneAppPerTest
  *
  *
  */
-class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPerSuite with BeforeAndAfter with ApplicationWithCustomModule {
+class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPerSuite with ConfigurableFakeApp with BeforeAndAfter {
+
+  implicit override lazy val app = fakeApplication
 
   val mockedRequestHolder = mock[WSRequest]
   val mockedDispatcher = mock[RequestDispatcher]
@@ -48,6 +46,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
   val source = "source"
   val target = "target"
 
+  def client = new SCMImpl(mockedDispatcher)
   before {
     reset(mockedRequestHolder)
     reset(mockedDispatcher)
@@ -147,15 +146,5 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
     verify(mockedDispatcher, times(1)).requestHolder(urlCap.capture())
     assert(url == urlCap.getValue)
   }
-
-  //Custom settings
-  override def customConfiguration: Map[String, String] = {
-    Map("client.github.host" -> "github.com", "client.stash.host" -> "stash.zalando.net")
-  }
-  override def customModule(): Module = new Module {
-    def bindings(env: Environment, conf: Configuration) = Seq(
-      bind[RequestDispatcher].to(mockedDispatcher))
-  }
-  def client = application.injector.instanceOf[SCM]
 
 }

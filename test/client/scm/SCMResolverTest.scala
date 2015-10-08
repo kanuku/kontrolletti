@@ -11,16 +11,16 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.ws.WSResponse
 import play.api.test.FakeApplication
 import test.util.MockitoUtils
+import test.util.ConfigurableFakeApp
 
 /**
  * This tests make sure that the configurations for the client are being
  * read from properties in the application.conf file.
  * If you change the file, this test should fail.
  */
-class SCMResolverTest extends PlaySpec with OneAppPerSuite with MockitoSugar with MockitoUtils{
+class SCMResolverTest extends PlaySpec with OneAppPerSuite with ConfigurableFakeApp with MockitoSugar with MockitoUtils {
 
-  // Override app if you need a FakeApplication with other than non-default parameters.
-  implicit override lazy val app: FakeApplication = FakeApplication()
+  implicit override lazy val app = fakeApplication
 
   "The GithubResolver " must {
     val host = "github.com"
@@ -54,11 +54,11 @@ class SCMResolverTest extends PlaySpec with OneAppPerSuite with MockitoSugar wit
 
     "use the passed parameters in the contributors url" in {
       val contributorsUrl = "https://api.github.com/repos/kanuku/misc/contributors"
-//      assert(resolver.contributors(host, project, repo) === contributorsUrl)
+      //      assert(resolver.contributors(host, project, repo) === contributorsUrl)
     }
     "use the passed parameters in the reposory url" in {
-    	val contributorsUrl = "https://api.github.com/repos/kanuku/misc"
-    			assert(resolver.repo(host, project, repo) === contributorsUrl)
+      val contributorsUrl = "https://api.github.com/repos/kanuku/misc"
+      assert(resolver.repo(host, project, repo) === contributorsUrl)
     }
   }
   "The StashResolver " must {
@@ -96,11 +96,10 @@ class SCMResolverTest extends PlaySpec with OneAppPerSuite with MockitoSugar wit
 
     "use the passed parameters in the contributors url" in {
       val contributorsUrl = "https://stash.zalando.net/rest/api/1.0/projects/doc/repos/ci-cd/contributors"
-//      println(resolver.contributors(host, project, repo))
-//      assert(resolver.contributors(host, project, repo) === contributorsUrl)
+      //      println(resolver.contributors(host, project, repo))
+      //      assert(resolver.contributors(host, project, repo) === contributorsUrl)
     }
 
   }
 
 }
-

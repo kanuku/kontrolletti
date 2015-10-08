@@ -8,6 +8,10 @@ info:
     name: Automata
     url: https://zalando.github.io/kontrolletti/
     email: automata-team@zalando.de
+
+security:
+  - oauth2: [uid]
+
 paths:
 
   /api/repos/{repository-url}:
@@ -366,3 +370,11 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Link"
+
+securityDefinitions:
+  oauth2:
+    type: oauth2
+    flow: implicit
+    authorizationUrl: https://example.com/oauth2/dialog
+    scopes:
+      uid: Unique identifier of the user accessing the service.

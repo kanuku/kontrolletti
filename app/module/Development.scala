@@ -2,8 +2,8 @@ package module
 
 import com.google.inject.AbstractModule
 import client.kio.KioClient
-import client.kio.KioClientConfiguration
-import client.kio.KioClientConfigurationImpl
+import configuration.GeneralConfiguration
+import configuration.GeneralConfigurationImpl
 import client.kio.KioClientImpl
 import client.oauth.OAuth
 import client.oauth.OAuthClientImpl
@@ -20,6 +20,8 @@ import dao.AuthorRepository
 import dao.AuthorRepositoryImpl
 import dao.RepoRepository
 import dao.RepoRepositoryImpl
+import configuration.OAuthConfigurationImpl
+import configuration.OAuthConfiguration
 
 class Development extends AbstractModule {
 
@@ -27,13 +29,15 @@ class Development extends AbstractModule {
   def configure() {
     logger.info("Configured with the Development module")
     bind(classOf[OAuth]).to(classOf[OAuthClientImpl])
+    bind(classOf[GeneralConfiguration]).to(classOf[GeneralConfigurationImpl])
+    bind(classOf[OAuthConfiguration]).to(classOf[OAuthConfigurationImpl])
     bind(classOf[RequestDispatcher]).to(classOf[RequestDispatcherImpl])
-    bind(classOf[KioClientConfiguration]).to(classOf[KioClientConfigurationImpl])
+    bind(classOf[GeneralConfiguration]).to(classOf[GeneralConfigurationImpl])
     bind(classOf[KioClient]).to(classOf[KioClientImpl])
     bind(classOf[Search]).to(classOf[SearchImpl])
     bind(classOf[Import]).to(classOf[ImportImpl])
-    bind(classOf[RepoRepository]).to(classOf[RepoRepositoryImpl])
     bind(classOf[CommitRepository]).to(classOf[CommitRepositoryImpl])
+    bind(classOf[RepoRepository]).to(classOf[RepoRepositoryImpl])
     bind(classOf[AuthorRepository]).to(classOf[AuthorRepositoryImpl])
   }
 }

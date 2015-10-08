@@ -34,6 +34,7 @@ dist
 /.cache-main
 /.cache-tests
 /bin
+.DS_Store
 
 #misc
 aws_host.txt

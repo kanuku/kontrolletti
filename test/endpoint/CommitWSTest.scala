@@ -1,56 +1,31 @@
 package endpoint
 
 import java.net.URLEncoder
-import scala.Right
+
+import scala.{ Left, Right }
 import scala.concurrent.Future
-import org.mockito.Mockito.reset
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.when
+
+import org.mockito.Mockito.{ reset, times, verify, when }
 import org.scalatest.BeforeAndAfter
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import dao.CommitRepository
-import model.Link
-import play.api.test.FakeRequest
-import play.api.test.Helpers.GET
-import play.api.test.Helpers.LOCATION
-import play.api.test.Helpers.SEE_OTHER
-import play.api.test.Helpers.contentAsString
-import play.api.test.Helpers.defaultAwaitTimeout
-import play.api.test.Helpers.header
-import play.api.test.Helpers.route
-import play.api.test.Helpers.status
-import play.api.test.Helpers.writeableOf_AnyContentAsEmpty
-import service.Search
-import play.api.inject.bind
-import test.util.MockitoUtils
-import play.api.inject.Module
-import play.api.Environment
-import play.api.Configuration
-import java.net.URLEncoder
-import scala.concurrent._
-import scala.concurrent.Future
-import org.mockito.Mockito._
-import org.scalatest.mock.MockitoSugar
-import org.scalatestplus.play.OneAppPerSuite
-import org.scalatestplus.play.PlaySpec
-import model.Commit
-import model.CommitsResult
-import model.Link
-import model.Error
-import play.api.test._
-import play.api.test.Helpers._
-import play.api.libs.json.Reads
-import play.api.libs.json.Writes
-import play.api.libs.json._
-import service.Search
-import test.util.MockitoUtils
-import model.KontrollettiToJsonParser._
-import model.CommitResult
-import test.util.KontrollettiOneAppPerTestWithOverrides
 
-class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides with MockitoSugar with MockitoUtils with BeforeAndAfter {
+import client.RequestDispatcher
+import client.oauth.OAuth
+import configuration.OAuthConfiguration
+import dao.CommitRepository
+import model.{ CommitResult, CommitsResult }
+import model.KontrollettiToJsonParser.{ commitResultWriter, commitsResultWriter }
+import model.Link
+import play.api.inject.bind
+import play.api.inject.guice.GuiceableModule.fromPlayBinding
+import play.api.libs.json.Json
+import play.api.test.FakeRequest
+import play.api.test.Helpers.{ GET, INTERNAL_SERVER_ERROR, LOCATION, NOT_FOUND, OK, SEE_OTHER, contentAsString, contentType, defaultAwaitTimeout, header, route, status, writeableOf_AnyContentAsEmpty }
+import service.Search
+import test.util.{ KontrollettiOneAppPerTestWithOverrides, MockitoUtils, OAuthTestBuilder }
+
+class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides with MockitoSugar with MockitoUtils with BeforeAndAfter with OAuthTestBuilder {
   val host = "github.com"
   val project = "zalando"
   val repository = "kontrolletti"
@@ -61,6 +36,11 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
 
   before {
     reset(search, commitRepository)
+    recordOAuthPassAuthenticationBehaviour
+  }
+
+  after {
+    verifyOAuthPassAuthenticationBehaviour
   }
 
   def diffRoute(host: String = host, project: String = project, repository: String = repository, source: String, target: String) = s"/api/hosts/$host/projects/$project/repos/$repository/diff/$source...$target"
@@ -89,7 +69,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
 
       when(search.diff(host, project, repository, source, target)).thenReturn(diffExistsResult)
 
-      val result = route(FakeRequest(GET, url)).get
+      val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual SEE_OTHER
       header(LOCATION, result) === Some(LOCATION -> URLEncoder.encode(link.href, "UTF-8"))
       contentAsString(result) mustBe empty
@@ -106,7 +86,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
 
       when(search.diff(host, project, repository, source, target)).thenReturn(diffExistsResult)
 
-      val result = route(FakeRequest(GET, url)).get
+      val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual NOT_FOUND
       header(LOCATION, result) mustBe empty
       contentAsString(result) mustBe empty
@@ -122,7 +102,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
 
       when(search.diff(host, project, repository, source, target)).thenReturn(diffExistsResult)
 
-      val result = route(FakeRequest(GET, url)).get
+      val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual INTERNAL_SERVER_ERROR
       header(LOCATION, result) mustBe empty
       contentAsString(result) mustBe empty
@@ -143,7 +123,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       val commitResult = Future.successful(commits)
       val url = commitsRoute(sinceId = sinceId, untilId = untilId)
       when(commitRepository.get(host, project, repository)).thenReturn(commitResult)
-      val result = route(FakeRequest(GET, url)).get
+      val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual OK
       contentType(result) mustEqual Some("application/x.zalando.commit+json")
       contentAsString(result) mustEqual Json.stringify(Json.toJson(response))
@@ -153,7 +133,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       val commitResult = Future.successful(List())
       val url = commitsRoute(sinceId = sinceId, untilId = untilId)
       when(commitRepository.get(host, project, repository)).thenReturn(commitResult)
-      val Some(result) = route(FakeRequest(GET, url))
+      val Some(result) = route(FakeRequest(GET, url).withHeaders(authorizationHeader))
       status(result) mustEqual NOT_FOUND
     }
 
@@ -166,7 +146,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       val url = singleCommitRoute(commitId = commitId)
       val response = new CommitResult(List(), commit)
       when(commitRepository.byId(host, project, repository, commitId)).thenReturn(commitResult)
-      val result = route(FakeRequest(GET, url)).get
+      val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual OK
       contentType(result) mustEqual Some("application/x.zalando.commit+json")
       contentAsString(result) mustEqual Json.stringify(Json.toJson(response))
@@ -179,18 +159,20 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       val url = singleCommitRoute(commitId = commitId)
       val response = new CommitResult(List(), commit)
       when(commitRepository.byId(host, project, repository, commitId)).thenReturn(commitResult)
-      val Some(result) = route(FakeRequest(GET, url))
+      val Some(result) = route(FakeRequest(GET, url).withHeaders(authorizationHeader))
       status(result) mustEqual NOT_FOUND
       contentAsString(result) mustBe empty
     }
-
- 
 
   }
 
   override def overrideModules = {
     Seq(
       bind[Search].toInstance(search),
-      bind[CommitRepository].toInstance(commitRepository))
+      bind[CommitRepository].toInstance(commitRepository), //
+      bind[OAuthConfiguration].toInstance(oauthConfig), //
+      bind[RequestDispatcher].toInstance(dispatcher), //
+      bind[OAuth].toInstance(oauthClient) //
+      )
   }
 }

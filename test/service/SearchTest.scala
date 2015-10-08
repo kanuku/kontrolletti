@@ -1,32 +1,40 @@
 package service
 
+import scala.Left
+import scala.Right
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
-import org.mockito.Mockito._
+
+import org.mockito.Mockito.reset
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfter
 import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
-import org.scalatestplus.play.OneAppPerTest
-import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.OneAppPerSuite
+
+import com.google.inject.ImplementedBy
+
+import client.RequestDispatcherImpl
 import client.scm.SCM
 import client.scm.SCMImpl
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.libs.json.JsValue
-import play.api.libs.ws.WSResponse
-import test.util.MockitoUtils
-import client.RequestDispatcherImpl
-import test.util.TestUtils._
+import configuration.GeneralConfiguration
+import javax.inject.Inject
+import javax.inject.Singleton
 import model.Link
-import test.util.ApplicationWithCustomModule
-import org.scalatestplus.play.OneAppPerSuite
-import play.api.inject.Module
-import play.api.Environment
-import play.api.Configuration
+import play.api.libs.ws.WSClient
+import play.api.libs.ws.WSResponse
+import test.util.ConfigurableFakeApp
+import test.util.MockitoUtils
+import test.util.TestUtils.assertEitherIsLeft
+import test.util.TestUtils.assertEitherIsNotNull
+import test.util.TestUtils.assertEitherIsRight
 /**
  * This class tests the interaction between the Service and the Client(mock).
  */
-class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPerSuite with BeforeAndAfter with ApplicationWithCustomModule  {
+class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPerSuite with ConfigurableFakeApp with BeforeAndAfter {
 
   val defaultError = "Something went wrong, check the logs!"
   val host = "github.com"
@@ -39,6 +47,8 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
   val client = mock[SCM]
   val search: Search = new SearchImpl(client)
 
+  implicit override lazy val app = fakeApplication
+
   before {
     reset(client)
   }
@@ -47,7 +57,7 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
     when(client.commits(host, project, repository, None, None, 1)).thenReturn(response)
     val result = Await.result(search.commits(host, project, repository, None, None, 1), Duration("5 seconds"))
-    println(">>>>>>  "+result)
+    println(">>>>>>  " + result)
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
     assert(!result.right.get.isEmpty, "Result must not be empty")
@@ -134,13 +144,13 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
 
   "Search#normalize" should "normalize the github URL" in {
     val url = "https://github.com/zalando-bus/kontrolletti"
-    val client = new SCMImpl(new RequestDispatcherImpl(null))
+    val client = new SCMImpl(new RequestDispatcherImpl(mock[WSClient], mock[GeneralConfiguration]))
     val search = new SearchImpl(client)
     assert(search.normalize(host, project, repository) == url)
   }
   "Search#normalize" should "normalize the stash URL" in {
     val url = "https://stash.zalando.net/rest/api/1.0/projects/zalando-bus/repos/kontrolletti"
-    val client = new SCMImpl(new RequestDispatcherImpl(null))
+    val client = new SCMImpl(new RequestDispatcherImpl(mock[WSClient], mock[GeneralConfiguration]))
     val search = new SearchImpl(client)
     assert(search.normalize("stash.zalando.net", project, repository) == url)
   }
@@ -241,5 +251,4 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
     verify(client, times(1)).tickets(host, project, repository)
   }
 
-  
 }
