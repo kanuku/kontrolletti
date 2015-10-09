@@ -22,31 +22,29 @@ class RepoRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar wi
 
   val date1 = new DateTime
   val enabledRepo1 = createRepository(url = "url1", host = "host1", project = "RepoRepositoryTest-project1", repository = "repository")
-  val disabledRepo2 = createRepository(url = "url2", host = "host2", project = "RepoRepositoryTest-project2", repository = "repository",enabled=false)
-
+  val disabledRepo2 = createRepository(url = "url2", host = "host2", project = "RepoRepositoryTest-project2", repository = "repository", enabled = false)
 
   "RepoRepository" should {
-	  Await.result(repoRepository.save(List(enabledRepo1, disabledRepo2)), 5 seconds)
+    Await.result(repoRepository.save(List(enabledRepo1, disabledRepo2)), 15.seconds)
     "store data in the database" in {
-      val result = Await.result(repoRepository.all(), 15 seconds)
+      val result = Await.result(repoRepository.all(), 15.seconds)
       assert(result.size >= 2)
       assert(result.contains(enabledRepo1))
       assert(result.contains(disabledRepo2))
     }
-	  
-	  "return enabled repositories" in {
-		  val result = Await.result(repoRepository.enabled(), 15 seconds)
-				  assert(result.size > 0)
-				  assert(result.contains(enabledRepo1), "Enabled repository should be in the result")
-				  assert(!result.contains(disabledRepo2), "Disabled repository should not be in the result")
-	    
-	  }
-	  "return single result by parameters" in {
-		  val Some(result) = Await.result(repoRepository.byParameters(enabledRepo1.host, enabledRepo1.project, enabledRepo1.repository), 15 seconds)
-		  assert(result === enabledRepo1,"Enabled repository should be the only returned result")
-	  }
+
+    "return enabled repositories" in {
+      val result = Await.result(repoRepository.enabled(), 15.seconds)
+      assert(result.size > 0)
+      assert(result.contains(enabledRepo1), "Enabled repository should be in the result")
+      assert(!result.contains(disabledRepo2), "Disabled repository should not be in the result")
+
+    }
+    "return single result by parameters" in {
+      val Some(result) = Await.result(repoRepository.byParameters(enabledRepo1.host, enabledRepo1.project, enabledRepo1.repository), 15.seconds)
+      assert(result === enabledRepo1, "Enabled repository should be the only returned result")
+    }
   }
-  
 
   def repoRepository = application.injector.instanceOf[RepoRepository]
 }

@@ -34,7 +34,7 @@ class ImportTest extends FlatSpec with MockitoSugar with MockitoUtils {
   private val scheduler = mock[Scheduler]
   private val repoRepository = mock[RepoRepository]
   when(actorSystem.scheduler).thenReturn(scheduler)
-  
+
   val dateToday = new DateTime
 
   //repositories
@@ -43,11 +43,11 @@ class ImportTest extends FlatSpec with MockitoSugar with MockitoUtils {
   val validRepo1 = createRepository(url = s"$repoPrefix/import-test/repo1", host = "host", project = "project", repository = "repository1")
   val validRepo2 = createRepository(url = s"$repoPrefix/import-test/repo2", host = "host", project = "project", repository = "repository2")
   val validRepo3 = createRepository(url = s"$repoPrefix/import-test/repo3", host = "host", project = "project", repository = "repository3")
-  
+
   val author1 = createAuthor("Author1name", "email", None)
   val commit1Repo1 = createCommit(s"commitRepo1-id1", "message", None, author1, None, None, None, None, dateToday, validRepo1.url)
   val commit2Repo1 = createCommit(s"commitRepo1-id2", "message", None, author1, None, None, None, None, dateToday, validRepo1.url)
-  
+
   private val synchronizer = new ImportImpl(oAuthClient, commitRepo, kioClient, search, repoRepository)
 
   "Import#syncApps" should "store apps from kio in data-store" in {
@@ -65,7 +65,7 @@ class ImportTest extends FlatSpec with MockitoSugar with MockitoUtils {
     when(oAuthClient.accessToken()).thenReturn(accessTokenResult)
     when(kioClient.repositories(accessToken)).thenReturn(reposReturnedByKio)
     when(repoRepository.all()).thenReturn(savedRepos)
-    when(repoRepository.save(anyObject())).thenReturn(Future.successful {})
+    when(repoRepository.save(any[List[Repository]]())).thenReturn(Future.successful {})
 
     Await.result(synchronizer.syncApps(), Duration("500 seconds"))
 
@@ -77,28 +77,28 @@ class ImportTest extends FlatSpec with MockitoSugar with MockitoUtils {
     assert(capturedRepos.getValue.find(x => x.url == validRepo2.url) != None)
   }
 
-//  "Import#synchCommits" should "store apps from kio in data-store" in {
-//
-//    val savedRepos = List(validRepo1, validRepo2)
-//
-//    when(repoRepository.enabled()).thenReturn(Future.successful(savedRepos))
-//    when(search.commits("github.com", "zalando", "kontrolletti", None, None, 1)).thenReturn(commitResult1)
-//    when(search.commits("github.com", "zalando", "kontrolletti", None, None, 2)).thenReturn(emptyResult)
-//    when(commitRepo.save(List(commit1, commit2))).thenReturn(emptyFuture)
-//    when(commitRepo.save(List(commit3))).thenReturn(emptyFuture)
-//
-//    Await.result(synchronizer.synchCommits(), Duration("5 seconds"))
-//
-//    verify(repoRepository, times(1)).scmUrls()
-//    verify(search, times(1)).parse(url1)
-//    verify(search, times(1)).parse(url2)
-//    verify(search, times(1)).commits("github", "zalando", "kontrolletti", None, None, 1)
-//    verify(search, times(1)).commits("github", "zalando", "kontrolletti", None, None, 2)
-//    verify(search, times(1)).commits("github", "zalando", "lizzy", None, None, 1)
-//    verify(search, times(1)).commits("github", "zalando", "lizzy", None, None, 2)
-//    verify(commitRepo, times(1)).save(List(commit1, commit2))
-//    verify(commitRepo, times(1)).save(List(commit3))
-//  }
+  //  "Import#synchCommits" should "store apps from kio in data-store" in {
+  //
+  //    val savedRepos = List(validRepo1, validRepo2)
+  //
+  //    when(repoRepository.enabled()).thenReturn(Future.successful(savedRepos))
+  //    when(search.commits("github.com", "zalando", "kontrolletti", None, None, 1)).thenReturn(commitResult1)
+  //    when(search.commits("github.com", "zalando", "kontrolletti", None, None, 2)).thenReturn(emptyResult)
+  //    when(commitRepo.save(List(commit1, commit2))).thenReturn(emptyFuture)
+  //    when(commitRepo.save(List(commit3))).thenReturn(emptyFuture)
+  //
+  //    Await.result(synchronizer.synchCommits(), Duration("5 seconds"))
+  //
+  //    verify(repoRepository, times(1)).scmUrls()
+  //    verify(search, times(1)).parse(url1)
+  //    verify(search, times(1)).parse(url2)
+  //    verify(search, times(1)).commits("github", "zalando", "kontrolletti", None, None, 1)
+  //    verify(search, times(1)).commits("github", "zalando", "kontrolletti", None, None, 2)
+  //    verify(search, times(1)).commits("github", "zalando", "lizzy", None, None, 1)
+  //    verify(search, times(1)).commits("github", "zalando", "lizzy", None, None, 2)
+  //    verify(commitRepo, times(1)).save(List(commit1, commit2))
+  //    verify(commitRepo, times(1)).save(List(commit3))
+  //  }
   //
   //  "Import#updateChildIds" should "update childId parameters" in {
   //    val commit1 = createCommit(id = "id1", parentIds = List("id2", "id3"))

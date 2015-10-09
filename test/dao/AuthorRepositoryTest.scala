@@ -21,18 +21,17 @@ class AuthorRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar 
   val author2 = createAuthor("name", "email2", Option(links))
   val author3 = createAuthor("name", "email2", Option(links))
 
- 
   "AuthorRepository#list" should {
     "be empty initially" in {
-      val result = Await.result(authorRepo.list(), 15 seconds)
+      val result = Await.result(authorRepo.list(), 15.seconds)
       assert(result.size == 0)
     }
   }
 
   "AuthorRepository#save" should {
     "store data in the database" in {
-      Await.result(authorRepo.save(List(author1, author2)), 15 seconds)
-      val result = Await.result(authorRepo.list(), 15 seconds)
+      Await.result(authorRepo.save(List(author1, author2)), 15.seconds)
+      val result = Await.result(authorRepo.list(), 15.seconds)
       assert(result.size == 2, "The number of inserted authors does not match!!")
       assert(result.contains(author1), "author1 should be returned")
       assert(result.contains(author2), "author1 should be returned")

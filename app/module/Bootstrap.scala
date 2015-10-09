@@ -18,7 +18,7 @@ import akka.actor.ActorSystem
  * @author fbenjamin
  */
 trait Bootstrap {
-  def setup
+  def setup()
 }
 
 @Singleton
@@ -29,22 +29,22 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
                                commitRepo: CommitRepository) extends Bootstrap {
   val logger: Logger = Logger { this.getClass }
 
-  val star = setup
+  val star = setup()
 
-  def scheduleSyncAppsJob() = actorSystem.scheduler.schedule(12 seconds, 4 minutes) {
+  def scheduleSyncAppsJob() = actorSystem.scheduler.schedule(12.seconds, 4.minutes) {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
-    Await.result(importJob.syncApps(), 120 seconds)
+    Await.result(importJob.syncApps(), 120.seconds)
     logger.info("Finished the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
-    
+
   }
 
-  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(12 seconds, 1 minutes) {
+  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(12.seconds, 1.minutes) {
     logger.info("Started the job for synchronizing Commits from the SCM's")
-    Await.result(importJob.synchCommits(), 20 seconds)
+    Await.result(importJob.synchCommits(), 20.seconds)
   }
-  
+
   def scheduleDatabaseBootstrap() =
-    actorSystem.scheduler.scheduleOnce(7 seconds) {
+    actorSystem.scheduler.scheduleOnce(7.seconds) {
       logger.info("Started bootstrapping initial database")
       for {
         authorsResult <- authorRepo.initializeDatabase
@@ -53,12 +53,10 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
       } yield (authorsResult)
     }
 
- 
-
   def setup() = {
     scheduleSyncAppsJob
     scheduleSynchCommitsJobs
-    
+
   }
 
 }
