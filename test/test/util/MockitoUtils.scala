@@ -37,6 +37,7 @@ import client.oauth.OAuthUserCredential
 import client.oauth.OAuthAccessToken
 import org.junit.internal.builders.AnnotatedBuilder
 import org.joda.time.DateTime
+import play.api.libs.json.Reads
 
 trait MockitoUtils extends MockitoSugar {
 
@@ -53,20 +54,20 @@ trait MockitoUtils extends MockitoSugar {
     val jsValue = mock[JsValue]
     val jsResult: JsResult[String] = new JsSuccess(result)
 
-    when(jsValue.validate[String](anyObject())).thenReturn(jsResult)
+    when(jsValue.validate[String](any[Reads[String]]())).thenReturn(jsResult)
     when(wsResponse.status).thenReturn(httpCode)
     when(wsResponse.json).thenReturn(jsValue)
     when(wsResponse.body).thenReturn(result)
     wsResponse
   }
-   
+
   def createCommitsResult(links: List[Link] = List(), commits: List[Commit] = List(createCommit())): CommitsResult = new CommitsResult(links, commits)
 
-  def createRepository(url: String="url", host: String="host", project: String="project", repository: String="repository", enabled: Boolean=true, lastSync:Option[DateTime]=None, lastFailed:Option[DateTime]=None, links: Option[List[Link]]=None): Repository = new Repository( url , host , project , repository , enabled, lastSync, lastFailed, links)
+  def createRepository(url: String = "url", host: String = "host", project: String = "project", repository: String = "repository", enabled: Boolean = true, lastSync: Option[DateTime] = None, lastFailed: Option[DateTime] = None, links: Option[List[Link]] = None): Repository = new Repository(url, host, project, repository, enabled, lastSync, lastFailed, links)
 
   def createTicket(name: String = "name", description: String = "description", href: String = "href", links: List[Link] = List()) = new Ticket(name, href, Option(links))
 
-  def createCommit(id: String="id", message: String="message", parentIds: Option[List[String]]=None, author: Author=createAuthor(), childId: Option[String]=None, tickets: Option[List[Ticket]]=None, valid: Option[Boolean]=None, links: Option[List[Link]]=None, date: DateTime=new DateTime, repoUrl: String="repoUrl"): Commit = new Commit(id, message, parentIds, author, childId, tickets, valid, links, date, repoUrl)
+  def createCommit(id: String = "id", message: String = "message", parentIds: Option[List[String]] = None, author: Author = createAuthor(), childId: Option[String] = None, tickets: Option[List[Ticket]] = None, valid: Option[Boolean] = None, links: Option[List[Link]] = None, date: DateTime = new DateTime, repoUrl: String = "repoUrl"): Commit = new Commit(id, message, parentIds, author, childId, tickets, valid, links, date, repoUrl)
 
   def createLink(href: String, method: String, rel: String, relType: String) = new Link(href, method, rel, relType)
 

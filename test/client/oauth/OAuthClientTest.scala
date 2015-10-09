@@ -79,11 +79,15 @@ class OAuthClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
 
   "OAuthClient#accessToken" should "return access-token" in {
     val body = s"grant_type=password&scope=uid&username=$userCred.username&password=$userCred.password"
-    when(mockedDispatcher.requestHolder(anyString)).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.withAuth(anyString, anyString, any())).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.withRequestTimeout(anyInt)).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.withQueryString(any())).thenReturn(mockedRequestHolder)
+    when(mockedDispatcher.requestHolder(config.accessTokenRequestEndpoint)).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withHeaders(("Content-Type", "application/x-www-form-urlencoded"))).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withAuth(clientCred.id, clientCred.secret, WSAuthScheme.BASIC)).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withRequestTimeout(config.requestClientTimeout.toLong)).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withQueryString(("grant_type", "password"))).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withQueryString(("username", userCred.username))).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withQueryString(("password", userCred.password))).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withQueryString(("scope", "uid"))).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withQueryString(("realm", "/services"))).thenReturn(mockedRequestHolder)
     implicit val writable = any[Writeable[String]]
     when(mockedRequestHolder.post(anyString)(writable)).thenReturn(mockedResponse)
 
@@ -92,16 +96,6 @@ class OAuthClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
       case _                       => fail("Result should not be null");
     }
 
-    verify(mockedDispatcher, times(1)).requestHolder(config.accessTokenRequestEndpoint)
-    verify(mockedRequestHolder, times(1)).withHeaders(("Content-Type", "application/x-www-form-urlencoded"))
-    verify(mockedRequestHolder, times(1)).withAuth(clientCred.id, clientCred.secret, WSAuthScheme.BASIC)
-    verify(mockedRequestHolder, times(1)).withRequestTimeout(config.requestClientTimeout)
-    verify(mockedRequestHolder, times(1)).withQueryString(("realm", "/services"))
-    verify(mockedRequestHolder, times(1)).withQueryString(("grant_type", "password"))
-    verify(mockedRequestHolder, times(1)).withQueryString(("grant_type", "password"))
-    verify(mockedRequestHolder, times(1)).withQueryString(("grant_type", "password"))
-    verify(mockedRequestHolder, times(1)).withQueryString(("grant_type", "password"))
-    verify(mockedRequestHolder, times(1)).withQueryString(("grant_type", "password"))
     verify(mockedRequestHolder, times(1)).post(same(""))(any[Writeable[String]])
     verify(mockedWSResponse, times(1)).body
   }
@@ -113,16 +107,14 @@ class OAuthClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
     val mockedTokenInfoWSResponse = createMockedWSResponse(requestReponse, 200)
     val mockedResponse = Future.successful(mockedTokenInfoWSResponse)
 
-    when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.withQueryString(any())).thenReturn(mockedRequestHolder)
+    when(mockedDispatcher.requestHolder(config.tokenInfoRequestEndpoint)).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withQueryString(("access_token", token))).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.get()).thenReturn(mockedResponse)
 
     Await.result(client.tokenInfo(token), Duration("50 seconds")) match {
       case Some(result) => assert(result === tokenInfo, "Result is not equal to expected")
       case None         => fail("Result should not be None");
     }
-    verify(mockedDispatcher, times(1)).requestHolder(config.tokenInfoRequestEndpoint)
-    verify(mockedRequestHolder, times(1)).withQueryString(("access_token", token))
     verify(mockedTokenInfoWSResponse, times(1)).body
   }
 

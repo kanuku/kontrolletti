@@ -12,7 +12,7 @@ object ParsingData {
   val users = List("", "git@", "fbenjamin@")
   val protocols = List("", "http://", "http://", "https://", "ssh://")
 
-  def fixture = new {
+  val fixture = new {
     val hosts =
       for {
         host <- hostnames
@@ -98,7 +98,7 @@ object FakeResponseData {
             ]
         }
         ]}
-    
+
     """
   val multiGithubCommit = """
     [
@@ -247,7 +247,7 @@ object FakeResponseData {
             }
         ]
     }
-    ]    
+    ]
     """
 
   val ghUsers = """

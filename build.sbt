@@ -8,7 +8,7 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala).enablePlugins(Do
 
 scalaVersion := "2.11.1"
 
-/*scalacOptions ++= Seq(
+scalacOptions in Compile ++= Seq(
   "-deprecation", // Emit warning and location for usages of deprecated APIs.
   "-feature", // Emit warning and location for usages of features that should be imported explicitly.
   "-unchecked", // Enable additional warnings where generated code depends on assumptions.
@@ -17,9 +17,8 @@ scalaVersion := "2.11.1"
   "-Ywarn-adapted-args", // Warn if an argument list is modified to match the receiver.
   "-Ywarn-dead-code", // Warn when dead code is identified.
   "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures.
-  "-Ywarn-nullary-override", // Warn when non-nullary overrides nullary, e.g. def foo() over def foo.
-  "-Ywarn-numeric-widen" // Warn when numerics are widened.
-)*/
+  "-Ywarn-nullary-override" // Warn when non-nullary overrides nullary, e.g. def foo() over def foo.
+)
 
 ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 15
 	
@@ -82,4 +81,3 @@ mappings in Universal += {
 dockerCommands ++=  Seq(
   Cmd("ADD", "/scm-source.json" + " /scm-source.json")  
 )
-

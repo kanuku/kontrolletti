@@ -8,6 +8,7 @@ import play.api.test.Helpers._
 import test.util.ParsingData._
 import test.util.TestUtils._
 import scala.Left
+import scala.language.reflectiveCalls
 
 /**
  * This class tests for parsing URL composed of corner cases.
@@ -112,7 +113,7 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
     assert(either == Left("Repository-url should not be empty/null"))
   }
   test("parse (NoneURL) and get empty tuple") {
-    val url="asdfasdfölakjsdfölkajsdfölkj1230790823702934857"
+    val url = "asdfasdfölakjsdfölkajsdfölkj1230790823702934857"
     val either = extract(url)
     assertEitherIsNotNull(either)
     assertEitherIsLeft(either)

@@ -33,13 +33,13 @@ class CommitRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar 
   val commitOneMonthAgo = createCommit(s"$prefix-id5", "message", None, author1, None, None, None, None, dateOneMonthAgo, repo1.url)
 
   override def beforeAll {
-    Await.result(repoRepository.save(List(repo1)), 5 seconds)
-    Await.result(commitRepository.save(List(commitToday, commitYesterday, commitBeforeYesterday, commitOneWeekAgo, commitOneMonthAgo)), 5 seconds)
+    Await.result(repoRepository.save(List(repo1)), 15.seconds)
+    Await.result(commitRepository.save(List(commitToday, commitYesterday, commitBeforeYesterday, commitOneWeekAgo, commitOneMonthAgo)), 15.seconds)
   }
 
   "CommitRepository" should {
     "save() & all() should save and return all commits in the table" in {
-      val result = Await.result(commitRepository.all(), 15 seconds)
+      val result = Await.result(commitRepository.all(), 15.seconds)
       assert(result.size === 5, "Two commits were saved.")
       assert(result.contains(commitToday), "commitToday should be saved")
       assert(result.contains(commitYesterday), "commitYesterday should be saved")
@@ -49,26 +49,26 @@ class CommitRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar 
     }
 
     "get commit by Id" in {
-      val result = Await.result(commitRepository.byId(repo1.host, repo1.project, repo1.repository, commitToday.id), 15 seconds)
+      val result = Await.result(commitRepository.byId(repo1.host, repo1.project, repo1.repository, commitToday.id), 15.seconds)
       assert(result.size === 1, "Should return single commit!!")
       assert(result.contains(commitToday))
     }
 
     //    "get commits between since yesterday untill 1-week-ago" in {
-    //      val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitYesterday.id), Option(commitOneWeekAgo.id), 1, 100), 15 seconds)
+    //      val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitYesterday.id), Option(commitOneWeekAgo.id), 1, 100), 15.seconds)
     //      assert(result.size === 3, "3 Commits should be returned by the range query")
     //      assert(result.contains(commitYesterday), "commitYesterday should be in the result")
     //      assert(result.contains(commitBeforeYesterday), "commitBeforeYesterday should be in the result")
     //      assert(result.contains(commitOneWeekAgo), "commitOneWeekAgo should be in the result")
     //    }
     //    "get commits since yesterday" in {
-    //      val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitYesterday.id), None, 1, 100), 15 seconds)
+    //      val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitYesterday.id), None, 1, 100), 15.seconds)
     //      assert(result.size === 2, "2 Commits should be returned by the range query")
     //      assert(result.contains(commitToday), "commitToday should be in the result")
     //      assert(result.contains(commitYesterday), "commitYesterday should be in the result")
     //    }
     //    "get commits untill yesterday" in {
-    //      val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, None, Option(commitYesterday.id), 1, 100), 15 seconds)
+    //      val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, None, Option(commitYesterday.id), 1, 100), 15.seconds)
     //      assert(result.size === 4, "4 Commits should be returned by the range query")
     //      assert(result.contains(commitYesterday), "commitYesterday should be in the result")
     //      assert(result.contains(commitBeforeYesterday), "commitBeforeYesterday should be in the result")
@@ -77,12 +77,12 @@ class CommitRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar 
     //    }
 
     "get youngest commit" in {
-      val result = Await.result(commitRepository.youngest(repo1.url), 15 seconds)
+      val result = Await.result(commitRepository.youngest(repo1.url), 15.seconds)
       assert(result.size === 1)
       assert(result.contains(commitToday), "commitToday should be in the result")
     }
     "get oldest commit" in {
-      val result = Await.result(commitRepository.oldest(repo1.url), 15 seconds)
+      val result = Await.result(commitRepository.oldest(repo1.url), 15.seconds)
       assert(result.size === 1)
       assert(result.contains(commitOneMonthAgo), "commitOneMonthAgo should be in the result")
     }

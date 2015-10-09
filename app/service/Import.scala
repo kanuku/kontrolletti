@@ -50,7 +50,7 @@ class ImportImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
         }
       }
     } yield (savedRepos, result)
-  } 
+  }
 
   /**
    * Filter apps that have a parsable scm-url.
@@ -113,13 +113,13 @@ class ImportImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
     search.commits(repository.host, repository.project, repository.repository, since, None, pageNumber).map {
       _ match {
         case Right(Some(Nil)) =>
-          logger.info("Received empty result from $repository")
+          logger.info(s"Received empty result from $repository")
           None
         case Right(Some(result)) =>
           logger.info("About to import " + result.size + " commits from " + repository.url)
           Some(result)
         case Right(None) =>
-          logger.info("Received no result from $repository")
+          logger.info(s"Received no result from $repository")
           None
         case Left(msg) =>
           logger.warn(s"Received msg: $msg")

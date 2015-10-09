@@ -112,8 +112,8 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
 
   "SCM#head" should "GET github url" in {
     val url = s"Test"
-    when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
+    when(mockedDispatcher.requestHolder(anyString)).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withHeaders(any[Tuple2[String, String]]())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.head()).thenReturn(mockedResponse)
     val result = client.head(github, url)
     assert(result == mockedResponse)
@@ -124,8 +124,8 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
   "SCM#head" should "HEAD stash url" in {
     val url = s"Test"
     when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.withQueryString(any())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withHeaders(any[Tuple2[String, String]]())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withQueryString(any[Tuple2[String, String]]())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.get()).thenReturn(mockedResponse)
     val result = client.head(stash, url)
     assert(result == mockedResponse)
@@ -136,8 +136,8 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
 
   def testGET(url: String, call: => Future[WSResponse]) = {
     when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.withHeaders(any())).thenReturn(mockedRequestHolder)
-    when(mockedRequestHolder.withQueryString(any())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withHeaders(any[Tuple2[String, String]]())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withQueryString(any[Tuple2[String, String]]())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.get()).thenReturn(mockedResponse)
     val result = call
     assert(result == mockedResponse)
