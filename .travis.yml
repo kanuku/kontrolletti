@@ -5,7 +5,7 @@ scala:
 jdk:
   - oraclejdk8
 
-addon:
+addons:
   postgresql: "9.4"
 
 before_script:
