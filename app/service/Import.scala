@@ -41,9 +41,10 @@ class ImportImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
         val reposNotInDatabase = filtered.filter {
           n => !savedRepos.toList.exists { s => (s.host == n.host && s.project == n.project && s.repository == n.repository) }
         }
-        filtered.map { x => (x.url -> x) } match {
+        reposNotInDatabase.map { x => (x.url -> x) } match {
           case Nil => Future.successful {}
           case valid =>
+            logger.info("from " + kioRepos.size + " Repositories(Kio) only " + valid.size + " are usable and " + savedRepos.size + " are already in database")
             repoRepo.save(valid.toMap.values.toList).map { _ =>
               logger.info("Finished saving apps")
             }
@@ -84,7 +85,7 @@ class ImportImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
           falseFuture
         case Some(result) =>
           val updateCommits = removeIfExists(updateChildIds(repo, result), since)
-          logger.info("result: " + result.size + " - updated: " + updateCommits.size)
+          logger.info("result: " + result.size + "  - updated: " + updateCommits.size)
           commitRepo.save(updateCommits).flatMap { _ =>
             logger.info(s"Saved " + result.size + "commits from " + repo.url)
             synchCommit(repo, since, pageNumber + 1)
