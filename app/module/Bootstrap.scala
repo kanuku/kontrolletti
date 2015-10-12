@@ -38,7 +38,7 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
 
   }
 
-  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(12.seconds, 1.minutes) {
+  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(12.seconds, 10.minutes) {
     logger.info("Started the job for synchronizing Commits from the SCM's")
     Await.result(importJob.synchCommits(), 20.seconds)
   }
@@ -55,7 +55,7 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
 
   def setup() = {
     scheduleSyncAppsJob
-    scheduleSynchCommitsJobs
+    //    scheduleSynchCommitsJobs
 
   }
 
