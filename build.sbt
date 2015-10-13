@@ -4,7 +4,7 @@ name := """kontrolletti"""
 
 version := "0.02-SNAPSHOT"
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala).enablePlugins(DockerPlugin)
+lazy val root = (project in file(".")).enablePlugins(PlayScala, DockerPlugin, GitVersioning)
 
 scalaVersion := "2.11.1"
 
