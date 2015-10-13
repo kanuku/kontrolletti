@@ -121,14 +121,14 @@ sealed trait SCMResolver {
 
   /**
    * Builds a QueryParameter to get maximal number of Items in the response.
-   *  @returns query parameter (Tupple)
+   *  @return query parameter (Tupple)
    */
   def maximumPerPageQueryPararmeter: (String, String)
 
   /**
    * Builds a Query parameter to retrieve commits after.
    *  @param since since parameter
-   *  @returns query parameter (Tupple)
+   *  @return query parameter (Tupple)
    */
   def sinceCommitQueryParameter(since: String): (String, String)
 
