@@ -64,6 +64,8 @@ dockerBaseImage := "zalando/openjdk:8u40-b09-4"
 
 dockerExposedPorts in Docker := Seq(9000, 9443)
 
+dockerEntrypoint := Seq("bin/kontrolletti", "-Dconfig.resource=application.prod.conf")
+
 // ------------- Generate scm-source.json ---------
 lazy val genScmSource = taskKey[Unit]("Execute the scm-source.sh shell script")
 

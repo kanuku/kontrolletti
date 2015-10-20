@@ -36,7 +36,7 @@ trait CommitRepository {
 class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext) extends CommitRepository with HasDatabaseConfigProvider[KontrollettiPostgresDriver] {
   import dao.KontrollettiPostgresDriver.api._
   import utility.FutureUtil._
-
+  private val queries = Queries
   private val logger: Logger = Logger(this.getClass())
   private val commits = Tables.commits
   private val repos = Tables.repositories
@@ -64,62 +64,18 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     commit <- commits.filter { _.repoURL === repo.url }
   } yield commit
 
-  private def getWithSinceAndUntilQuery(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Int, maxPerPage: Int): Future[Seq[Commit]] = {
-    logger.info(s"WithSinceAndUntilQuery- host($host) - project($project) - repository($repository) - since($since) - untill($until) pageNumber($pageNumber) - maxPerPage($maxPerPage)")
-    val Some(sinceId) = since
-    val Some(untilId) = until
-    import slick.jdbc.{ StaticQuery => Q, GetResult }
-    implicit val getCommits = GetResult[Commit](r => utility.Transformer.deserialize(Json.parse(r.nextString()))(KontrollettiToModelParser.commitReader))
-    val query = sql"""
-                        WITH RECURSIVE PARENTS(parent_id, id, date) AS (
-                          WITH ALL_COMMITS(parent_id, id, date) AS (
-                            SELECT unnest(parent_ids)as parent_id, id, date
-                              FROM kont_data."COMMITS" C, kont_data."REPOSITORIES" R
-                              WHERE R.host = $host
-                              AND R.project = $project
-                              AND R.repository = $repository
-                              AND C.repository_url = R.URL
-                          ), LAST_COMMIT(parent_id, id, date) AS (
-                            SELECT parent_id, id, date
-                              FROM ALL_COMMITS END_PARENT
-                              WHERE id = $untilId
-                          )
-                          SELECT START_CHILD.parent_id, START_CHILD.id, START_CHILD.date
-                            FROM ALL_COMMITS AS START_CHILD , LAST_COMMIT LC
-                            WHERE START_CHILD.id = $sinceId
-                          UNION ALL
-                          SELECT   P.parent_id, P.id, P.date
-                            FROM ALL_COMMITS P,PARENTS AS ND, LAST_COMMIT AS LAST
-                            WHERE P.id = ND.parent_id
-                            AND P.date >= LAST.date
-                        )
-                        SELECT C.json_value
-                        FROM PARENTS P, kont_data."COMMITS" C
-                        WHERE C.id = P.id
-                        ORDER BY C.date
-
-                        ;
-                  """.as[Commit]
-    db.run(query)
-  }
-
   def get(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Int, maxPerPage: Int): Future[Seq[Commit]] = {
-
     (since, until) match {
-      case (None, None)                       => pageQuery(getByRepositoryQuery(host, project, repository).sortBy(_.date.desc).take(maxPerPage), pageNumber: Int, maxPerPage: Int)
-      case (Some(sinceDate), None)            => pageQuery(getByRepositoryQuery(host, project, repository).sortBy(_.date.desc).take(maxPerPage), pageNumber: Int, maxPerPage: Int)
-      case (None, Some(untilDate))            => pageQuery(getByRepositoryQuery(host, project, repository).sortBy(_.date.desc).take(maxPerPage), pageNumber: Int, maxPerPage: Int)
-      case (Some(sinceDate), Some(untilDate)) => getWithSinceAndUntilQuery(host, project, repository, since, until, pageNumber, maxPerPage)
-      //
-
+      case (Some(firstCommit), Some(lastCommit)) => handleError(db.run(queries.selectRangeOfCommits(host, project, repository, firstCommit, lastCommit, pageNumber, maxPerPage)))
+      case _                                     => pageQuery(getByRepositoryQuery(host, project, repository).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
     }
   }
 
   def pageQuery(query: Query[Tables.CommitTable, Commit, Seq], pageNumber: Int, maxPerPage: Int) = {
     if (pageNumber > 1)
-      handleError(db.run(query.drop((pageNumber - 1) * maxPerPage).result))
+      handleError(db.run(query.drop((pageNumber - 1) * maxPerPage).take(maxPerPage).result))
     else
-      handleError(db.run(query.result))
+      handleError(db.run(query.take(maxPerPage).result))
   }
 
   def youngest(repoUrl: String): Future[Option[Commit]] = {

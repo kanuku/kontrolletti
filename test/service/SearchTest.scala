@@ -250,5 +250,7 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
     assert(result == Left(defaultError), f"Result should be [$defaultError]")
     verify(client, times(1)).tickets(host, project, repository)
   }
-
+  override def configuration: Map[String, _] = Map(
+    "client.stash.host" -> "stash.zalando.net",
+    "client.github.host" -> "github.com")
 }
