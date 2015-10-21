@@ -64,10 +64,34 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     commit <- commits.filter { _.repoURL === repo.url }
   } yield commit
 
+  private def getCommitsByRange(host: String, project: String, repository: String, since: String, until: String) = for {
+    repo <- repos.filter { repo => repo.host === host && repo.project === project && repo.repository === repository }
+    firstCommit <- commits.filter { c => c.id === since && c.repoURL === repo.url }
+    lastCommit <- commits.filter { c => c.id === until && c.repoURL === repo.url }
+    result <- commits.filter { c => c.date >= lastCommit.date && c.date <= firstCommit.date }
+  } yield result
+
+  private def getCommitsUntilCommitDate(host: String, project: String, repository: String, until: String) = for {
+    repo <- repos.filter { repo => repo.host === host && repo.project === project && repo.repository === repository }
+    targetCommit <- commits.filter { c => c.id === until && c.repoURL === repo.url }
+    result <- commits.filter { c => c.date <= targetCommit.date }
+  } yield result
+
+  private def getCommitsSinceCommitDate(host: String, project: String, repository: String, since: String) = for {
+    repo <- repos.filter { repo => repo.host === host && repo.project === project && repo.repository === repository }
+    targetCommit <- commits.filter { c => c.id === since && c.repoURL === repo.url }
+    result <- commits.filter { c => c.date >= targetCommit.date }
+  } yield result
+
   def get(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Int, maxPerPage: Int): Future[Seq[Commit]] = {
     (since, until) match {
-      case (Some(firstCommit), Some(lastCommit)) => handleError(db.run(queries.selectRangeOfCommits(host, project, repository, firstCommit, lastCommit, pageNumber, maxPerPage)))
-      case _                                     => pageQuery(getByRepositoryQuery(host, project, repository).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
+      case (Some(sinceCommit), Some(untilCommit)) =>
+        pageQuery(getCommitsByRange(host, project, repository, sinceCommit, untilCommit).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
+      case (Some(sinceCommit), None) =>
+        pageQuery(getCommitsSinceCommitDate(host, project, repository, sinceCommit).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
+      case (None, Some(untilCommit)) =>
+        pageQuery(getCommitsUntilCommitDate(host, project, repository, untilCommit).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
+      case _ => pageQuery(getByRepositoryQuery(host, project, repository).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
     }
   }
 
