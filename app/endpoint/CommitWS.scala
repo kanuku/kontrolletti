@@ -35,10 +35,10 @@ class CommitWS @Inject() (search: Search, commitRepo: CommitRepository) extends 
     }
   }
 
-  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String]) = Action.async {
-    logger.info(s"Request(commits) - host:$host, project:$project, repository:$repository, since:$since, until:$until")
+  def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String], isValid: Option[Boolean]) = Action.async {
+    logger.info(s"Request(commits) - host:$host, project:$project, repository:$repository, since:$since, until:$until, isValid:$isValid")
 
-    commitRepo.get(host, project, repository).map {
+    commitRepo.get(host, project, repository, since = since, until = until, valid = isValid).map {
       case Nil =>
         logger.info("Result 404")
         NotFound

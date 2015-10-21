@@ -18,7 +18,7 @@ GET    /api/repos/:repositoryUrl                                                
 
 # COMMITS 
 GET    /api/hosts/:host/projects/:project/repos/:repository/commits/:id              @endpoint.CommitWS.byId(host: String, project: String, repository: String, id: String)
-GET    /api/hosts/:host/projects/:project/repos/:repository/commits                  @endpoint.CommitWS.commits(host: String, project: String, repository: String, since:Option[String] , until:Option[String])
+GET    /api/hosts/:host/projects/:project/repos/:repository/commits                  @endpoint.CommitWS.commits(host: String, project: String, repository: String, since:Option[String] , until:Option[String], isValid:Option[Boolean])
 GET    /api/hosts/:host/projects/:project/repos/:repository/diff/:source...:target   @endpoint.CommitWS.diff(host: String, project: String, repository: String, source:String, target:String)
 
 # TICKETS 

@@ -44,7 +44,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
   }
 
   def diffRoute(host: String = host, project: String = project, repository: String = repository, source: String, target: String) = s"/api/hosts/$host/projects/$project/repos/$repository/diff/$source...$target"
-  def commitsRoute(host: String = host, project: String = project, repository: String = repository, sinceId: Option[String] = None, untilId: Option[String] = None) = {
+  def commitsRoute(host: String = host, project: String = project, repository: String = repository, sinceId: Option[String] = None, untilId: Option[String] = None, isValid: Option[Boolean] = None) = {
     val since = sinceId.getOrElse("default")
     val until = untilId.getOrElse("deafult")
     s"/api/hosts/github.com/projects/zalando/repos/kontrolletti/commits?since=$since&until=$until"
@@ -122,7 +122,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       val response = new CommitsResult(List(), commits)
       val commitResult = Future.successful(commits)
       val url = commitsRoute(sinceId = sinceId, untilId = untilId)
-      when(commitRepository.get(host, project, repository)).thenReturn(commitResult)
+      when(commitRepository.get(host, project, repository, since = sinceId, until = untilId, valid = None)).thenReturn(commitResult)
       val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual OK
       contentType(result) mustEqual Some("application/x.zalando.commit+json")
@@ -132,7 +132,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
     "Return 404 when objects are not found" in {
       val commitResult = Future.successful(List())
       val url = commitsRoute(sinceId = sinceId, untilId = untilId)
-      when(commitRepository.get(host, project, repository)).thenReturn(commitResult)
+      when(commitRepository.get(host, project, repository, since = sinceId, until = untilId, valid = None)).thenReturn(commitResult)
       val Some(result) = route(FakeRequest(GET, url).withHeaders(authorizationHeader))
       status(result) mustEqual NOT_FOUND
     }

@@ -22,8 +22,8 @@ object Tables { self: HasDatabaseConfigProvider[KontrollettiPostgresDriver] =>
   import KontrollettiToJsonParser.linkWriter
   import KontrollettiToModelParser.linkReader
 
-   private  val schema = Some("kont_data")
-  
+  private val schema = Some("kont_data")
+
   lazy val authors = TableQuery[AuthorTable]
   lazy val tickets = TableQuery[TicketTable]
   lazy val repositories = TableQuery[RepositoryTable]
@@ -83,15 +83,15 @@ object Tables { self: HasDatabaseConfigProvider[KontrollettiPostgresDriver] =>
     def parentIds = column[Option[List[String]]]("parent_ids")
     def date = column[DateTime]("date")
     def repoURL = column[String]("repository_url")
+    def isValid = column[Boolean]("is_valid")
     def jsonValue = column[JsValue]("json_value")
 
-    def * = (id, repoURL, parentIds, date, jsonValue) <> ((apply _).tupled, unapply)
+    def * = (id, repoURL, parentIds, date, isValid, jsonValue) <> ((apply _).tupled, unapply)
 
     def repoFK = foreignKey("repository_url", repoURL, repositories)(_.url)
 
-    def apply(id: String, repoId: String, parentIds: Option[List[String]], date: DateTime, jsonValue: JsValue): Commit = deserialize(jsonValue)(KontrollettiToModelParser.commitReader)
-    def unapply(commit: Commit): Option[(String, String, Option[List[String]], DateTime, JsValue)] = Some((commit.id, commit.repoUrl, commit.parentIds, commit.date, serialize(commit)(KontrollettiToJsonParser.commitWriter)))
+    def apply(id: String, repoId: String, parentIds: Option[List[String]], date: DateTime, isValid: Boolean, jsonValue: JsValue): Commit = deserialize(jsonValue)(KontrollettiToModelParser.commitReader)
+    def unapply(commit: Commit): Option[(String, String, Option[List[String]], DateTime, Boolean, JsValue)] = Some((commit.id, commit.repoUrl, commit.parentIds, commit.date, !commit.tickets.isEmpty, serialize(commit)(KontrollettiToJsonParser.commitWriter)))
   }
 
 }
-
