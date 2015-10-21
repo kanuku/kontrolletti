@@ -121,7 +121,7 @@ paths:
         type: string
       - name: isValid
         in: query
-        description: Only commits with a valid commmit-message will be returned.
+        description: Only commits with a valid(`true`)/unvalid(`false`) commmit-message will be returned.
         required: false
         type: boolean
       responses:
