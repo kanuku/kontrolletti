@@ -63,13 +63,13 @@ class CommitRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar 
     }
     "get commits since yesterday" in {
       val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitYesterday.id), None, 1, 100), 15.seconds)
-      assert(result.size === 2, "Only 2 Commits should be returned by the range query")
+      assert(result.size >= 2, "Only 2 Commits should be returned by the range query")
       assert(result.contains(commitToday), "commitToday should be in the result")
       assert(result.contains(commitYesterday), "commitYesterday should be in the result")
     }
     "get commits untill yesterday" in {
       val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, None, Option(commitYesterday.id), 1, 100), 15.seconds)
-      assert(result.size === 4, "Only 4 Commits should be returned by the range query")
+      assert(result.size >= 4, "Only 4 Commits should be returned by the range query")
       assert(result.contains(commitYesterday), "commitYesterday should be in the result")
       assert(result.contains(commitBeforeYesterday), "commitBeforeYesterday should be in the result")
       assert(result.contains(commitOneWeekAgo), "commitOneWeekAgo should be in the result")

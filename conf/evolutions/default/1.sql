@@ -18,6 +18,7 @@ CREATE TABLE kont_data."COMMITS"
   repository_url 		CHARACTER VARYING NOT NULL,
   parent_ids 			TEXT[],
   date 					TIMESTAMP WITH TIME ZONE NOT NULL,
+  is_valid 				BOOLEAN NOT NULL,
   json_value 			JSONB NOT NULL, 
   CONSTRAINT repository_url 
   		FOREIGN KEY (repository_url)

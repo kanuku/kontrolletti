@@ -36,7 +36,7 @@ import org.joda.time.format.DateTimeFormat
 @Singleton
 class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
-  type Parser[JsValue, B] = JsValue => B
+  type Parser[B] = JsValue => B
 
   private val logger: Logger = Logger(this.getClass())
   private val defaultError = Left("Something went wrong, check the logs!")
@@ -131,7 +131,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
    * @return Either an Error-message(left) or the parsed Model(right).
    *
    */
-  def handleRequest[A](parser: Parser[JsValue, Either[String, A]], clientCall: => Future[WSResponse]): Future[Either[String, Option[A]]] =
+  def handleRequest[A](parser: Parser[Either[String, A]], clientCall: => Future[WSResponse]): Future[Either[String, Option[A]]] =
     executeCall(clientCall).map {
       _.right.flatMap { response =>
         response.status match {
@@ -148,7 +148,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
                 Left(error)
             }
           case status =>
-            logger.warn(s"Status $status was not handled! ->"+response.body)
+            logger.warn(s"Status $status was not handled! ->" + response.body)
             Left("Unexpected SCM response: " + response.status)
         }
       }
@@ -190,5 +190,3 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
     }
 
 }
-
-
