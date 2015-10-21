@@ -85,7 +85,7 @@ sealed trait SCM {
 class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
   private val logger: Logger = Logger(this.getClass())
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNr: Int): Future[WSResponse] = {
-    //FIXME! resolver.get should be best avoided. 
+    //FIXME! resolver.get should be best avoided.
 
     val res: SCMResolver = resolver(host)
     val url = res.commits(host, project, repository)
@@ -118,14 +118,14 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
     val res = resolver(host)
 
     val call = if (res.isGithubServerType) {
-      logger.info("Putting the access-token is in url")
+      logger.info("Putting the access-token in url")
       dispatcher //
         .requestHolder(url) //
         .withQueryString(res.maximumPerPageQueryPararmeter) //
         .withQueryString(res.startAtPageNumber(pageNr))
         .withQueryString(res.accessTokenQueryParameter)
     } else {
-    	logger.info("Putting the access-token is in head")
+      logger.info("Putting the access-token in head")
       dispatcher //
         .requestHolder(url) //
         .withQueryString(res.maximumPerPageQueryPararmeter) //
