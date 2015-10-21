@@ -111,14 +111,19 @@ paths:
         type: string
       - name: since
         in: query
-        description: Only commits after this commitId will be returned.
+        description: Only commits made after this commitId will be returned.
         required: false
         type: string
       - name: until
         in: query
-        description: Only commits before this commitId will be returned.
+        description: Only commits made before this commitId will be returned.
         required: false
         type: string
+      - name: isValid
+        in: query
+        description: Only commits with a valid commmit-message will be returned.
+        required: false
+        type: boolean
       responses:
           200:
             description: Retrieved the objects successfully.
