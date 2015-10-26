@@ -55,25 +55,33 @@ class CommitRepositoryTest extends PlaySpec with MockitoUtils with MockitoSugar 
     }
 
     "get commits between since yesterday untill 1-week-ago" in {
-      val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitYesterday.id), Option(commitOneWeekAgo.id), 1, 100), 15.seconds)
+      val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitYesterday.id), Option(commitOneWeekAgo.id)), 15.seconds)
       assert(result.size === 3, "Only 3 Commits should be returned by the range query")
       assert(result.contains(commitYesterday), "commitYesterday should be in the result")
       assert(result.contains(commitBeforeYesterday), "commitBeforeYesterday should be in the result")
       assert(result.contains(commitOneWeekAgo), "commitOneWeekAgo should be in the result")
     }
     "get commits since yesterday" in {
-      val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitYesterday.id), None, 1, 100), 15.seconds)
+      val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitYesterday.id), None), 15.seconds)
       assert(result.size >= 2, "Only 2 Commits should be returned by the range query")
       assert(result.contains(commitToday), "commitToday should be in the result")
       assert(result.contains(commitYesterday), "commitYesterday should be in the result")
     }
     "get commits untill yesterday" in {
-      val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, None, Option(commitYesterday.id), 1, 100), 15.seconds)
+      val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, None, Option(commitYesterday.id)), 15.seconds)
       assert(result.size >= 4, "Only 4 Commits should be returned by the range query")
       assert(result.contains(commitYesterday), "commitYesterday should be in the result")
       assert(result.contains(commitBeforeYesterday), "commitBeforeYesterday should be in the result")
       assert(result.contains(commitOneWeekAgo), "commitOneWeekAgo should be in the result")
       assert(result.contains(commitOneMonthAgo), "commitOneMonthAgo should be in the result")
+    }
+
+    "get commits between since yesterday untill 1-week-ago but pageNumber=2 and perPage=1" in {
+      val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitYesterday.id), Option(commitOneWeekAgo.id), pageNumber = Option(2), perPage = Option(1)), 15.seconds)
+      assert(result.size === 1, "Only 1 Commit should be returned by the range query")
+      assert(!result.contains(commitYesterday), "commitYesterday should be in the result")
+      assert(result.contains(commitBeforeYesterday), "commitBeforeYesterday should be in the result")
+      assert(!result.contains(commitOneWeekAgo), "commitOneWeekAgo should be in the result")
     }
 
     "get youngest commit" in {

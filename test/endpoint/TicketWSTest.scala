@@ -50,28 +50,28 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with Kon
       val tickets = List(ticket)
       val commits = List(createCommit(tickets = Option(tickets)))
       val commitResult = Future.successful(commits)
-      val ticketResult = Future.successful(Some(tickets))
+      val ticketResult = Future.successful(tickets.toSeq)
 
-      when(commitRepository.tickets(host, project, repo, sinceId, untilId)).thenReturn(commitResult)
+      when(commitRepository.tickets(host, project, repo, sinceId, untilId, None, None)).thenReturn(ticketResult)
 
       val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual OK
       contentType(result) mustEqual Some("application/x.zalando.ticket+json")
       contentAsString(result) mustEqual Json.stringify(Json.toJson(List(ticket)))
 
-      verify(commitRepository, times(2)).tickets(host, project, repo, sinceId, untilId)
+      verify(commitRepository, times(2)).tickets(host, project, repo, sinceId, untilId, None, None)
     }
 
     "Return 404 when the result is empty" in {
       val url = ticketRoute(sinceId = sinceId, untilId = untilId)
       val ticketResult = Future.successful(Right(None))
 
-      when(commitRepository.tickets(host, project, repo, sinceId, untilId)).thenReturn(Future.successful(Nil))
+      when(commitRepository.tickets(host, project, repo, sinceId, untilId, None, None)).thenReturn(Future.successful(Nil))
 
       val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual NOT_FOUND
 
-      verify(commitRepository, times(2)).tickets(host, project, repo, sinceId, untilId)
+      verify(commitRepository, times(2)).tickets(host, project, repo, sinceId, untilId, None, None)
     }
 
   }
