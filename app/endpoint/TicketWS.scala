@@ -17,14 +17,19 @@ class TicketWS @Inject() (commitRepo: CommitRepository) extends Controller {
   private val logger: Logger = Logger(this.getClass())
   def tickets(host: String, project: String, repository: String, sinceId: Option[String], untilId: Option[String]) = Action.async {
     logger.info(s"host: $host, project: $project repository: $repository, sinceId: $sinceId, untilId: $untilId")
-    commitRepo.tickets(host, project, repository, since = sinceId, until = untilId).map {
+    commitRepo.get(host, project, repository, since = sinceId, until = untilId).map {
       _.toList match {
         case Nil =>
           logger.info(s"Result: 404 ")
           NotFound
         case commits =>
           logger.info(s"Result: 200 ")
-          val result = (commits.flatMap { commit => commit.tickets }).flatMap { x => x }
+          logger.info("size = " + commits.size)
+          val result = for {
+            commit <- commits
+            ticket <- commit.tickets
+          } yield ticket
+
           Ok(Json.toJson(result)).as("application/x.zalando.ticket+json")
 
       }
