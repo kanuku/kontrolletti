@@ -2,12 +2,10 @@ package endpoint
 
 import scala.{ Left, Right }
 import scala.concurrent.Future
-
 import org.mockito.Mockito.{ reset, times, verify, when }
 import org.scalatest.BeforeAndAfter
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-
 import client.RequestDispatcher
 import client.oauth.OAuth
 import configuration.OAuthConfiguration
@@ -19,6 +17,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{ GET, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, contentAsString, contentType, defaultAwaitTimeout, route, status, writeableOf_AnyContentAsEmpty }
 import service.Search
 import test.util.{ KontrollettiOneAppPerTestWithOverrides, MockitoUtils, OAuthTestBuilder }
+import dao.CommitRepository
 
 class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with KontrollettiOneAppPerTestWithOverrides with OAuthTestBuilder with BeforeAndAfter {
   val reposRoute = "/api/repos/"
@@ -27,10 +26,10 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with Kon
   val repo = "kontrolletti"
   val sinceId = Some("sinceId")
   val untilId = Some("untilId")
-  val search = mock[Search]
+  val commitRepository = mock[CommitRepository]
 
   before {
-    reset(search)
+    reset(commitRepository)
     recordOAuthPassAuthenticationBehaviour
   }
 
@@ -47,49 +46,38 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with Kon
   "GET /api/hosts/{host}/projects/{project}/repos/{repository}/tickets" should {
     "Return 200 when tickets are found" in {
       val url = ticketRoute(sinceId = sinceId, untilId = untilId)
-      val ticket = createTicket()
+      val ticket = createTicket("name", "description", "href", Nil)
       val tickets = List(ticket)
-      val ticketResult = Future.successful(Right(Some(tickets)))
+      val commits = List(createCommit(tickets = Option(tickets)))
+      val commitResult = Future.successful(commits)
+      val ticketResult = Future.successful(Some(tickets))
 
-      when(search.tickets(host, project, repo, sinceId, untilId)).thenReturn(ticketResult)
+      when(commitRepository.tickets(host, project, repo, sinceId, untilId)).thenReturn(commitResult)
 
       val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual OK
       contentType(result) mustEqual Some("application/x.zalando.ticket+json")
       contentAsString(result) mustEqual Json.stringify(Json.toJson(List(ticket)))
 
-      verify(search, times(1)).tickets(host, project, repo, sinceId, untilId)
+      verify(commitRepository, times(2)).tickets(host, project, repo, sinceId, untilId)
     }
 
     "Return 404 when the result is empty" in {
       val url = ticketRoute(sinceId = sinceId, untilId = untilId)
       val ticketResult = Future.successful(Right(None))
 
-      when(search.tickets(host, project, repo, sinceId, untilId)).thenReturn(ticketResult)
+      when(commitRepository.tickets(host, project, repo, sinceId, untilId)).thenReturn(Future.successful(Nil))
 
       val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual NOT_FOUND
 
-      verify(search, times(1)).tickets(host, project, repo, sinceId, untilId)
+      verify(commitRepository, times(2)).tickets(host, project, repo, sinceId, untilId)
     }
 
-    "Return 500 when the result is an error" in {
-      val url = ticketRoute(sinceId = sinceId, untilId = untilId)
-      val error = "Some Error"
-      val ticketResult = Future.successful(Left(error))
-
-      when(search.tickets(host, project, repo, sinceId, untilId)).thenReturn(ticketResult)
-
-      val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
-      status(result) mustEqual INTERNAL_SERVER_ERROR
-      contentType(result) mustEqual Some("application/problem+json")
-
-      verify(search, times(1)).tickets(host, project, repo, sinceId, untilId)
-    }
   }
   override def overrideModules = {
     Seq(
-      bind[Search].toInstance(search), //
+      bind[CommitRepository].toInstance(commitRepository), //
       bind[OAuthConfiguration].toInstance(oauthConfig), //
       bind[RequestDispatcher].toInstance(dispatcher), //
       bind[OAuth].toInstance(oauthClient) //

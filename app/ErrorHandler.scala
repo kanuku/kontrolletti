@@ -1,5 +1,4 @@
 
-
 import play.api.http.HttpErrorHandler
 import scala.concurrent.Future
 import play.api.mvc.RequestHeader
@@ -16,7 +15,7 @@ class ErrorHandler extends HttpErrorHandler {
   // 500 - internal server error
   def onServerError(request: RequestHeader, throwable: Throwable) = {
     logger.error("A Server error occurred" + throwable.getMessage)
-    Future.successful(InternalServerError(views.html.errors.onError(throwable)))
+    Future.successful(InternalServerError(views.html.errors.onError(throwable)).as("application/problem+json"))
   }
 
   def onClientError(request: RequestHeader, statusCode: Int, message: String) = {
