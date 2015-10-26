@@ -16,6 +16,7 @@ import play.api.libs.json.JsValue
 import slick.jdbc.GetResult
 import model.KontrollettiToModelParser
 import play.api.libs.json.Json
+import model.Ticket
 
 /**
  * @author fbenjamin
@@ -23,13 +24,17 @@ import play.api.libs.json.Json
 trait CommitRepository {
   val defaultPageNumber = 1
   val defaultMaxPerPage = 500
+  val defaultPerPage = 50
   def initializeDatabase: Future[Unit]
+
   def all(): Future[Seq[Commit]]
+
   def save(commits: List[Commit]): Future[Unit]
   def byId(host: String, project: String, repository: String, id: String): Future[Option[Commit]]
-  def get(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Int = defaultPageNumber, maxPerPage: Int = defaultMaxPerPage, valid: Option[Boolean] = None): Future[Seq[Commit]]
+  def get(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage), valid: Option[Boolean] = None): Future[Seq[Commit]]
   def youngest(repoUrl: String): Future[Option[Commit]]
   def oldest(repoUrl: String): Future[Option[Commit]]
+  def tickets(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage), valid: Option[Boolean] = None): Future[Seq[Ticket]]
 
 }
 
@@ -96,28 +101,36 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     }
   } yield result
 
-  def get(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Int, maxPerPage: Int, valid: Option[Boolean]): Future[Seq[Commit]] = {
+  def get(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Option[Int], perPage: Option[Int], valid: Option[Boolean]): Future[Seq[Commit]] = {
+    logger.info(s"Get  from $host/$project/$repository since $since until $until, page number $pageNumber limit $perPage and valid $valid")
     (since, until) match {
       case (Some(sinceCommit), Some(untilCommit)) =>
-        logger.info(s" 0 -Get  from $host/$project/$repository since $since until $until, page number $pageNumber limit $maxPerPage and valid $valid")
-        pageQuery(getCommitsByRange(host, project, repository, sinceCommit, untilCommit, valid).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
+        pageQuery(getCommitsByRange(host, project, repository, sinceCommit, untilCommit, valid).sortBy(_.date.desc), pageNumber, perPage)
       case (Some(sinceCommit), None) =>
-        logger.info(s" 1 -Get from $host/$project/$repository since $since until $until, page number $pageNumber limit $maxPerPage and valid $valid")
-        pageQuery(getCommitsSinceCommitDate(host, project, repository, sinceCommit, valid).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
+        pageQuery(getCommitsSinceCommitDate(host, project, repository, sinceCommit, valid).sortBy(_.date.desc), pageNumber, perPage)
       case (None, Some(untilCommit)) =>
-        logger.info(s" 2 -Get from $host/$project/$repository since $since until $until, page number $pageNumber limit $maxPerPage and valid $valid")
-        pageQuery(getCommitsUntilCommitDate(host, project, repository, untilCommit, valid).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
+        pageQuery(getCommitsUntilCommitDate(host, project, repository, untilCommit, valid).sortBy(_.date.desc), pageNumber, perPage)
       case _ =>
-        logger.info(s" 3 -Get from $host/$project/$repository since $since until $until, page number $pageNumber limit $maxPerPage and valid $valid")
-        pageQuery(getByRepositoryQuery(host, project, repository, valid).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
+        pageQuery(getByRepositoryQuery(host, project, repository, valid).sortBy(_.date.desc), pageNumber, perPage)
     }
   }
 
-  def pageQuery(query: Query[Tables.CommitTable, Commit, Seq], pageNumber: Int, maxPerPage: Int) = {
-    if (pageNumber > 1)
-      handleError(db.run(query.drop((pageNumber - 1) * maxPerPage).take(maxPerPage).result))
-    else
-      handleError(db.run(query.take(maxPerPage).result))
+  def pageQuery(query: Query[Tables.CommitTable, Commit, Seq], pageNumber: Option[Int], perPage: Option[Int]) = {
+    logger.info(s"Query pagination -page $pageNumber, perPage $perPage")
+    (pageNumber, perPage) match {
+      case (Some(page), Some(perPage)) if page >= 1 && perPage <= defaultMaxPerPage =>
+        logger.info("0")
+        handleError(db.run(query.drop((page - 1) * perPage).take(perPage).result))
+      case (Some(page), None) if page >= 1 =>
+        logger.info("1")
+        handleError(db.run(query.drop((page - 1) * defaultPerPage).take(defaultPerPage).result))
+      case (None, Some(perPage)) if perPage <= defaultMaxPerPage =>
+        logger.info("2")
+        handleError(db.run(query.drop((defaultPageNumber - 1) * perPage).take(perPage).result))
+      case (_, _) =>
+        logger.info("3")
+        handleError(db.run(query.take(defaultPerPage).result))
+    }
   }
 
   def youngest(repoUrl: String): Future[Option[Commit]] = {
@@ -130,4 +143,11 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     handleError(db.run(commits.filter { x => x.repoURL === repoUrl }.sortBy(_.date.asc).result.headOption))
   }
 
+  def tickets(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage), valid: Option[Boolean] = None): Future[Seq[Ticket]] =
+    get(host, project, repository, since, until, pageNumber, perPage, valid).map { commits =>
+      (for {
+        commit <- commits.toList
+        tickets <- commit.tickets
+      } yield tickets).flatten.toSeq
+    }
 }

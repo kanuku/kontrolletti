@@ -15,22 +15,16 @@ import dao.CommitRepository
 @Singleton
 class TicketWS @Inject() (commitRepo: CommitRepository) extends Controller {
   private val logger: Logger = Logger(this.getClass())
-  def tickets(host: String, project: String, repository: String, sinceId: Option[String], untilId: Option[String]) = Action.async {
+  def tickets(host: String, project: String, repository: String, sinceId: Option[String], untilId: Option[String], page: Option[Int], perPage: Option[Int]) = Action.async {
     logger.info(s"host: $host, project: $project repository: $repository, sinceId: $sinceId, untilId: $untilId")
-    commitRepo.get(host, project, repository, since = sinceId, until = untilId).map {
+    commitRepo.tickets(host, project, repository, since = sinceId, until = untilId, pageNumber = page, perPage = perPage).map {
       _.toList match {
         case Nil =>
           logger.info(s"Result: 404 ")
           NotFound
-        case commits =>
+        case tickets =>
           logger.info(s"Result: 200 ")
-          logger.info("size = " + commits.size)
-          val result = for {
-            commit <- commits
-            ticket <- commit.tickets
-          } yield ticket
-
-          Ok(Json.toJson(result)).as("application/x.zalando.ticket+json")
+          Ok(Json.toJson(tickets)).as("application/x.zalando.ticket+json")
 
       }
     }

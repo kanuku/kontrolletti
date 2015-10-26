@@ -124,6 +124,16 @@ paths:
         description: Only commits with a valid(`true`)/unvalid(`false`) commmit-message will be returned.
         required: false
         type: boolean
+      - name: page
+        in: query
+        required: false
+        type: integer
+        description: Page number to be returned. Default = `1`.
+      - name: per_page
+        in: query
+        required: false
+        type: integer
+        description: Maximal number of `Commits` to return per page. Default = `50` and maximum = `500`.
       responses:
           200:
             description: Retrieved the objects successfully.
@@ -223,6 +233,16 @@ paths:
           description: Return tickets registered until this commitId
           required: false
           type: string
+        - name: page
+          in: query
+          required: false
+          type: integer
+          description: Page number to be returned. Default = `1`.
+        - name: per_page
+          in: query
+          required: false
+          type: integer
+          description: Maximal number of `Tickets` to return per page. Default = `50` and maximum = `500`.
         responses:
             200:
               description: Retrieved the objects successfully.
