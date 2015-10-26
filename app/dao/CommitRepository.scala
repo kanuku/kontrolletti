@@ -22,7 +22,7 @@ import play.api.libs.json.Json
  */
 trait CommitRepository {
   val defaultPageNumber = 1
-  val defaultMaxPerPage = 100
+  val defaultMaxPerPage = 500
   def initializeDatabase: Future[Unit]
   def all(): Future[Seq[Commit]]
   def save(commits: List[Commit]): Future[Unit]
@@ -30,8 +30,6 @@ trait CommitRepository {
   def get(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Int = defaultPageNumber, maxPerPage: Int = defaultMaxPerPage, valid: Option[Boolean] = None): Future[Seq[Commit]]
   def youngest(repoUrl: String): Future[Option[Commit]]
   def oldest(repoUrl: String): Future[Option[Commit]]
-  //TODO: Evaluation option to move tickets to its own tabel?
-  def tickets(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Int = defaultPageNumber, maxPerPage: Int = defaultMaxPerPage): Future[Seq[Commit]]
 
 }
 
@@ -75,8 +73,8 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     firstCommit <- commits.filter { c => c.id === since && c.repoURL === repo.url }
     lastCommit <- commits.filter { c => c.id === until && c.repoURL === repo.url }
     result <- isValid match {
-      case Some(valid) => commits.filter { c => c.date >= lastCommit.date && c.date <= firstCommit.date && c.isValid === valid }
-      case None        => commits.filter { c => c.date >= lastCommit.date && c.date <= firstCommit.date }
+      case Some(valid) => commits.filter { c => c.date >= lastCommit.date && c.date <= firstCommit.date && c.isValid === valid && c.repoURL === repo.url }
+      case None        => commits.filter { c => c.date >= lastCommit.date && c.date <= firstCommit.date && c.repoURL === repo.url }
     }
   } yield result
 
@@ -84,8 +82,8 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     repo <- repos.filter { repo => repo.host === host && repo.project === project && repo.repository === repository }
     targetCommit <- commits.filter { c => c.id === until && c.repoURL === repo.url }
     result <- isValid match {
-      case Some(valid) => commits.filter { c => c.date <= targetCommit.date && c.isValid === valid }
-      case None        => commits.filter { c => c.date <= targetCommit.date }
+      case Some(valid) => commits.filter { c => c.date <= targetCommit.date && c.isValid === valid && c.repoURL === repo.url }
+      case None        => commits.filter { c => c.date <= targetCommit.date && c.repoURL === repo.url }
     }
   } yield result
 
@@ -93,20 +91,25 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     repo <- repos.filter { repo => repo.host === host && repo.project === project && repo.repository === repository }
     targetCommit <- commits.filter { c => c.id === since && c.repoURL === repo.url }
     result <- isValid match {
-      case Some(valid) => commits.filter { c => c.date >= targetCommit.date && c.isValid === valid }
-      case None        => commits.filter { c => c.date >= targetCommit.date }
+      case Some(valid) => commits.filter { c => c.date >= targetCommit.date && c.isValid === valid && c.repoURL === repo.url }
+      case None        => commits.filter { c => c.date >= targetCommit.date && c.repoURL === repo.url }
     }
   } yield result
 
   def get(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Int, maxPerPage: Int, valid: Option[Boolean]): Future[Seq[Commit]] = {
     (since, until) match {
       case (Some(sinceCommit), Some(untilCommit)) =>
+        logger.info(s" 0 -Get  from $host/$project/$repository since $since until $until, page number $pageNumber limit $maxPerPage and valid $valid")
         pageQuery(getCommitsByRange(host, project, repository, sinceCommit, untilCommit, valid).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
       case (Some(sinceCommit), None) =>
+        logger.info(s" 1 -Get from $host/$project/$repository since $since until $until, page number $pageNumber limit $maxPerPage and valid $valid")
         pageQuery(getCommitsSinceCommitDate(host, project, repository, sinceCommit, valid).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
       case (None, Some(untilCommit)) =>
+        logger.info(s" 2 -Get from $host/$project/$repository since $since until $until, page number $pageNumber limit $maxPerPage and valid $valid")
         pageQuery(getCommitsUntilCommitDate(host, project, repository, untilCommit, valid).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
-      case _ => pageQuery(getByRepositoryQuery(host, project, repository, valid).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
+      case _ =>
+        logger.info(s" 3 -Get from $host/$project/$repository since $since until $until, page number $pageNumber limit $maxPerPage and valid $valid")
+        pageQuery(getByRepositoryQuery(host, project, repository, valid).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
     }
   }
 
@@ -125,18 +128,6 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
   def oldest(repoUrl: String): Future[Option[Commit]] = {
     logger.debug(s"Getting oldest commit for $repoUrl")
     handleError(db.run(commits.filter { x => x.repoURL === repoUrl }.sortBy(_.date.asc).result.headOption))
-  }
-
-  def tickets(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Int = defaultPageNumber, maxPerPage: Int = defaultMaxPerPage): Future[Seq[Commit]] = {
-    (since, until) match {
-      case (Some(sinceCommit), Some(untilCommit)) =>
-        pageQuery(getCommitsByRange(host, project, repository, sinceCommit, untilCommit, None).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
-      case (Some(sinceCommit), None) =>
-        pageQuery(getCommitsSinceCommitDate(host, project, repository, sinceCommit, None).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
-      case (None, Some(untilCommit)) =>
-        pageQuery(getCommitsUntilCommitDate(host, project, repository, untilCommit, None).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
-      case _ => pageQuery(getByRepositoryQuery(host, project, repository, None).sortBy(_.date.desc), pageNumber: Int, maxPerPage: Int)
-    }
   }
 
 }

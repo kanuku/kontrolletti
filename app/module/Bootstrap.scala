@@ -31,13 +31,13 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
 
   val star = setup()
 
-  def scheduleSyncAppsJob() = actorSystem.scheduler.schedule(12.seconds, 4.minutes) {
+  def scheduleSyncAppsJob() = actorSystem.scheduler.schedule(12.seconds, 40.seconds) {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
     Await.result(importJob.syncApps(), 120.seconds)
     logger.info("Finished the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
   }
 
-  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(12.seconds, 10.minutes) {
+  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(12.seconds, 20.seconds) {
     logger.info("Started the job for synchronizing Commits from the SCM's")
     Await.result(importJob.synchCommits(), 20.seconds)
   }
