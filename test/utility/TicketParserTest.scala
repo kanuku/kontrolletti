@@ -18,19 +18,7 @@ class TicketParserTest extends FlatSpec with Matchers {
   val ticketParser: TicketParser = new TicketParser {
     def githubHost = github
     def githubEnterpriseHost = githubEnterprise
-    def jiraHost = jira
-  }
-
-  "TicketParser.parse " must "parse offline regex expression" in {
-    val spec = "offline:/something/Test-GoThere"
-    val text = "test-/123"
-    val message = s"$spec $text"
-    message match {
-      case ticketParser.offlineRegex(offline, msg) =>
-        offline shouldBe spec
-        msg.trim shouldBe text
-      case _ => fail()
-    }
+    def jiraTicketUrl = jira
   }
 
   "TicketParser#parse " must "parse custom [offline:] protocol" in {

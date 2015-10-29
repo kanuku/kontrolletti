@@ -15,55 +15,22 @@ import utility.FutureUtil._
 import utility.UrlParser
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
+import configuration.GeneralConfiguration
+import utility.TicketParser
 
-trait Import {
-  def syncApps(): Future[Unit]
+trait ImportCommit {
   def synchCommits(): Future[Unit]
 }
 
 @Singleton
-class ImportImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
-                            kioClient: KioClient, search: Search, //
-                            repoRepo: RepoRepository) extends Import with UrlParser {
+class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
+                                  search: Search, //
+                                  repoRepo: RepoRepository,
+                                  config: GeneralConfiguration) extends ImportCommit with TicketParser {
 
   val logger: Logger = Logger { this.getClass }
 
   val falseFuture = Future.successful(false)
-
-  def syncApps(): Future[Unit] = {
-    logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
-    for {
-      accessToken <- logErrorOnFailure(oAuthclient.accessToken())
-      kioRepos <- kioClient.repositories(accessToken)
-      savedRepos <- repoRepo.all()
-      result <- {
-        val filtered = filterValidRepos(kioRepos)
-        val reposNotInDatabase = filtered.filter {
-          n => !savedRepos.toList.exists { s => (s.host == n.host && s.project == n.project && s.repository == n.repository) }
-        }
-        reposNotInDatabase.map { x => (x.url -> x) } match {
-          case Nil => Future.successful {}
-          case valid =>
-            logger.info("from " + kioRepos.size + " Repositories(Kio) only " + valid.size + " are usable and " + savedRepos.size + " are already in database")
-            repoRepo.save(valid.toMap.values.toList).map { _ =>
-              logger.info("Finished saving apps")
-            }
-        }
-      }
-    } yield (savedRepos, result)
-  }
-
-  /**
-   * Filter apps that have a parsable scm-url.
-   */
-  private def filterValidRepos(repositories: List[Repository]): List[Repository] = for {
-    repo <- repositories
-    if (Option(repo.url) != None && !repo.url.isEmpty())
-    (host, project, repository) <- extract(repo.url) match {
-      case Right((host, project, repoName)) => Option((host, project, repoName))
-      case Left(_)                          => None
-    }
-  } yield repo.copy(host = host, project = project, repository = repository)
 
   def synchCommits(): Future[Unit] = Future {
     repoRepo.enabled().map { repos =>
@@ -76,6 +43,7 @@ class ImportImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
       }
     }
   }
+
   private def synchCommit(repo: Repository, since: Option[Commit], pageNumber: Int = 1): Future[Boolean] = {
     logger.info(s"Getting Commit's page nr:$pageNumber from:" + repo.url)
     commits(repo, since, pageNumber).flatMap {
@@ -84,9 +52,10 @@ class ImportImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
           logger.info("No result")
           falseFuture
         case Some(result) =>
-          val updateCommits = removeIfExists(updateChildIds(repo, result), since)
-          logger.info("result: " + result.size + "  - updated: " + updateCommits.size)
-          commitRepo.save(updateCommits).flatMap { _ =>
+          val updatedCommits = removeIfExists(updateChildIds(repo, result), since)
+          logger.info("result: " + result.size + "  - updated: " + updatedCommits.size)
+          val enrichedCommits = enrichWithTickets(repo.host, repo.project, repo.repository, updatedCommits)
+          commitRepo.save(updatedCommits).flatMap { _ =>
             logger.info(s"Saved " + result.size + "commits from " + repo.url)
             synchCommit(repo, since, pageNumber + 1)
           }
@@ -127,5 +96,27 @@ class ImportImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
           None
       }
     }
+
+  /**
+   * Will parse the commit-message in each commit and add a ticket to the commit if the parser returns a ticket.
+   * @param host Hostname where the commits are originated from.
+   * @param project Project to where the commits belong to.
+   * @param repository Repository where the commits come from.
+   * @param commits Commits whom's commit-messages should be parsed
+   * @return The same commit
+   */
+  def enrichWithTickets(host: String, project: String, repository: String, commits: List[Commit]): List[Commit] = {
+    for {
+      commit <- commits
+      result = parse(host, project, repository, commit.message) match {
+        case None         => commit.copy(valid = Some(true))
+        case Some(ticket) => commit.copy(tickets = Option(List(ticket)), valid = Some(true))
+      }
+    } yield result
+  }
+
+  def jiraTicketUrl: String = config.ticketReferenceJiraBrowseUrl
+  def githubHost: String = config.ticketReferenceGithubHost
+  def githubEnterpriseHost: String = config.ticketReferenceGithubEnterpriseHost
 
 }

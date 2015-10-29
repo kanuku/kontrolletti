@@ -1,7 +1,6 @@
 package module
 
 import com.google.inject.AbstractModule
-
 import client.RequestDispatcher
 import client.RequestDispatcherImpl
 import client.kio.KioClient
@@ -19,10 +18,12 @@ import dao.CommitRepositoryImpl
 import dao.RepoRepository
 import dao.RepoRepositoryImpl
 import play.api.Logger
-import service.Import
-import service.ImportImpl
 import service.Search
 import service.SearchImpl
+import service.ImportRepository
+import service.ImportRepositoriesImpl
+import service.ImportCommit
+import service.ImportCommitImpl
 
 class Production extends AbstractModule {
 
@@ -36,7 +37,8 @@ class Production extends AbstractModule {
     bind(classOf[GeneralConfiguration]).to(classOf[GeneralConfigurationImpl])
     bind(classOf[KioClient]).to(classOf[KioClientImpl])
     bind(classOf[Search]).to(classOf[SearchImpl])
-    bind(classOf[Import]).to(classOf[ImportImpl])
+    bind(classOf[ImportRepository]).to(classOf[ImportRepositoriesImpl])
+    bind(classOf[ImportCommit]).to(classOf[ImportCommitImpl])
     bind(classOf[CommitRepository]).to(classOf[CommitRepositoryImpl])
     bind(classOf[RepoRepository]).to(classOf[RepoRepositoryImpl])
     bind(classOf[AuthorRepository]).to(classOf[AuthorRepositoryImpl])

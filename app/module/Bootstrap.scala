@@ -1,6 +1,5 @@
 package module
 
-import service.Import
 import javax.inject._
 import play.api.Application
 import play.api.Logger
@@ -14,6 +13,8 @@ import model.Author
 import model.Author
 import model.Link
 import akka.actor.ActorSystem
+import service.ImportCommit
+import service.ImportRepository
 /**
  * @author fbenjamin
  */
@@ -23,7 +24,8 @@ trait Bootstrap {
 
 @Singleton
 class BootstrapImpl @Inject() (actorSystem: ActorSystem,
-                               importJob: Import,
+                               repoImporter: ImportRepository,
+                               commitImporter: ImportCommit,
                                repoRepo: RepoRepository, //
                                authorRepo: AuthorRepository, //
                                commitRepo: CommitRepository) extends Bootstrap {
@@ -31,15 +33,15 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
 
   val star = setup()
 
-  def scheduleSyncAppsJob() = actorSystem.scheduler.schedule(12.seconds, 10.minutes) {
+  def scheduleSyncAppsJob() = actorSystem.scheduler.schedule(12.seconds, 20.seconds) {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
-    Await.result(importJob.syncApps(), 120.seconds)
+    Await.result(repoImporter.syncApps(), 120.seconds)
     logger.info("Finished the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
   }
 
-  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(12.seconds, 9.minutes) {
+  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(12.seconds, 1.minutes) {
     logger.info("Started the job for synchronizing Commits from the SCM's")
-    Await.result(importJob.synchCommits(), 20.seconds)
+    Await.result(commitImporter.synchCommits(), 20.seconds)
   }
 
   def scheduleDatabaseBootstrap() =

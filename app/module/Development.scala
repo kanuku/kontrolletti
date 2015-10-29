@@ -7,8 +7,6 @@ import configuration.GeneralConfigurationImpl
 import client.kio.KioClientImpl
 import client.oauth.OAuth
 import client.oauth.OAuthClientImpl
-import service.Import
-import service.ImportImpl
 import play.api.Logger
 import service.Search
 import service.SearchImpl
@@ -22,6 +20,10 @@ import dao.RepoRepository
 import dao.RepoRepositoryImpl
 import configuration.OAuthConfigurationImpl
 import configuration.OAuthConfiguration
+import service.ImportCommitImpl
+import service.ImportCommit
+import service.ImportRepository
+import service.ImportRepositoriesImpl
 
 class Development extends AbstractModule {
 
@@ -35,7 +37,8 @@ class Development extends AbstractModule {
     bind(classOf[GeneralConfiguration]).to(classOf[GeneralConfigurationImpl])
     bind(classOf[KioClient]).to(classOf[KioClientImpl])
     bind(classOf[Search]).to(classOf[SearchImpl])
-    bind(classOf[Import]).to(classOf[ImportImpl])
+    bind(classOf[ImportRepository]).to(classOf[ImportRepositoriesImpl])
+    bind(classOf[ImportCommit]).to(classOf[ImportCommitImpl])
     bind(classOf[CommitRepository]).to(classOf[CommitRepositoryImpl])
     bind(classOf[RepoRepository]).to(classOf[RepoRepositoryImpl])
     bind(classOf[AuthorRepository]).to(classOf[AuthorRepositoryImpl])
