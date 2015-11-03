@@ -1,29 +1,14 @@
 package module
 
 import com.google.inject.AbstractModule
-import client.kio.KioClient
-import configuration.GeneralConfiguration
-import configuration.GeneralConfigurationImpl
-import client.kio.KioClientImpl
-import client.oauth.OAuth
-import client.oauth.OAuthClientImpl
+
+import client.{ RequestDispatcher, RequestDispatcherImpl }
+import client.kio.{ KioClient, KioClientImpl }
+import client.oauth.{ OAuth, OAuthClientImpl }
+import configuration.{ GeneralConfiguration, GeneralConfigurationImpl, OAuthConfiguration, OAuthConfigurationImpl }
+import dao.{ CommitRepository, CommitRepositoryImpl, RepoRepository, RepoRepositoryImpl }
 import play.api.Logger
-import service.Search
-import service.SearchImpl
-import client.RequestDispatcherImpl
-import client.RequestDispatcher
-import dao.CommitRepositoryImpl
-import dao.CommitRepository
-import dao.AuthorRepository
-import dao.AuthorRepositoryImpl
-import dao.RepoRepository
-import dao.RepoRepositoryImpl
-import configuration.OAuthConfigurationImpl
-import configuration.OAuthConfiguration
-import service.ImportCommitImpl
-import service.ImportCommit
-import service.ImportRepository
-import service.ImportRepositoriesImpl
+import service.{ ImportCommit, ImportCommitImpl, ImportRepositoriesImpl, ImportRepository, Search, SearchImpl }
 
 class Development extends AbstractModule {
 
@@ -41,6 +26,5 @@ class Development extends AbstractModule {
     bind(classOf[ImportCommit]).to(classOf[ImportCommitImpl])
     bind(classOf[CommitRepository]).to(classOf[CommitRepositoryImpl])
     bind(classOf[RepoRepository]).to(classOf[RepoRepositoryImpl])
-    bind(classOf[AuthorRepository]).to(classOf[AuthorRepositoryImpl])
   }
 }
