@@ -11,13 +11,11 @@ CREATE TABLE kont_data.repositories
   last_failed_at 		TIMESTAMP 		WITH TIME ZONE,
   links 				JSONB
 );
-
 CREATE UNIQUE INDEX CONCURRENTLY hpr_idx on kont_data.repositories (host, project, repository);
-
 
 CREATE TABLE kont_data.commits
 (
-  id 					CHARACTER VARYING NOT NULL PRIMARY KEY,
+  id 					CHARACTER VARYING NOT NULL,
   repository_url 		CHARACTER VARYING NOT NULL,
   date 					TIMESTAMP WITH TIME ZONE NOT NULL,
   nr_tickets integer    NOT NULL,
@@ -26,9 +24,10 @@ CREATE TABLE kont_data.commits
   		FOREIGN KEY (repository_url)
       	REFERENCES kont_data.repositories (url) 
 );
+ALTER TABLE kont_data.commits ADD PRIMARY KEY (id, repository_url)
 
 # --- !Downs
-DROP INDEX IF EXISTS kont_data.hpr_idx ;
-DROP TABLE IF EXISTS kont_data.commits ;
-DROP TABLE IF EXISTS  kont_data.repositories ;
+DROP INDEX IF EXISTS kont_data.hpr_idx;
+DROP TABLE IF EXISTS kont_data.commits;
+DROP TABLE IF EXISTS kont_data.repositories;
 SET search_path TO kont_data,public;

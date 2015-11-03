@@ -34,7 +34,7 @@ trait CommitRepository {
   def get(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage), valid: Option[Boolean] = None): Future[Seq[Commit]]
   def youngest(repoUrl: String): Future[Option[Commit]]
   def oldest(repoUrl: String): Future[Option[Commit]]
-  def tickets(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage), valid: Option[Boolean] = None): Future[Seq[Ticket]]
+  def tickets(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage), valid: Option[Boolean] = Some(true)): Future[Seq[Ticket]]
 
 }
 
@@ -143,7 +143,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     handleError(db.run(commits.filter { x => x.repoURL === repoUrl }.sortBy(_.date.asc).result.headOption))
   }
 
-  def tickets(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage), valid: Option[Boolean] = None): Future[Seq[Ticket]] =
+  def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Option[Int], perPage: Option[Int], valid: Option[Boolean]): Future[Seq[Ticket]] =
     get(host, project, repository, since, until, pageNumber, perPage, valid).map { commits =>
       (for {
         commit <- commits.toList
