@@ -15,19 +15,19 @@ trait TicketParser {
    *  Reference:https://help.github.com/articles/writing-on-github/#references
    *
    */
-  private val message = """(.*)?"""
-  private val offline = """(.?offline:[\w*\.*/*\-*]+){1}"""
-  private val techJira = """(.?techjira:|jira:){1}"""
-  private val jiraSpec = """(.?[\w*\-*\\d*]+){1}"""
-  private val https = """(.?https://[\w*\.*/*\-*]+){1}"""
-  private val http = """(.?http://[\w*\.*/*\-*]+){1}"""
+  private val message = """(.*?)?"""
+  private val offline = """(.*?offline:[\w*\.*/*\-*]+){1}"""
+  private val techJira = """(.*?techjira:|jira:){1}"""
+  private val jiraSpec = """(.*?[\w*\-*\\d*]+){1}"""
+  private val https = """(.*?https://[\w*\.*/*\-*]+){1}"""
+  private val http = """(.*?http://[\w*\.*/*\-*]+){1}"""
   private val number = """(\d+){1}"""
-  private val issueHashtag = """(.?#){1}"""
-  private val referenceGithub = """(\s*\(gh\)\s*){1}"""
-  private val referenceGithubEnterprise = """(\s*\(ghe\)\s*){1}"""
-  private val issueGH = """(.?GH-){1}"""
+  private val issueHashtag = """(.*?#){1}"""
+  private val referenceGithub = """(\s*?\(gh\)\s*?){1}"""
+  private val referenceGithubEnterprise = """(\s*?\(ghe\)\s*?){1}"""
+  private val issueGH = """(.*?GH-){1}"""
   private val project = """([\w-.]+){1,1}"""
-  private val repoRgx = """([\w.-]*?){1,1}"""
+  private val repoRgx = """([\w.-]*){1,1}"""
   /**
    * Here we compose the use-cases we want to extract.
    */
@@ -51,42 +51,60 @@ trait TicketParser {
   def parse(host: String, project: String, repository: String, message: String): Option[Ticket] = message match {
     // CAUTION: The order of the regex must be kept as is. It is ordered in regex-priority.
     case offlineRegex(specLink, restCap) =>
-      logger.info(s"Parser -> [offline:] host:$host, project:$project, repository:$repository, spec:$specLink rest:$restCap")
       Some(Ticket(message, specLink, None))
     case jiraRegex(jiraCap, specCap, restCap) =>
-      logger.info(s"Parser -> [jira:] host:$host, project:$project, repository:$repository, spec:$specCap rest:$restCap")
       val link = jiraTicketUrl + specCap
       Some(Ticket(message, link, None))
     case httpsRegex(specLink, restCap) =>
-      logger.info(s"Parser -> [https://] host:$host, project:$project, repository:$repository, spec:$specLink rest:$restCap")
       Some(Ticket(message, specLink, None))
     case httpRegex(specLink, restCap) =>
-      logger.info(s"Parser -> [http://] host:$host, project:$project, repository:$repository, spec:$specLink rest:$restCap")
       Some(Ticket(message, specLink, None))
     case issueOnGithubRegex(specLink, numberCap, reference, restCap) =>
-      logger.info(s"Parser -> [#Number (gh)] host:$host, project:$project, repository:$repository, number: $numberCap rest:$restCap")
       Some(Ticket(message, s"$githubHost/$project/$repository/issues/$numberCap", None))
     case issueOnGithubEnterpriseRegex(specLink, numberCap, reference, restCap) =>
-      logger.info(s"Parser -> [#Number (ghe)] host:$host, project:$project, repository:$repository, number: $numberCap rest:$restCap")
       Some(Ticket(message, s"$githubEnterpriseHost/$project/$repository/issues/$numberCap", None))
     case issueGHOnGithubRegex(specLink, numberCap, reference, restCap) =>
-      logger.info(s"Parser -> [GH-Number (gh)] host:$host, project:$project, repository:$repository, number: $numberCap rest:$restCap")
       Some(Ticket(message, s"$githubHost/$project/$repository/issues/$numberCap", None))
     case issueGHOnGithubEnterpriseRegex(specLink, numberCap, reference, restCap) =>
-      logger.info(s"Parser -> [GH-Number (ghe)] host:$host, project:$project, repository:$repository, number: $numberCap rest:$restCap")
       Some(Ticket(message, s"$githubEnterpriseHost/$project/$repository/issues/$numberCap", None))
     case issueGHOnItselfRegex(specLink, numberCap, restCap) =>
-      logger.info(s"Parser -> [GH-Number (gh)] host:$host, project:$project, repository:$repository, number: $numberCap rest:$restCap")
-      Some(Ticket(message, s"$host/$project/$repository/issues/$numberCap", None))
+      if (host.toLowerCase().startsWith("http"))
+        Some(Ticket(message, s"$host/$project/$repository/issues/$numberCap", None))
+      else
+        Some(Ticket(message, s"https://$host/$project/$repository/issues/$numberCap", None))
     case issueOnItselfRegex(specLink, numberCap, restCap) =>
-      logger.info(s"Parser -> [#Number] host:$host, project:$project, repository:$repository, number: $numberCap rest:$restCap")
-      Some(Ticket(message, s"$host/$project/$repository/issues/$numberCap", None))
+      if (host.toLowerCase().startsWith("http"))
+        Some(Ticket(message, s"$host/$project/$repository/issues/$numberCap", None))
+      else
+        Some(Ticket(message, s"https://$host/$project/$repository/issues/$numberCap", None))
     case _ =>
-      logger.info(s"Failed to parse -> none: host:$host, project:$project, repository:$repository, message:$message")
+      logger.info(s"Failed to parse ->  message:$message")
       None
   }
-
   def jiraTicketUrl: String
   def githubHost: String
   def githubEnterpriseHost: String
 }
+
+//object Ay extends App with TicketParser {
+//  private val issueHashtag = """(.*?#){1}"""
+//  private val number = """(\d+){1}"""
+//  private val message = """(.*?)?"""
+//
+//  val jira = "https://jira/browse/"
+//  val githubEnterprise = "https://github-enterprise.com"
+//  val github = "https://github.com"
+//
+//  def githubHost = github
+//  def githubEnterpriseHost = githubEnterprise
+//  def jiraTicketUrl = jira
+//
+//  private val issueOnItselfRegex = s"$issueHashtag$number$message".r
+//  def d(value: String) = value match {
+//    case issueOnItselfRegex(issue, number, message) => println(s"Value: $number")
+//    case _ => println(value)
+//
+//  }
+//
+//  d("Merge pull request #104 from zalando/ticket-parsing\n\nParse valid message into a ticket. fixes #98")
+//}
