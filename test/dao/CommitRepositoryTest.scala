@@ -26,10 +26,11 @@ class CommitRepositoryTest extends FlatSpec with Matchers with MockitoUtils with
   val dateOneMonthAgo = dateToday.minusMonths((1))
 
   val author1 = createAuthor("Author1name", "email", None)
-  val commitToday = createCommit(s"$prefix-id1", "message", Option(List(s"$prefix-id2")), author1, None, Some(true), None, dateToday, repo1.url)
-  val commitYesterday = createCommit(s"$prefix-id2", "message", Option(List(s"$prefix-id3")), author1, None, Some(true), None, dateYesterday, repo1.url)
-  val commitBeforeYesterday = createCommit(s"$prefix-id3", "message", Option(List(s"$prefix-id4")), author1, None, Some(true), None, dateBeforeYesterday, repo1.url)
-  val commitOneWeekAgo = createCommit(s"$prefix-id4", "message", None, author1, None, Some(true), None, dateOneWeekAgo, repo1.url)
+  val tickets = Option(List(createTicket()))
+  val commitToday = createCommit(s"$prefix-id1", "message", Option(List(s"$prefix-id2")), author1, tickets, Some(true), None, dateToday, repo1.url)
+  val commitYesterday = createCommit(s"$prefix-id2", "message", Option(List(s"$prefix-id3")), author1, tickets, Some(true), None, dateYesterday, repo1.url)
+  val commitBeforeYesterday = createCommit(s"$prefix-id3", "message", Option(List(s"$prefix-id4")), author1, tickets, Some(true), None, dateBeforeYesterday, repo1.url)
+  val commitOneWeekAgo = createCommit(s"$prefix-id4", "message", None, author1, tickets, Some(true), None, dateOneWeekAgo, repo1.url)
   val commitOneMonthAgo = createCommit(s"$prefix-id5", "message", None, author1, None, Some(false), None, dateOneMonthAgo, repo1.url)
 
   override def beforeAll {
@@ -80,21 +81,21 @@ class CommitRepositoryTest extends FlatSpec with Matchers with MockitoUtils with
     assert(!result.contains(commitOneWeekAgo), "commitOneWeekAgo should be in the result")
   }
 
-  ignore must "get only invalid commits" in {
+  it must "get only invalid commits" in {
     val isValid = Some(false)
     val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, valid = isValid), 15.seconds)
+    result foreach println
     assert(result.contains(commitOneMonthAgo), "commitOneMonthAgo should be in the result")
-    println(result)
-    assert(result(0).valid === Some(false), "is_valid should be true")
+    assert(result(0).valid === isValid, "valid should be true")
   }
-  ignore must "get only valid commits" in {
+  it must "get only valid commits" in {
     val isValid = Some(true)
     val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, valid = isValid), 15.seconds)
     assert(result.size === 4, "Only 1 Invalid Commit should be returned")
     assert(!result.contains(commitOneMonthAgo), "commitOneMonthAgo should not be in the result")
-    assert(result(0).valid === Some(true), "is_valid should be true")
-    assert(result(1).valid === Some(true), "is_valid should be true")
-    assert(result(2).valid === Some(true), "is_valid should be true")
+    assert(result(0).valid === isValid, "valid should be true")
+    assert(result(1).valid === isValid, "valid should be true")
+    assert(result(2).valid === isValid, "valid should be true")
   }
   it must "get youngest commit" in {
     val result = Await.result(commitRepository.youngest(repo1.url), 15.seconds)
@@ -108,5 +109,4 @@ class CommitRepositoryTest extends FlatSpec with Matchers with MockitoUtils with
   }
   def repoRepository = application.injector.instanceOf[RepoRepository]
   def commitRepository = application.injector.instanceOf[CommitRepository]
-
 }
