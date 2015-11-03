@@ -101,8 +101,7 @@ object GithubToJsonParser extends SCMParser {
     and (JsPath \ "commit" \ "message").read[String] // message
     and readUrls
     and (JsPath \ "commit" \ "committer").read[Author]
-    and Reads.pure(None) // ch 
-    and Reads.pure(None) // tickets 
+    and Reads.pure(None) // tickets
     and Reads.pure(None) // childId
     and Reads.pure(None) //0 links
     and (JsPath \ "commit" \ "author" \ "date").read[DateTime](dateReads)
@@ -165,8 +164,7 @@ object StashToJsonParser extends SCMParser {
     and (JsPath \ "message").read[String] //message
     and readUrls
     and (JsPath \ "author").read[Author] // author
-    and Reads.pure(None) // tickets
-    and Reads.pure(None) // childId
+    and Reads.pure(None) // Tickets
     and Reads.pure(None) // valid
     and Reads.pure(None) //0 links
     and (JsPath \ "authorTimestamp").read[DateTime]
@@ -193,4 +191,3 @@ object StashToJsonParser extends SCMParser {
     and Reads.pure(None))(Repository.apply _)
 
 }
-
