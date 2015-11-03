@@ -60,6 +60,7 @@ object Tables extends GeneralHelper { self: HasDatabaseConfigProvider[Kontrollet
 
     def * = (id, repoURL, date, nrOfTickets, jsonValue) <> ((apply _).tupled, unapply)
     def repoFK = foreignKey("repository_url", repoURL, repositories)(_.url)
+    def pk = primaryKey("commits_pkey", (id, repoURL))
 
     def apply(id: String, repoId: String, date: DateTime, nrOfTickets: Int, jsonValue: JsValue): Commit = deserialize(jsonValue)(KontrollettiToModelParser.commitReader)
     def unapply(commit: Commit): Option[(String, String, DateTime, Int, JsValue)] = Some((commit.id, commit.repoUrl, commit.date, numberOfTickets(commit.tickets), serialize(commit)(KontrollettiToJsonParser.commitWriter)))

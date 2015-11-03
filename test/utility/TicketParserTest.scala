@@ -174,9 +174,9 @@ class TicketParserTest extends FlatSpec with Matchers {
     val result = new Ticket(message, s"https://github.com/zalando/kontrolletti/issues/63", None)
     ticketParser.parse("github.com", "zalando", "kontrolletti", message) shouldBe Some(result)
   }
-  ignore must "parse a message from kontrolletti with multiple tickets" in {
+  it must "parse a message from kontrolletti with multiple tickets" in {
     val message = "Merge pull request #104 from zalando/ticket-parsing\n\nParse valid message into a ticket. fixes #98"
-    val result = new Ticket(message, s"https://github.com/zalando/kontrolletti/issues/63", None)
+    val result = new Ticket(message, s"https://github.com/zalando/kontrolletti/issues/104", None)
     ticketParser.parse("github.com", "zalando", "kontrolletti", message) shouldBe Some(result)
   }
 }

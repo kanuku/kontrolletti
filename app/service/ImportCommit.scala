@@ -41,6 +41,7 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
           synchCommit(repo, lastCommit)
         }
       }
+      logger.info("Finished synchronizing Commits.")
     }
   }
 

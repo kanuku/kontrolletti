@@ -48,7 +48,7 @@ trait TicketParser {
   //Reference like GH-33 (ghe) will refer to the github-enterprise host configured: [github.com]/project/repository
   private val issueGHOnGithubEnterpriseRegex = s"$issueGH$number$referenceGithubEnterprise$message".r
 
-  def parse(host: String, project: String, repository: String, message: String): Option[Ticket] = message match {
+  def parse(host: String, project: String, repository: String, message: String): Option[Ticket] = message.replaceAll("\\r?\\n", "") match {
     // CAUTION: The order of the regex must be kept as is. It is ordered in regex-priority.
     case offlineRegex(specLink, restCap) =>
       Some(Ticket(message, specLink, None))
