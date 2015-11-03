@@ -10,7 +10,6 @@ import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
 import client.kio.KioClient
 import client.oauth.OAuth
-import service.ImportRepositoriesImpl
 import test.util.MockitoUtils
 import akka.actor.ActorSystem
 import akka.actor.Scheduler
@@ -21,7 +20,6 @@ import model.Repository
 import configuration.GeneralConfiguration
 import org.scalatest.Matchers
 import org.scalatest.BeforeAndAfter
-import service.ImportRepositoriesImpl
 
 class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils with Matchers with BeforeAndAfter {
 
