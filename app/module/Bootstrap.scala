@@ -32,7 +32,7 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
     logger.info("Finished the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
   }
 
-  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(500.seconds, 20.seconds) {
+  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(12.seconds, 600.seconds) {
     logger.info("Started the job for synchronizing Commits from the SCM's")
     Await.result(commitImporter.synchCommits(), 300.seconds)
   }
