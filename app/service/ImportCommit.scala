@@ -52,9 +52,9 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
           logger.info("No result")
           falseFuture
         case Some(result) =>
-          val updatedCommits = removeIfExists(updateChildIds(repo, result), since)
-          logger.info("result: " + result.size + "  - updated: " + updatedCommits.size)
-          val enrichedCommits = enrichWithTickets(repo.host, repo.project, repo.repository, updatedCommits)
+          val commitsWithoutDuplicates = removeIfExists(result, since)
+          logger.info("With Duplicates: " + result.size + "  - Without Duplicates: " + commitsWithoutDuplicates.size)
+          val updatedCommits = updateCommits(repo, commitsWithoutDuplicates)
           commitRepo.save(updatedCommits).flatMap { _ =>
             logger.info(s"Saved " + result.size + "commits from " + repo.url)
             synchCommit(repo, since, pageNumber + 1)
@@ -71,13 +71,9 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
 
   }
 
-  def updateChildIds(repo: Repository, commits: List[Commit]): List[Commit] = for {
-    parent <- commits
-    result <- commits.find { _.parentIds.contains(parent.id) } match {
-      case None        => List(parent.copy(repoUrl = repo.url))
-      case Some(child) => List(parent.copy(repoUrl = repo.url, childId = Option(child.id)))
-    }
-  } yield result
+  def updateCommits(repo: Repository, commits: List[Commit]): List[Commit] = for {
+    commit <- enrichWithTickets(repo.host, repo.project, repo.repository, commits)
+  } yield commit.copy(repoUrl = repo.url)
 
   private def commits(repository: Repository, since: Option[Commit], pageNumber: Int): Future[Option[List[Commit]]] =
     search.commits(repository.host, repository.project, repository.repository, since, None, pageNumber).map {
@@ -109,8 +105,8 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
     for {
       commit <- commits
       result = parse(host, project, repository, commit.message) match {
-        case None         => commit.copy(valid = Some(true))
-        case Some(ticket) => commit.copy(tickets = Option(List(ticket)), valid = Some(true))
+        case None         => commit.copy(valid = Option(commit.isValid))
+        case Some(ticket) => commit.copy(tickets = Option(List(ticket)), valid = Option(commit.isValid))
       }
     } yield result
   }
