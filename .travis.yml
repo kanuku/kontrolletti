@@ -1,7 +1,8 @@
 language: scala
 scala:
    - 2.11.7   
-
+env:
+  - DATABASE_URL_TEST='jdbc:postgresql://localhost:5432/kontrolletti_test?characterEncoding=UTF-8'
 jdk:
   - oraclejdk8
 
@@ -12,7 +13,7 @@ before_script:
   - psql -f 'conf/db-setup/initialize-test-db.sql' -U postgres 
 
 script:
-  - sbt clean coverage test -Dconfig.resource=application.travis.conf
+  - sbt clean coverage test
   - sbt coverageReport
 
 after_success:
