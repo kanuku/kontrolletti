@@ -109,36 +109,74 @@ class TicketParserTest extends FlatSpec with Matchers {
   /**
    * Tests for issuehost/project/repository#Number Is not a must...
    */
-  //  "TicketParser#parse host/project/repository#Number"
-  ignore must "parse a message on github with an issue(zalando/kontrolletti#55) without reference" in {
+  "TicketParser#parse host/project/repository#Number" must "parse a message on github with an issue(zalando/kontrolletti#55) without reference" in {
     val message = "zalando/kontrolletti#55 adding Ticket model."
     val result = new Ticket(message, s"$github/zalando/kontrolletti/issues/55", None)
     ticketParser.parse(github, project, repository, message) shouldBe Some(result)
   }
-  ignore must "parse a message on github with an issue(zalando/kontrolletti#55) refering to itself" in {
+  it must "parse a message on github with an issue(zalando/kontrolletti#55) refering to itself" in {
     val message = "zalando/kontrolletti#55 (gh) adding Ticket model."
     val result = new Ticket(message, s"$github/zalando/kontrolletti/issues/55", None)
     ticketParser.parse(github, project, repository, message) shouldBe Some(result)
   }
-  ignore must "parse a message on github with an issue(zalando/kontrolletti#55) refering to github-enterprise" in {
+  it must "parse a message on github with an issue(zalando/kontrolletti#55) refering to github-enterprise" in {
     val message = "zalando/kontrolletti#55 (ghe) adding Ticket model."
     val result = new Ticket(message, s"$githubEnterprise/zalando/kontrolletti/issues/55", None)
     ticketParser.parse(github, project, repository, message) shouldBe Some(result)
   }
-  ignore must "parse a message on github-enterprise with an issue(zalando/kontrolletti#55) without reference" in {
+  it must "parse a message on github-enterprise with an issue(zalando/kontrolletti#55) without reference" in {
     val message = "zalando/kontrolletti#55 adding Ticket model."
     val result = new Ticket(message, s"$githubEnterprise/zalando/kontrolletti/issues/55", None)
     ticketParser.parse(githubEnterprise, project, repository, message) shouldBe Some(result)
   }
-  ignore must "parse a message on github-enterprise with an issue(zalando/kontrolletti#55) refering itself" in {
+  it must "parse a message on github-enterprise with an issue(zalando/kontrolletti#55) refering itself" in {
     val message = "zalando/kontrolletti#55 (ghe) adding Ticket model."
     val result = new Ticket(message, s"$githubEnterprise/zalando/kontrolletti/issues/55", None)
     ticketParser.parse(githubEnterprise, project, repository, message) shouldBe Some(result)
   }
-  ignore must "parse a message on github-enterprise with an issue(zalando/kontrolletti#55) refering to github" in {
+  it must "parse a message on github-enterprise with an issue(zalando/kontrolletti#55) refering to github" in {
     val message = "zalando/kontrolletti#55 (gh) adding Ticket model."
     val result = new Ticket(message, s"$github/zalando/kontrolletti/issues/55", None)
     ticketParser.parse(githubEnterprise, project, repository, message) shouldBe Some(result)
   }
 
+  /**
+   * For very specific cases
+   */
+
+  "TicketParser#parse (#Number)" must "parse github issue(#NUMBER) in the middel of the msg" in {
+    val message = "Finished #55. Adding Ticket model."
+    val result = new Ticket(message, s"$github/zalando/kontrolletti/issues/55", None)
+    ticketParser.parse(github, project, repository, message) shouldBe Some(result)
+  }
+  it must "parse a message on github with an issue(#NUMBER) in the middel of the msg, without space, refering to github itself" in {
+    val message = "Finished#55(gh)adding Ticket model."
+    val result = new Ticket(message, s"$github/zalando/kontrolletti/issues/55", None)
+    ticketParser.parse(github, project, repository, message) shouldBe Some(result)
+  }
+  it must "parse a message on github-enterprise with an issue(GH-NUMBER) refering to itself" in {
+    val message = "Great,GH-55(ghe)is done, by this commit."
+    val result = new Ticket(message, s"$githubEnterprise/zalando/kontrolletti/issues/55", None)
+    ticketParser.parse(githubEnterprise, project, repository, message) shouldBe Some(result)
+  }
+  it must "parse a message on github-enterprise with an issue(GH-NUMBER) at the end, refering to itself" in {
+    val message = "Parse valid message into a ticket. fixes #98"
+    val result = new Ticket(message, s"$githubEnterprise/zalando/kontrolletti/issues/98", None)
+    ticketParser.parse(githubEnterprise, project, repository, message) shouldBe Some(result)
+  }
+  it must "parse a message on github-enterprise with an issue, refering to itself" in {
+    val message = "Merge pull request #63 from zalando/get-credentials-from-s3"
+    val result = new Ticket(message, s"$githubEnterprise/zalando/kontrolletti/issues/63", None)
+    ticketParser.parse(githubEnterprise, project, repository, message) shouldBe Some(result)
+  }
+  it must "parse a message from kontrolletti" in {
+    val message = "Merge pull request #63 from zalando/get-credentials-from-s3"
+    val result = new Ticket(message, s"https://github.com/zalando/kontrolletti/issues/63", None)
+    ticketParser.parse("github.com", "zalando", "kontrolletti", message) shouldBe Some(result)
+  }
+  ignore must "parse a message from kontrolletti with multiple tickets" in {
+    val message = "Merge pull request #104 from zalando/ticket-parsing\n\nParse valid message into a ticket. fixes #98"
+    val result = new Ticket(message, s"https://github.com/zalando/kontrolletti/issues/63", None)
+    ticketParser.parse("github.com", "zalando", "kontrolletti", message) shouldBe Some(result)
+  }
 }
