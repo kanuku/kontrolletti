@@ -18,14 +18,7 @@ case class Link(href: String, method: String, rel: String, relType: String)
 case class Author(name: String, email: String, links: Option[List[Link]])
 
 //TODO: Add [specs] and [valid] properties
-case class Commit(id: String, message: String, parentIds: Option[List[String]], author: Author, tickets: Option[List[Ticket]], valid: Option[Boolean], links: Option[List[Link]], date: DateTime, repoUrl: String) {
-  def isValid = tickets match {
-    case None => false
-    case Some(Nil) =>
-      false
-    case Some(result) => !result.isEmpty
-  }
-}
+case class Commit(id: String, message: String, parentIds: Option[List[String]], author: Author, tickets: Option[List[Ticket]], valid: Option[Boolean], links: Option[List[Link]], date: DateTime, repoUrl: String)
 case class Repository(url: String, host: String, project: String, repository: String, enabled: Boolean, lastSync: Option[DateTime], lastFailed: Option[DateTime], links: Option[List[Link]])
 case class Ticket(name: String, href: String, links: Option[List[Link]])
 
