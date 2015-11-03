@@ -17,9 +17,9 @@ case class Error(detail: String, status: Int, errorType: String)
 case class Link(href: String, method: String, rel: String, relType: String)
 case class Author(name: String, email: String, links: Option[List[Link]])
 
-//TODO: Add [specs] and [valid] properties 
-case class Commit(id: String, message: String, parentIds: Option[List[String]], author: Author, childId: Option[String], tickets: Option[List[Ticket]], valid: Option[Boolean], links: Option[List[Link]], date: DateTime, repoUrl: String)
-case class Repository(url: String, host: String, project: String, repository: String, enabled: Boolean, lastSync:Option[DateTime], lastFailed:Option[DateTime], links: Option[List[Link]])
+//TODO: Add [specs] and [valid] properties
+case class Commit(id: String, message: String, parentIds: Option[List[String]], author: Author, tickets: Option[List[Ticket]], valid: Option[Boolean], links: Option[List[Link]], date: DateTime, repoUrl: String)
+case class Repository(url: String, host: String, project: String, repository: String, enabled: Boolean, lastSync: Option[DateTime], lastFailed: Option[DateTime], links: Option[List[Link]])
 case class Ticket(name: String, href: String, links: Option[List[Link]])
 
 //MUST HAVE HATEOAS RESULTS
@@ -37,12 +37,12 @@ object KontrollettiToModelParser {
 
   val dateReads = Reads.jodaDateReads("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
 
-   implicit val errorReader: Reads[Error] = (
+  implicit val errorReader: Reads[Error] = (
     (__ \ "detail").read[String] and
     (__ \ "status").read[Int] and
     (__ \ "errorType").read[String] //
     )(Error.apply _)
-  
+
   implicit val linkReader: Reads[Link] = (
     (__ \ "href").read[String] and
     (__ \ "method").read[String] and
@@ -67,7 +67,6 @@ object KontrollettiToModelParser {
     (__ \ "message").read[String] and
     (__ \ "parent_ids").readNullable[List[String]] and
     (__ \ "author").read[Author] and
-    Reads.pure(None) and //
     (__ \ "tickets").readNullable[List[Ticket]] and
     (__ \ "valid").readNullable[Boolean] and
     (__ \ "links").readNullable[List[Link]] and //
@@ -137,7 +136,6 @@ object KontrollettiToJsonParser {
     (__ \ "message").write[String] and
     (__ \ "parent_ids").writeNullable[List[String]] and
     (__ \ "author").write[Author] and
-    (__ \ "child_id").writeNullable[String] and
     (__ \ "tickets").writeNullable[List[Ticket]] and
     (__ \ "valid").writeNullable[Boolean] and
     (__ \ "links").writeNullable[List[Link]] and //
@@ -171,6 +169,3 @@ object KontrollettiToJsonParser {
     (__ \ "result").write[List[Repository]])(unlift(RepositoriesResult.unapply))
 
 }
-
-
- 

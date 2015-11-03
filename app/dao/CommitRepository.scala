@@ -68,7 +68,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
   private def getByRepositoryQuery(host: String, project: String, repository: String, isValid: Option[Boolean]): Query[Tables.CommitTable, Commit, Seq] = for {
     repo <- repos.filter { repo => repo.host === host && repo.project === project && repo.repository === repository }
     commit <- isValid match {
-      case Some(valid) => commits.filter { c => c.repoURL === repo.url && c.isValid === valid }
+      case Some(valid) => commits.filter { c => c.repoURL === repo.url && ((c.nrOfTickets > 0) === valid) }
       case None        => commits.filter { _.repoURL === repo.url }
     }
   } yield commit
@@ -78,7 +78,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     firstCommit <- commits.filter { c => c.id === since && c.repoURL === repo.url }
     lastCommit <- commits.filter { c => c.id === until && c.repoURL === repo.url }
     result <- isValid match {
-      case Some(valid) => commits.filter { c => c.date >= lastCommit.date && c.date <= firstCommit.date && c.isValid === valid && c.repoURL === repo.url }
+      case Some(valid) => commits.filter { c => c.date >= lastCommit.date && c.date <= firstCommit.date && ((c.nrOfTickets > 0) === valid) && c.repoURL === repo.url }
       case None        => commits.filter { c => c.date >= lastCommit.date && c.date <= firstCommit.date && c.repoURL === repo.url }
     }
   } yield result
@@ -87,7 +87,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     repo <- repos.filter { repo => repo.host === host && repo.project === project && repo.repository === repository }
     targetCommit <- commits.filter { c => c.id === until && c.repoURL === repo.url }
     result <- isValid match {
-      case Some(valid) => commits.filter { c => c.date <= targetCommit.date && c.isValid === valid && c.repoURL === repo.url }
+      case Some(valid) => commits.filter { c => c.date <= targetCommit.date && ((c.nrOfTickets > 0) === valid) && c.repoURL === repo.url }
       case None        => commits.filter { c => c.date <= targetCommit.date && c.repoURL === repo.url }
     }
   } yield result
@@ -96,7 +96,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     repo <- repos.filter { repo => repo.host === host && repo.project === project && repo.repository === repository }
     targetCommit <- commits.filter { c => c.id === since && c.repoURL === repo.url }
     result <- isValid match {
-      case Some(valid) => commits.filter { c => c.date >= targetCommit.date && c.isValid === valid && c.repoURL === repo.url }
+      case Some(valid) => commits.filter { c => c.date >= targetCommit.date && ((c.nrOfTickets > 0) === valid) && c.repoURL === repo.url }
       case None        => commits.filter { c => c.date >= targetCommit.date && c.repoURL === repo.url }
     }
   } yield result
@@ -139,7 +139,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
   }
 
   def oldest(repoUrl: String): Future[Option[Commit]] = {
-    logger.debug(s"Getting oldest commit for $repoUrl")
+    logger.info(s"Getting oldest commit for $repoUrl")
     handleError(db.run(commits.filter { x => x.repoURL === repoUrl }.sortBy(_.date.asc).result.headOption))
   }
 

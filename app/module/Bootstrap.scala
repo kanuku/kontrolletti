@@ -1,19 +1,14 @@
 package module
 
-import service.Import
-import javax.inject._
-import play.api.Application
-import play.api.Logger
-import scala.concurrent.duration.DurationInt
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import dao.CommitRepository
 import scala.concurrent.Await
-import dao.RepoRepository
-import dao.AuthorRepository
-import model.Author
-import model.Author
-import model.Link
+import scala.concurrent.duration.DurationInt
+
 import akka.actor.ActorSystem
+import dao.{ CommitRepository, RepoRepository }
+import javax.inject.{ Inject, Singleton }
+import play.api.Logger
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import service.{ ImportCommit, ImportRepository }
 /**
  * @author fbenjamin
  */
@@ -23,34 +18,32 @@ trait Bootstrap {
 
 @Singleton
 class BootstrapImpl @Inject() (actorSystem: ActorSystem,
-                               importJob: Import,
+                               repoImporter: ImportRepository,
+                               commitImporter: ImportCommit,
                                repoRepo: RepoRepository, //
-                               authorRepo: AuthorRepository, //
                                commitRepo: CommitRepository) extends Bootstrap {
   val logger: Logger = Logger { this.getClass }
 
   val star = setup()
 
-  def scheduleSyncAppsJob() = actorSystem.scheduler.schedule(12.seconds, 10.minutes) {
+  def scheduleSyncAppsJob() = actorSystem.scheduler.schedule(12.seconds, 120.seconds) {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
-    Await.result(importJob.syncApps(), 120.seconds)
+    Await.result(repoImporter.syncApps(), 180.seconds)
     logger.info("Finished the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
   }
 
-  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(12.seconds, 9.minutes) {
+  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(500.seconds, 20.seconds) {
     logger.info("Started the job for synchronizing Commits from the SCM's")
-    Await.result(importJob.synchCommits(), 20.seconds)
+    Await.result(commitImporter.synchCommits(), 300.seconds)
   }
 
-  def scheduleDatabaseBootstrap() =
-    actorSystem.scheduler.scheduleOnce(7.seconds) {
-      logger.info("Started bootstrapping initial database")
-      for {
-        authorsResult <- authorRepo.initializeDatabase
-        repoResult <- repoRepo.initializeDatabase
-        commitsResult <- commitRepo.initializeDatabase
-      } yield (authorsResult)
-    }
+  def scheduleDatabaseBootstrap() = actorSystem.scheduler.scheduleOnce(7.seconds) {
+    logger.info("Started bootstrapping initial database")
+    for {
+      repoResult <- repoRepo.initializeDatabase
+      commitsResult <- commitRepo.initializeDatabase
+    } yield (commitsResult)
+  }
 
   def setup() = {
     scheduleSyncAppsJob
