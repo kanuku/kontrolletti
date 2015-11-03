@@ -1,4 +1,4 @@
-package job
+package service
 
 import scala.Right
 import scala.concurrent.Await
@@ -11,8 +11,6 @@ import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
 import client.kio.KioClient
 import client.oauth.OAuth
-import service.ImportCommitImpl
-import service.Search
 import test.util.MockitoUtils
 import akka.actor.ActorSystem
 import akka.actor.Scheduler
@@ -79,18 +77,17 @@ class ImportCommitTest extends FlatSpec with MockitoSugar with MockitoUtils with
     val commit3 = createCommit(id = "id3", message = msg3)
     val result = commitImporter.enrichWithTickets(host, project, repository, List(commit1, commit2, commit3))
     result.size shouldBe 3
-    val commitRes1 = result(0)
-    val commitRes2 = result(1)
-    val commitRes3 = result(2)
+    val Some(commitRes1) = result.find { _.id == "id1" }
+    val Some(commitRes2) = result.find { _.id == "id2" }
+    val Some(commitRes3) = result.find { _.id == "id3" }
     //Check it tickets field/member
     commitRes1.tickets.isDefined shouldBe true
     commitRes2.tickets.isDefined shouldBe true
     commitRes3.tickets shouldBe None
-
     //Check validation
-    commitRes1.isValid shouldBe true
-    commitRes2.isValid shouldBe true
-    commitRes3.isValid shouldBe false
+    commitRes1.valid shouldBe Option(true)
+    commitRes2.valid shouldBe Option(true)
+    commitRes3.valid shouldBe Option(false)
 
     val Some(ticketsCommit1) = commitRes1.tickets
     val Some(ticketsCommit2) = commitRes2.tickets

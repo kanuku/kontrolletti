@@ -20,6 +20,7 @@ import model.Repository
 import configuration.GeneralConfiguration
 import org.scalatest.Matchers
 import org.scalatest.BeforeAndAfter
+import model.Repository
 
 class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils with Matchers with BeforeAndAfter {
 
@@ -37,9 +38,9 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
   //repositories
   val repoPrefix = "https://github.com/zalando-bus"
   val unvalidRepo = createRepository(url = s"url1", host = "host1", project = "project1", repository = "repository")
-  val validRepo1 = createRepository(url = s"$repoPrefix/import-test/repo1", host = "host", project = "project", repository = "repository1")
-  val validRepo2 = createRepository(url = s"$repoPrefix/import-test/repo2", host = "host", project = "project", repository = "repository2")
-  val validRepo3 = createRepository(url = s"$repoPrefix/import-test/repo3", host = "host", project = "project", repository = "repository3")
+  val validRepo1 = createRepository(url = s"$repoPrefix/repo1")
+  val validRepo2 = createRepository(url = s"$repoPrefix/repo2")
+  val validRepo3 = createRepository(url = s"$repoPrefix/repo3")
 
   private val repoImporter = new ImportRepositoriesImpl(oAuthClient, kioClient, repoRepository, config)
 
@@ -48,7 +49,7 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
 
   }
 
-  "Import#syncApps" should "store apps from kio in data-store" in {
+  "ImportRepository#syncApps" should "store apps from kio in data-store" in {
 
     val accessToken = createOAuthAccessToken("token_type", "access_token", "scope", 3599)
     val accessTokenResult = Future.successful { accessToken }
@@ -75,4 +76,48 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
     assert(capturedRepos.getValue.find(x => x.url == validRepo2.url) != None)
   }
 
+  "ImportRepository#removeDuplicates" should "return Collection without duplicates" in {
+    val r1 = new Repository("url1", "host1", "project1", "repository1", true, None, None, None)
+    val r2 = new Repository(null, "host2", "project2", "repository2", true, None, None, None)
+    val r3 = new Repository(null, "host3", "project3", "repository3", true, None, None, None)
+    val r4 = new Repository(null, "host4", "project4", "repository4", true, None, None, None)
+    val r5 = new Repository(null, "host5", "project5", "repository5", true, None, None, None)
+    val d1 = new Repository(null, "host1", "project1", "repository1", true, None, None, None)
+    val d4 = new Repository(null, "host4", "project4", "repository4", true, None, None, None)
+    val result = repoImporter.removeDuplicates(List(r1, r2, r3, r4, r5, d1, d4))
+
+    result.size shouldBe 5
+    result.contains(r1) shouldBe false
+    result.contains(r2) shouldBe true
+    result.contains(r3) shouldBe true
+    result.contains(r5) shouldBe true
+    result.contains(d1) shouldBe true
+    result.contains(d4) shouldBe true
+
+  }
+  "ImportRepository#notInRightHandFilter" should "return Collection without duplicates" in {
+    val r1 = new Repository("url1", "host1", "project1", "repository1", true, None, None, None)
+    val r2 = new Repository(null, "host2", "project2", "repository2", true, None, None, None)
+    val r3 = new Repository(null, "host3", "project3", "repository3", true, None, None, None)
+    val r4 = new Repository(null, "host4", "project4", "repository4", true, None, None, None)
+    val r5 = new Repository(null, "host5", "project5", "repository5", true, None, None, None)
+    val left = List(r1, r2, r3)
+    val right = List(r2, r4, r5)
+    var result = Await.result(repoImporter.notInRightHandFilter(left, right), Duration("50 seconds"))
+    result.size shouldBe 2
+    result.contains(r1)
+    result.contains(r3)
+
+    Await.result(repoImporter.notInRightHandFilter(left, Nil), Duration("50 seconds")) shouldBe left
+    Await.result(repoImporter.notInRightHandFilter(Nil, right), Duration("50 seconds")) shouldBe Nil
+
+  }
+  "ImportRepository#reposAreEqual" should "evaluate equality of the repositories" in {
+    val r1 = new Repository("url1", "host1", "project1", "repository1", true, None, None, None)
+    val r2 = new Repository(null, "host2", "project2", "repository2", true, None, None, None)
+    repoImporter.reposAreEqual(r1, r2) shouldBe false
+    repoImporter.reposAreEqual(r2, r2) shouldBe true
+    repoImporter.reposAreEqual(r1, r1) shouldBe true
+
+  }
 }

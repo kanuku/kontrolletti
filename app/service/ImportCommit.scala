@@ -5,8 +5,7 @@ import client.kio.KioClient
 import client.oauth.OAuth
 import dao.RepoRepository
 import dao.CommitRepository
-import javax.inject.Inject
-import javax.inject.Singleton
+import javax.inject.{ Inject, Singleton }
 import model.Repository
 import model.Commit
 import play.api.Logger
@@ -16,6 +15,7 @@ import utility.UrlParser
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 import configuration.GeneralConfiguration
+import utility.GeneralHelper
 import utility.TicketParser
 
 trait ImportCommit {
@@ -26,7 +26,7 @@ trait ImportCommit {
 class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
                                   search: Search, //
                                   repoRepo: RepoRepository,
-                                  config: GeneralConfiguration) extends ImportCommit with TicketParser {
+                                  config: GeneralConfiguration) extends ImportCommit with TicketParser with GeneralHelper {
 
   val logger: Logger = Logger { this.getClass }
 
@@ -101,12 +101,13 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
    * @param commits Commits whom's commit-messages should be parsed
    * @return The same commit
    */
+
   def enrichWithTickets(host: String, project: String, repository: String, commits: List[Commit]): List[Commit] = {
     for {
       commit <- commits
       result = parse(host, project, repository, commit.message) match {
-        case None         => commit.copy(valid = Option(commit.isValid))
-        case Some(ticket) => commit.copy(tickets = Option(List(ticket)), valid = Option(commit.isValid))
+        case None         => commit.copy(valid = Option(numberOfTickets(commit.tickets) > 0))
+        case Some(ticket) => commit.copy(tickets = Option(List(ticket)), valid = Option(numberOfTickets(Option(List(ticket))) > 0))
       }
     } yield result
   }

@@ -37,8 +37,8 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
       accessToken <- logErrorOnFailure(oAuthclient.accessToken())
       kioRepos <- kioClient.repositories(accessToken)
       savedRepos <- repoRepo.all()
-      validRepos <- filterValidRepos(kioRepos)
-      reposNotInDatabase <- RepositoriesNotInRightHandFilter(validRepos, savedRepos.toList)
+      validRepos <- keepValidRepos(kioRepos)
+      reposNotInDatabase <- notInRightHandFilter(validRepos, savedRepos.toList)
       result <- {
         reposNotInDatabase.map { x => (x.url -> x) } match {
           case Nil => Future.successful {}
@@ -53,10 +53,10 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
   }
 
   /**
-   * Filters repos that have a parsable scm-url. And are therefore valid in Kontrolletti.
+   * Removes repos that do not have a parsable scm-url or are duplicate.
    */
-  private def filterValidRepos(repositories: List[Repository]): Future[List[Repository]] = Future {
-    for {
+  private def keepValidRepos(repositories: List[Repository]): Future[List[Repository]] = Future {
+    val result = for {
       repo <- repositories
       if (Option(repo.url) != None && !repo.url.isEmpty())
       (host, project, repository) <- extract(repo.url) match {
@@ -64,6 +64,12 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
         case Left(_)                          => None
       }
     } yield repo.copy(host = host, project = project, repository = repository)
+    removeDuplicates(result)
+  }
+
+  def removeDuplicates(repos: List[Repository]): List[Repository] = repos match {
+    case head :: tail => if (tail.exists { reposAreEqual(_, head) }) removeDuplicates(tail) else head :: removeDuplicates(tail)
+    case Nil          => Nil
   }
 
   /**
@@ -73,10 +79,12 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
    * @param right The Valid repos that need to be compared to.
    * @return A Future containing List of Repos from left that do not exist in the right hand-side.
    */
-  def RepositoriesNotInRightHandFilter(left: List[Repository], right: List[Repository]): Future[List[Repository]] = Future {
+  def notInRightHandFilter(left: List[Repository], right: List[Repository]): Future[List[Repository]] = Future {
     left.filter {
-      n => !right.toList.exists { s => (s.host == n.host && s.project == n.project && s.repository == n.repository) }
+      n => !right.toList.exists { reposAreEqual(_, n) }
     }
   }
+
+  def reposAreEqual(left: Repository, right: Repository) = (left.host == right.host && left.project == right.project && left.repository == right.repository)
 
 }
