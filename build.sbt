@@ -4,7 +4,7 @@ name := """kontrolletti"""
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala, DockerPlugin, GitVersioning)
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.7"
 
 scalacOptions in Compile ++= Seq(
   "-deprecation", // Emit warning and location for usages of deprecated APIs.
