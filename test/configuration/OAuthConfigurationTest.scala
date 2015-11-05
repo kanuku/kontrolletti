@@ -1,11 +1,8 @@
-package client.configuration
+package configuration
 
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.OneAppPerSuite
 import test.util.ConfigurableFakeApp
-import configuration.OAuthConfigurationImpl
-import configuration.OAuthConfiguration
-import javax.inject.Singleton
 
 class OAuthConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneAppPerSuite {
   val oauthConfiguration: OAuthConfiguration = new OAuthConfigurationImpl
