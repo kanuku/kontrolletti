@@ -1,6 +1,11 @@
 package configuration
+
 import javax.inject.Singleton
 import play.api.Play
+
+/**
+ * @author fbenjamin
+ */
 trait GeneralConfiguration {
 
   /**
@@ -42,12 +47,20 @@ trait GeneralConfiguration {
   def ticketReferenceJiraBrowseUrl: String
 }
 
+trait ConfigurationDefaults {
+  def get[T](input: Option[T]): T = input match {
+    case Some(result) =>
+      result
+    case None => throw new IllegalStateException("Configuration could not be found/loaded!!")
+  }
+}
+
 @Singleton
-class GeneralConfigurationImpl extends GeneralConfiguration {
-  def defaultClientTimeout: Int = Play.current.configuration.getInt("default.client.timeout").get
-  def kioServiceAppsEndpoint: String = Play.current.configuration.getString("client.kio.service.apps.endpoint").get
-  def ticketReferenceGithubHost: String = Play.current.configuration.getString("ticket.reference.github.host").get
-  def ticketReferenceGithubEnterpriseHost: String = Play.current.configuration.getString("ticket.reference.github-enterprise.host").get
-  def ticketReferenceJiraBrowseUrl: String = Play.current.configuration.getString("ticket.reference.jira.tickets.url").get
+class GeneralConfigurationImpl extends GeneralConfiguration with ConfigurationDefaults {
+  def defaultClientTimeout: Int = get(Play.current.configuration.getInt("default.client.timeout"))
+  def kioServiceAppsEndpoint: String = get(Play.current.configuration.getString("client.kio.service.apps.endpoint"))
+  def ticketReferenceGithubHost: String = get(Play.current.configuration.getString("ticket.reference.github.host"))
+  def ticketReferenceGithubEnterpriseHost: String = get(Play.current.configuration.getString("ticket.reference.github-enterprise.host"))
+  def ticketReferenceJiraBrowseUrl: String = get(Play.current.configuration.getString("ticket.reference.jira.tickets.url"))
 
 }

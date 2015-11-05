@@ -23,16 +23,16 @@ trait OAuthConfiguration {
 }
 
 @Singleton
-class OAuthConfigurationImpl extends OAuthConfiguration {
+class OAuthConfigurationImpl extends OAuthConfiguration with ConfigurationDefaults {
 
   val logger: Logger = Logger { this.getClass }
 
-  def credentialsDirectory = Play.current.configuration.getString("client.oauth.credentials.dir").get
-  def requestClientTimeout = Play.current.configuration.getInt("client.oauth.request.timeout.ms").get
-  def clientCredentialsFilename: String = Play.current.configuration.getString("client.oauth.client.credentials.file").get
-  def userCredentialsFileName: String = Play.current.configuration.getString("client.oauth.user.credentials.file").get
-  def accessTokenRequestEndpoint: String = Play.current.configuration.getString("client.oauth.access.token.service.url").get
-  def tokenInfoRequestEndpoint: String = Play.current.configuration.getString("client.oauth.token.info.service.url").get
-  def excludedPaths: Set[String] = Play.current.configuration.getStringList("service.oauth.exclude.paths").map(_.toList.toSet).get
+  def credentialsDirectory = get(Play.current.configuration.getString("client.oauth.credentials.dir"))
+  def requestClientTimeout = get(Play.current.configuration.getInt("client.oauth.request.timeout.ms"))
+  def clientCredentialsFilename: String = get(Play.current.configuration.getString("client.oauth.client.credentials.file"))
+  def userCredentialsFileName: String = get(Play.current.configuration.getString("client.oauth.user.credentials.file"))
+  def accessTokenRequestEndpoint: String = get(Play.current.configuration.getString("client.oauth.access.token.service.url"))
+  def tokenInfoRequestEndpoint: String = get(Play.current.configuration.getString("client.oauth.token.info.service.url"))
+  def excludedPaths: Set[String] = get(Play.current.configuration.getStringList("service.oauth.exclude.paths")).toSet
 
 }

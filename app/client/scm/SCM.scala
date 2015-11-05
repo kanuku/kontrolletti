@@ -85,8 +85,6 @@ sealed trait SCM {
 class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
   private val logger: Logger = Logger(this.getClass())
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNr: Int): Future[WSResponse] = {
-    //FIXME! resolver.get should be best avoided.
-
     val res: SCMResolver = resolver(host)
     val url = res.commits(host, project, repository)
     get(host, url, since, pageNr)
@@ -133,7 +131,7 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
         .withHeaders(res.accessTokenQueryParameter)
     }
 
-    if (res.accessTokenValue == null || res.accessTokenValue.isEmpty()) {
+    if (Option(res.accessTokenValue) == None || res.accessTokenValue.isEmpty()) {
       logger.error("No tokens configured for host " + host)
     }
     if (since.isDefined) {
