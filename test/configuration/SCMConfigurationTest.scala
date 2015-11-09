@@ -11,8 +11,6 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
   implicit override lazy val app = fakeApplication
 
   override def configuration: Map[String, _] = Map(
-    "play.http.filters" -> "", //We need to disable filtering :D
-
     // Client hosts Github-type
     "client.scm.github.host.0" -> "github.com", // Server Github
     "client.scm.github.host.1" -> "g-e-company.com", // Server Github-Enterprise1

@@ -11,7 +11,7 @@ class OAuthConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneA
   implicit override lazy val app = fakeApplication
 
   override def configuration: Map[String, _] = Map(
-    "play.http.filters" -> null, //We need to disable filtering :D
+    "play.http.filters" -> "", //We need to disable filtering :D
     "client.oauth.credentials.dir" -> "test.client.oauth.credentials.dir",
     "client.oauth.access.token.service.url" -> "test.client.oauth.access.token.service.url",
     "client.oauth.token.info.service.url" -> "test.client.oauth.token.info.service.url",

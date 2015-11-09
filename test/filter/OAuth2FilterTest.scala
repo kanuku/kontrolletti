@@ -34,27 +34,27 @@ class OAuth2FilterTest extends PlaySpec with MockitoSugar with KontrollettiOneAp
 
   "OAuth2ServiceFilter" should {
     "not check for Authorization on the /swagger endpoint" in {
-      val result = route(FakeRequest(GET, swaggerUrl)).get
+      val Some(result) = route(FakeRequest(GET, swaggerUrl))
       status(result) mustEqual OK
       assertNoMocksCalled()
     }
     "not check for Authorization on the /assets endpoint" in {
-      val result = route(FakeRequest(GET, assetsUrl)).get
+      val Some(result) = route(FakeRequest(GET, assetsUrl))
       status(result) mustEqual NOT_FOUND
       assertNoMocksCalled()
     }
     "not check for Authorization on the /status endpoint" in {
-      val result = route(FakeRequest(GET, statusUrl)).get
+      val Some(result) = route(FakeRequest(GET, statusUrl))
       status(result) mustEqual OK
       assertNoMocksCalled()
     }
     "not check for Authorization on the /specs endpoint" in {
-      val result = route(FakeRequest(GET, specsUrl)).get
+      val Some(result) = route(FakeRequest(GET, specsUrl))
       status(result) mustEqual OK
       assertNoMocksCalled()
     }
     "Fail on /api endpoint with no Authorization header at all" in {
-      val result = route(FakeRequest(GET, "/api")).get
+      val Some(result) = route(FakeRequest(GET, "/api"))
       status(result) mustEqual UNAUTHORIZED
       assertNoMocksCalled()
     }
@@ -62,7 +62,7 @@ class OAuth2FilterTest extends PlaySpec with MockitoSugar with KontrollettiOneAp
       val tokenInfoEndpoint = "TokenInfoEndpoint"
       recordOAuthFailingTokenAuthenticationBehaviour()
 
-      val result = route(FakeRequest(GET, "/api").withHeaders(authorizationHeader)).get
+      val Some(result) = route(FakeRequest(GET, "/api").withHeaders(authorizationHeader))
       status(result) mustEqual UNAUTHORIZED
 
       verifyOAuthFailingTokenAuthenticationBehaviour
