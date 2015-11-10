@@ -39,15 +39,6 @@ sealed trait SCM {
   def repo(host: String, project: String, repository: String): Future[WSResponse]
 
   /**
-   * Issues a GET call against the ticket/issue-endpoint on the SCM.
-   * @param host DNS/IP of the SCM server <br/>
-   * @param project name of the project
-   * @param repo name of the repository
-   * @return The future with the response of the call
-   */
-  def tickets(host: String, project: String, repository: String): Future[WSResponse]
-
-  /**
    * Composes an URL of the give repository based on the SCM configured with the matching host.
    * @param host DNS/IP of the SCM server <br/>
    * @param project name of the project
@@ -82,8 +73,11 @@ sealed trait SCM {
 
 }
 @Singleton
-class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
+class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
+                         @Named("github") githubResolver: SCMResolver, //
+                         @Named("stash") stashResolver: SCMResolver) extends SCM {
   private val logger: Logger = Logger(this.getClass())
+
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNr: Int): Future[WSResponse] = {
     val res: SCMResolver = resolver(host)
     val url = res.commits(host, project, repository)
@@ -98,11 +92,7 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
     val url = res.repo(host, project, repository)
     get(host, url, None)
   }
-  def tickets(host: String, project: String, repository: String): Future[WSResponse] = {
-    val res: SCMResolver = resolver(host)
-    val url = res.tickets(host, project, repository)
-    get(host, url, None)
-  }
+
   def repoUrl(host: String, project: String, repository: String): String = {
     val res: SCMResolver = resolver(host)
     res.repoUrl(host, project, repository)
@@ -119,19 +109,19 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
       logger.info("Putting the access-token in url")
       dispatcher //
         .requestHolder(url) //
-        .withQueryString(res.maximumPerPageQueryPararmeter) //
+        .withQueryString(res.maximumPerPageQueryParameter()) //
         .withQueryString(res.startAtPageNumber(pageNr))
-        .withQueryString(res.accessTokenQueryParameter)
+        .withQueryString(res.accessTokenHeader(host))
     } else {
       logger.info("Putting the access-token in head")
       dispatcher //
         .requestHolder(url) //
-        .withQueryString(res.maximumPerPageQueryPararmeter) //
+        .withQueryString(res.maximumPerPageQueryParameter()) //
         .withQueryString(res.startAtPageNumber(pageNr))
-        .withHeaders(res.accessTokenQueryParameter)
+        .withHeaders(res.accessTokenHeader(host))
     }
-
-    if (Option(res.accessTokenValue) == None || res.accessTokenValue.isEmpty()) {
+    val token = Option(res.accessTokenValue(host))
+    if (!token.isDefined || token.isEmpty) {
       logger.error("No tokens configured for host " + host)
     }
     if (since.isDefined) {
@@ -144,12 +134,12 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
   def head(host: String, url: String): Future[WSResponse] = {
     logger.info(s"Issuing a HEAD on $url")
     resolver(host) match {
-      case resolver if resolver.name == "github" =>
+      case resolver if resolver.hostType == "github" =>
         logger.info(s"Calling(github) HEAD on $url")
         dispatcher.requestHolder(url) //
-          .withHeaders(resolver.accessTokenQueryParameter)
+          .withHeaders(resolver.accessTokenHeader(host))
           .head()
-      case resolver if resolver.name == "stash" =>
+      case resolver if resolver.hostType == "stash" =>
         logger.info(s"Calling(stash) GET on $url")
         get(host, url, None)
     }
@@ -157,9 +147,9 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher) extends SCM {
 
   def isGithubServerType(host: String): Boolean = resolver(host).isGithubServerType
 
-  def resolver(host: String): SCMResolver = GithubResolver.resolve(host) match {
+  def resolver(host: String): SCMResolver = githubResolver.resolve(host) match {
     case Some(resolver) => resolver
-    case _ => StashResolver.resolve(host) match {
+    case _ => stashResolver.resolve(host) match {
       case Some(resolver) => resolver
       case _              => throw new IllegalStateException(s"Could not resolve SCM context for $host")
     }

@@ -19,6 +19,7 @@ import play.api.libs.json.Json
 import utility.Transformer
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import configuration.SCMConfigurationImpl
 
 /**
  * Json deserializer for converting external json types, from the SCM,
@@ -79,9 +80,11 @@ sealed trait SCMParser {
  *
  */
 object GithubToJsonParser extends SCMParser {
-
+  //TODO Inject Resolver with GUICE
+  private val config = new SCMConfigurationImpl
+  private val resolver = new GithubResolver(config)
   private val transformer = Transformer
-  def domains = GithubResolver.hosts
+  def domains = resolver.hosts.keySet
   val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => transformer.deserialize2Either[List[Commit]](value)
   val singleCommitToModel: Parser[JsValue, Either[String, Commit]] = (value) => transformer.deserialize2Either[Commit](value)(commitReader)
   val authorToModel: Parser[JsValue, Either[String, List[Author]]] = (author) => transformer.deserialize2Either[List[Author]](author)
@@ -135,9 +138,11 @@ object GithubToJsonParser extends SCMParser {
  *
  */
 object StashToJsonParser extends SCMParser {
-
-  def domains = StashResolver.hosts
-  val transformer = Transformer
+  //TODO Inject Resolver with GUICE
+  private val config = new SCMConfigurationImpl
+  private val resolver = new StashResolver(config)
+  private val transformer = Transformer
+  def domains = resolver.hosts.keys.toSet
   val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = { value =>
     val res = (value \ "values")
     res.toOption match {

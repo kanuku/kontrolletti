@@ -1,7 +1,6 @@
 package client.scm
 
 import scala.concurrent.Future
-
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.any
 import org.mockito.Matchers.anyString
@@ -14,13 +13,14 @@ import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneAppPerSuite
 import org.scalatestplus.play.OneAppPerTest
-
 import client.RequestDispatcher
 import play.api.inject.Module
 import play.api.libs.ws.WSRequest
 import play.api.libs.ws.WSResponse
 import test.util.ConfigurableFakeApp
 import test.util.MockitoUtils
+import configuration.SCMConfigurationImpl
+import test.util.ConfigurationDefaults.SCMConfigurationDefaults._
 
 /**
  * The tests in this class will assure:
@@ -35,9 +35,12 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
 
   val mockedRequestHolder = mock[WSRequest]
   val mockedDispatcher = mock[RequestDispatcher]
+  val conf = new SCMConfigurationImpl
+  val githubResolver = new GithubResolver(conf)
+  val stashResolver = new StashResolver(conf)
   val mockedResponse = mockSuccessfullParsableFutureWSResponse("", 200)
   val github = "github.com"
-  val stash = "stash.zalando.net"
+  val stash = "stash.com"
   val project = "project"
   val repository = "repository"
   //  val since = Some("since")
@@ -46,10 +49,9 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
   val source = "source"
   val target = "target"
 
-  def client = new SCMImpl(mockedDispatcher)
+  def client = new SCMImpl(mockedDispatcher, githubResolver, stashResolver)
   before {
-    reset(mockedRequestHolder)
-    reset(mockedDispatcher)
+    reset(mockedRequestHolder, mockedDispatcher)
   }
 
   "SCM#commits" should "request commits from github API" in {
@@ -79,28 +81,19 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
     testGET(url, client.repo(stash, project, repository))
   }
 
-  "SCM#tickets" should "request a commit from github API" in {
-    val url = s"https://api.$github/repos/$project/$repository/commits"
-    testGET(url, client.tickets(github, project, repository))
-  }
-  it should "request a commit from stash API " in {
-    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits"
-    testGET(url, client.tickets(stash, project, repository))
-  }
-
   "SCM#repoUrl" should "return a repository-url for github API" in {
     val url = s"https://$github/$project/$repository"
     val result = client.repoUrl(github, project, repository)
     assert(result == url)
   }
   it should "return a repository-url for stash API" in {
-    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository"
+    val url = s"https://$stash/projects/$project/repos/$repository/browse"
     val result = client.repoUrl(stash, project, repository)
     assert(result == url)
   }
 
   "SCM#diffUrl" should "return a diffUrl for github frontend" in {
-    val url = s"https://$github/$project/$repository/compare/$source...$target"
+    val url = s"https://api.$github/$project/$repository/compare/$source...$target"
     val result = client.diffUrl(github, project, repository, source, target)
     assert(result == url)
   }
@@ -146,5 +139,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
     verify(mockedDispatcher, times(1)).requestHolder(urlCap.capture())
     assert(url == urlCap.getValue)
   }
+
+  override def configuration: Map[String, _] = scmConfigurations
 
 }

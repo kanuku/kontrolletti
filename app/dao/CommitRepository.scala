@@ -42,7 +42,6 @@ trait CommitRepository {
 class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext) extends CommitRepository with HasDatabaseConfigProvider[KontrollettiPostgresDriver] {
   import dao.KontrollettiPostgresDriver.api._
   import utility.FutureUtil._
-  private val queries = Queries
   private val logger: Logger = Logger(this.getClass())
   private val commits = Tables.commits
   private val repos = Tables.repositories

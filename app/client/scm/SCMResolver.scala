@@ -1,11 +1,11 @@
 package client.scm
 
-import java.util.ServiceConfigurationError
-
-import scala.collection.JavaConverters.asScalaBufferConverter
-import play.api.Play.current
+import scala.collection.JavaConverters.{ asScalaBufferConverter, _ }
 import play.api.Logger
-import collection.JavaConverters._
+import play.api.Play.current
+import javax.inject._
+import client.RequestDispatcher
+import configuration.SCMConfiguration
 
 /**
  * Resolves the URL's in the communication context with the SCM REST API. <br> Holds configurations like URL's
@@ -14,42 +14,39 @@ import collection.JavaConverters._
  */
 sealed trait SCMResolver {
   private val logger: Logger = Logger(this.getClass())
-  def name: String
+  def hostType: String
 
-  /**
-   * Hosts configuration property.
-   */
-  def hostsProperty: String = s"client.$name.host"
+  lazy val antecedents: Map[String, String] = combineMap(config().urlPrecedent(hostType))
+  lazy val authTokens: Map[String, String] = combineMap(config.authToken(hostType))
+  lazy val authUsers: Map[String, String] = combineMap(config.authUser(hostType))
+
+  private def combineMap(input: Map[Int, String]) = for {
+    (host, key) <- hosts
+    if input.contains(key)
+    value <- input.get(key)
+  } yield host -> value
+
+  def config(): SCMConfiguration
 
   /**
    * The list hosts that can handle the calls implemented by this client.
    *  @return the list of `hosts` this client can communicate with.
    */
-  lazy val hosts: Set[String] = {
-    current.configuration.getString(hostsProperty) match {
-      case Some(result) =>
-        logger.info(s"Configuring $name with hosts $result")
-        Set(result)
-      case None =>
-        logger.warn(s"Failed to load configuration $name and property $hostsProperty")
-        Set()
-    }
-  }
+  lazy val hosts: Map[String, Int] = config.hosts(hostType)
 
   /**
    * Checks if this client is configured to communicate with a given host.
    * @param  host The host to be tested(something like github.com or stash.zalan.do)
    * @return true if this client is configured to communicate with the host.
    */
-  def isCompatible(host: String): Boolean = {
-    !hosts.find { x => x == host }.isEmpty
-  }
+  //TODO This can be removed when github implementation returns an empty parameter for userAuth.
+  def isCompatible(host: String): Boolean = hosts.contains(host)
 
   /**
    *  Url for listing commits of a repository in the given `project` at the given `host`.
-   * @param repo repository
    * @param host host of the SCM server
    * @param project project where the repository belongs to
+   * @param repo repository
    * @return The url
    */
   def commits(host: String, project: String, repository: String): String
@@ -74,17 +71,9 @@ sealed trait SCMResolver {
   def repo(host: String, project: String, repository: String): String
 
   /**
-   *  Url for the tickets at the `repository` in the given `project` at the given `host`.
-   * @param repository repository.
-   * @param host host of the SCM server.
-   * @param project project where the repository belongs to.
-   * @return The url.
-   */
-  def tickets(host: String, project: String, repository: String): String
-
-  /**
    * Resolves to itself if the host matches to any of the configured `hosts`
    * Otherwise to an instance of None
+   * @param host host of the SCM server
    */
   def resolve(host: String): Option[SCMResolver] = {
     host match {
@@ -97,33 +86,30 @@ sealed trait SCMResolver {
 
   /**
    * Parses and returns the normalized URI for a github/stash repository-URL.
-   * @param url url of the repository
+   * @param host host of the SCM server
    * @return either an error(left) or the normalized URI (right)
    */
   def repoUrl(host: String, project: String, repository: String): String
 
   /**
    * Parses and returns the normalized URI for a github/stash repository-URL.
-   * @param url url of the repository
+   * @param host host of the SCM server
+   * @param project project where the repository belongs to
+   * @param repo repository
    * @return either an error(left) or the normalized URI (right)
    */
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String
 
   /**
-   * The access-token property for the access-token the rest api of this client.
-   */
-  def accessTokenProperty: String = s"client.$name.accessToken"
-
-  /**
    * The access-token key to use for accessing the SCM Rest api.
    */
-  def accessTokenQueryParameter: (String, String)
+  def accessTokenHeader(host: String): (String, String)
 
   /**
    * Builds a QueryParameter to get maximal number of Items in the response.
    *  @return query parameter (Tupple)
    */
-  def maximumPerPageQueryPararmeter: (String, String)
+  def maximumPerPageQueryParameter(): (String, String)
 
   /**
    * Builds a Query parameter to retrieve commits after.
@@ -133,64 +119,107 @@ sealed trait SCMResolver {
   def sinceCommitQueryParameter(since: String): (String, String)
 
   /**
+   * Returns the authorization/authentication user Parameter for the given host
+   * @param host
+   *  @return Username for the authorization/authentication
+   */
+  def authUser(host: String): String = authUsers.getOrElse(host, "")
+
+  /**
+   * Builds a header authorization query parameter for the user.
+   *  @return query parameter (Tupple)
+   */
+  def authUserHeaderParameter(host: String): (String, String)
+
+  /**
    * Builds a Query parameter that indicates which page number of the result Set should be returned.
    *  @param pageNr page number
    */
   def startAtPageNumber(pageNr: Int): (String, String)
 
-  def isGithubServerType: Boolean
+  def isGithubServerType(): Boolean
   /**
    * The access-token value to use for accessing the SCM Rest api.
    */
-  lazy val accessTokenValue: String = Option(play.Play.application.configuration.getString(accessTokenProperty)) match {
-    case None =>
-      logger.error(s"Configuration($accessTokenProperty) for the client is missing")
-      "Error"
-    case Some(token) if token.isEmpty =>
-      logger.warn(s"$accessTokenProperty property is empty, configure a token -> $accessTokenProperty=token")
-      token
-    case Some(token) =>
-      logger.info(s"Loaded Token configuration from $accessTokenProperty")
-      token
-  }
+  def accessTokenValue(host: String): String = authTokens.getOrElse(host, "")
+
 }
 
-object GithubResolver extends SCMResolver {
-  def name = "github"
-  private val apiAntecedent = "https://api."
-  private val antecedent = "https://"
-  def commits(host: String, project: String, repository: String) = s"$apiAntecedent$host/repos/$project/$repository/commits"
-  def commit(host: String, project: String, repository: String, id: String): String = s"$apiAntecedent$host/repos/$project/$repository/commits/$id"
-  def tickets(host: String, project: String, repository: String): String = s"$apiAntecedent$host/repos/$project/$repository/commits"
+@Singleton
+class GithubResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
+  private val logger: Logger = Logger(this.getClass())
+  def hostType = "github"
 
-  def repo(host: String, project: String, repository: String) = s"$apiAntecedent$host/repos/$project/$repository"
-  def repoUrl(host: String, project: String, repository: String) = s"$antecedent$host/$project/$repository"
-  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"$antecedent$host/$project/$repository/compare/$source...$target"
+  def config() = config
 
-  def accessTokenQueryParameter = ("access_token" -> accessTokenValue)
+  def commits(host: String, project: String, repository: String) = {
+    val antecedent = antecedents(host)
+    s"$antecedent$host/repos/$project/$repository/commits"
+  }
+  def commit(host: String, project: String, repository: String, id: String): String = {
+    val antecedent = antecedents(host)
+    s"$antecedent$host/repos/$project/$repository/commits/$id"
+  }
+
+  def repo(host: String, project: String, repository: String) = {
+    val antecedent = antecedents(host)
+    s"$antecedent$host/repos/$project/$repository"
+  }
+  def repoUrl(host: String, project: String, repository: String) =
+    if (hosts.contains(host))
+      s"https://$host/$project/$repository"
+    else
+      "" // I do not like it either( Option should be used instead)
+
+  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
+    val antecedent = antecedents(host)
+    s"$antecedent$host/$project/$repository/compare/$source...$target"
+  }
+
+  def accessTokenHeader(host: String) = ("access_token" -> accessTokenValue(host))
+  def authUserHeaderParameter(host: String): (String, String) = ("" -> "")
   // SCM Specific mappings
-  def maximumPerPageQueryPararmeter = ("per_page" -> "100")
-  def isGithubServerType: Boolean = true
+  def maximumPerPageQueryParameter = ("per_page" -> "100")
+  def isGithubServerType(): Boolean = true
   def sinceCommitQueryParameter(since: String) = ("date" -> since)
   def startAtPageNumber(pageNr: Int) = ("page" -> pageNr.toString())
 }
 
-object StashResolver extends SCMResolver {
-  def name = "stash"
-  private val antecedent = "https://"
-  def commits(host: String, project: String, repository: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits"
-  def commit(host: String, project: String, repository: String, id: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits/$id"
-  def tickets(host: String, project: String, repository: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits"
+@Singleton
+class StashResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
+  private val logger: Logger = Logger(this.getClass())
+  def hostType = "stash"
+  def config() = config
 
-  def repo(host: String, project: String, repository: String) = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository"
-  def repoUrl(host: String, project: String, repository: String) = repo(host, project, repository)
-  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
+  def commits(host: String, project: String, repository: String) = {
+    val antecedent = antecedents(host)
+    s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits"
+  }
+  def commit(host: String, project: String, repository: String, id: String): String = {
+    val antecedent = antecedents(host)
+    s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits/$id"
+  }
 
+  def repo(host: String, project: String, repository: String) = {
+    val antecedent = antecedents(host)
+    s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository"
+  }
+  def repoUrl(host: String, project: String, repository: String) = {
+    if (hosts.contains(host))
+      s"https://$host/projects/$project/repos/$repository/browse"
+    else
+      ""
+  }
+  def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
+    val antecedent = antecedents(host)
+    s"https://$host/rest/api/1.0/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
+  }
   // Authorization variables
-  def accessTokenQueryParameter = ("X-Auth-Token" -> accessTokenValue)
-  def maximumPerPageQueryPararmeter = ("limit" -> "10000")
+  def accessTokenHeader(host: String) = ("X-Auth-Token" -> accessTokenValue(host))
+  def authUserHeaderParameter(host: String): (String, String) = ("X-Auth-User" -> authUser(host))
+
+  def maximumPerPageQueryParameter() = ("limit" -> "10000")
   def isGithubServerType: Boolean = false
   def sinceCommitQueryParameter(since: String) = ("since" -> since)
   def startAtPageNumber(pageNr: Int) = ("start" -> (pageNr - 1).toString())
-
 }

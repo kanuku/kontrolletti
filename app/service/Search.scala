@@ -93,17 +93,6 @@ trait Search {
    */
   def diff(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]]
 
-  /**
-   * Fetches the tickets from.
-   * @param host hostname/IP-address of the SCM server
-   * @param project name of the project
-   * @param repository name of the repository
-   * @param since Includes tickets from this commit
-   * @param until Until tickets from this commit
-   *
-   * @return Either a Left with an error or a Right containing an Option with the List of found tickets or None if the repository does not exist(404).
-   */
-  def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Ticket]]]]
 }
 
 /**
@@ -182,14 +171,6 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
           case false => None
         }
       }
-    }
-  }
-  def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String]): Future[Either[String, Option[List[Ticket]]]] = {
-    logger.info(s"tickets: $host - $project - $repository - $since - $until")
-    resolveParser(host) match {
-      //TODO This should go to our local datastore
-      case Right(scmParser) => handleRequest(scmParser.ticketToModel, client.tickets(host, project, repository))
-      case Left(error)      => Future.successful(Left(error))
     }
   }
 

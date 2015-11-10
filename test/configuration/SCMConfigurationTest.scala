@@ -10,16 +10,28 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
 
   implicit override lazy val app = fakeApplication
 
+  //ServerTypes
+  val stashType = "stash"
+  val githubType = "github"
+
+  //Hosts
+  val githubCom = "github.com"
+  val githubEnterprise = "g-e-company.com"
+  val githubMyCompany = "my-company.io"
+  val stashCom = "stash.com"
+  val stashPrivate = "stash-company.com"
+  val stashMyCompany = "stash-company.io"
+
   override def configuration: Map[String, _] = Map(
     // Client hosts Github-type
-    "client.scm.github.host.0" -> "github.com", // Server Github
-    "client.scm.github.host.1" -> "g-e-company.com", // Server Github-Enterprise1
-    "client.scm.github.host.2" -> "my-company.io", // Server Github-Enterprise2
+    "client.scm.github.host.0" -> githubCom, // Server Github
+    "client.scm.github.host.1" -> githubEnterprise, // Server Github-Enterprise1
+    "client.scm.github.host.2" -> githubMyCompany, // Server Github-Enterprise2
 
     // Client hosts Stash-type
-    "client.scm.stash.host.0" -> "stash.com", // Server Stash1
-    "client.scm.stash.host.1" -> "stash-ama.com", // Server Stash2
-    "client.scm.stash.host.2" -> "stash-company.io", // Server Stash3
+    "client.scm.stash.host.0" -> stashCom, // Server Stash1
+    "client.scm.stash.host.1" -> stashPrivate, // Server Stash2
+    "client.scm.stash.host.2" -> stashMyCompany, // Server Stash3
 
     //Rest API precedent Github-type
     "client.scm.github.urlPrecedent.0" -> "https://api.", // Server Github
@@ -48,67 +60,67 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
     )
 
   "OAuthConfiguration#hosts" should {
-    "return hosts configured" in {
-      scmConfig.hosts("github") should have size 3
-      scmConfig.hosts("github") should contain("github.com")
-      scmConfig.hosts("github") should contain("g-e-company.com")
-      scmConfig.hosts("github") should contain("my-company.io")
-      scmConfig.hosts("github") should not contain ("does-not-exist.io")
-
-      scmConfig.hosts("stash") should have size 3
-      scmConfig.hosts("stash") should contain("stash.com")
-      scmConfig.hosts("stash") should contain("stash-ama.com")
-      scmConfig.hosts("stash") should contain("stash-company.io")
-      scmConfig.hosts("stash") should not contain ("does-not-exist.io")
+    "return github hosts are configured" in {
+      val result = scmConfig.hosts(githubType)
+      result.size shouldBe 3
+      result(githubCom) shouldBe 0
+      result(githubEnterprise) shouldBe 1
+      result(githubMyCompany) shouldBe 2
+    }
+    "return stash hosts are configured" in {
+      val result = scmConfig.hosts(stashType)
+      result.size shouldBe 3
+      result(stashCom) shouldBe 0
+      result(stashPrivate) shouldBe 1
+      result(stashMyCompany) shouldBe 2
 
       scmConfig.hosts("noon") shouldBe empty
     }
   }
 
   "OAuthConfiguration#urlPrecedent" should {
-    "return the precedents for the corresponding scm server" in {
+    "return the precedents for the github type" in {
       //Github
-      scmConfig.urlPrecedent("github") should have size 3
-      scmConfig.urlPrecedent("github") should contain("https://api.")
-      scmConfig.urlPrecedent("github") should contain("https://")
-      scmConfig.urlPrecedent("github") should contain("http://")
-      scmConfig.urlPrecedent("github") should not contain ("ssh://")
+      val result = scmConfig.urlPrecedent(githubType)
+      result.size shouldBe 3
+      result(0) shouldBe "https://api."
+      result(1) shouldBe "https://"
+      result(2) shouldBe "http://"
+    }
+    "return the precedents for the stash type" in {
       //Stash
-      scmConfig.urlPrecedent("stash") should have size 3
-      scmConfig.urlPrecedent("stash") should contain("https://server.")
-      scmConfig.urlPrecedent("stash") should contain("ftp://")
-      scmConfig.urlPrecedent("stash") should contain("ssh://")
-      scmConfig.urlPrecedent("stash") should not contain ("https://")
-
-      scmConfig.urlPrecedent("none") shouldBe empty
-
+      val result = scmConfig.urlPrecedent(stashType)
+      result.size shouldBe 3
+      result(0) shouldBe "https://server."
+      result(1) shouldBe "ftp://"
+      result(2) shouldBe "ssh://"
     }
   }
 
   "OAuthConfiguration#authToken" should {
-    "Return auth-token for corresponding scm server" in {
-      scmConfig.authToken("github") should contain("GithubAccessToken0")
-      scmConfig.authToken("github") should contain("GithubAccessToken1")
-      scmConfig.authToken("github") should contain("GithubAccessToken2")
-      scmConfig.authToken("github") should not contain ("none-existent")
-
-      scmConfig.authToken("stash") should contain("StashAccessToken0")
-      scmConfig.authToken("stash") should contain("StashAccessToken1")
-      scmConfig.authToken("stash") should contain("StashAccessToken2")
-      scmConfig.authToken("stash") should not contain ("none-existent")
-
-      scmConfig.authToken("none") shouldBe empty
+    "Return auth-token for corresponding scm server type (github)" in {
+      val result = scmConfig.authToken(githubType)
+      result.size shouldBe 3
+      result(0) shouldBe "GithubAccessToken0"
+      result(1) shouldBe "GithubAccessToken1"
+      result(2) shouldBe "GithubAccessToken2"
+    }
+    "Return auth-token for corresponding scm server type (stash)" in {
+      val result = scmConfig.authToken(stashType)
+      result.size shouldBe 3
+      result(0) shouldBe "StashAccessToken0"
+      result(1) shouldBe "StashAccessToken1"
+      result(2) shouldBe "StashAccessToken2"
     }
   }
 
   "OAuthConfiguration#authUser" should {
     "Return user for the corresponding scm server" in {
-      scmConfig.authUser("stash") should contain("StashUser0")
-      scmConfig.authUser("stash") should contain("StashUser1")
-      scmConfig.authUser("stash") should contain("StashUser2")
-
-      scmConfig.authUser("none") shouldBe empty
+      val result = scmConfig.authUser(stashType)
+      result.size shouldBe 3
+      result(0) shouldBe "StashUser0"
+      result(1) shouldBe "StashUser1"
+      result(2) shouldBe "StashUser2"
     }
-
   }
 }
