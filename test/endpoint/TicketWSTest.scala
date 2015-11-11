@@ -54,7 +54,7 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with Kon
 
       when(commitRepository.tickets(host, project, repo, sinceId, untilId, None, None)).thenReturn(ticketResult)
 
-      val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
+      val Some(result) = route(FakeRequest(GET, url).withHeaders(authorizationHeader))
       status(result) mustEqual OK
       contentType(result) mustEqual Some("application/x.zalando.ticket+json")
       contentAsString(result) mustEqual Json.stringify(Json.toJson(List(ticket)))
@@ -68,7 +68,7 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with Kon
 
       when(commitRepository.tickets(host, project, repo, sinceId, untilId, None, None)).thenReturn(Future.successful(Nil))
 
-      val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
+      val Some(result) = route(FakeRequest(GET, url).withHeaders(authorizationHeader))
       status(result) mustEqual NOT_FOUND
 
       verify(commitRepository, times(2)).tickets(host, project, repo, sinceId, untilId, None, None)

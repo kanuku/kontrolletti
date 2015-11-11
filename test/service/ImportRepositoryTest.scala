@@ -78,12 +78,12 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
 
   "ImportRepository#removeDuplicates" should "return Collection without duplicates" in {
     val r1 = new Repository("url1", "host1", "project1", "repository1", true, None, None, None)
-    val r2 = new Repository(null, "host2", "project2", "repository2", true, None, None, None)
-    val r3 = new Repository(null, "host3", "project3", "repository3", true, None, None, None)
-    val r4 = new Repository(null, "host4", "project4", "repository4", true, None, None, None)
-    val r5 = new Repository(null, "host5", "project5", "repository5", true, None, None, None)
-    val d1 = new Repository(null, "host1", "project1", "repository1", true, None, None, None)
-    val d4 = new Repository(null, "host4", "project4", "repository4", true, None, None, None)
+    val r2 = new Repository("", "host2", "project2", "repository2", true, None, None, None)
+    val r3 = new Repository("", "host3", "project3", "repository3", true, None, None, None)
+    val r4 = new Repository("", "host4", "project4", "repository4", true, None, None, None)
+    val r5 = new Repository("", "host5", "project5", "repository5", true, None, None, None)
+    val d1 = new Repository("", "host1", "project1", "repository1", true, None, None, None)
+    val d4 = new Repository("", "host4", "project4", "repository4", true, None, None, None)
     val result = repoImporter.removeDuplicates(List(r1, r2, r3, r4, r5, d1, d4))
 
     result.size shouldBe 5
@@ -97,13 +97,13 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
   }
   "ImportRepository#notInRightHandFilter" should "return Collection without duplicates" in {
     val r1 = new Repository("url1", "host1", "project1", "repository1", true, None, None, None)
-    val r2 = new Repository(null, "host2", "project2", "repository2", true, None, None, None)
-    val r3 = new Repository(null, "host3", "project3", "repository3", true, None, None, None)
-    val r4 = new Repository(null, "host4", "project4", "repository4", true, None, None, None)
-    val r5 = new Repository(null, "host5", "project5", "repository5", true, None, None, None)
+    val r2 = new Repository("", "host2", "project2", "repository2", true, None, None, None)
+    val r3 = new Repository("", "host3", "project3", "repository3", true, None, None, None)
+    val r4 = new Repository("", "host4", "project4", "repository4", true, None, None, None)
+    val r5 = new Repository("", "host5", "project5", "repository5", true, None, None, None)
     val left = List(r1, r2, r3)
     val right = List(r2, r4, r5)
-    var result = Await.result(repoImporter.notInRightHandFilter(left, right), Duration("50 seconds"))
+    val result = Await.result(repoImporter.notInRightHandFilter(left, right), Duration("50 seconds"))
     result.size shouldBe 2
     result.contains(r1)
     result.contains(r3)
@@ -114,7 +114,7 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
   }
   "ImportRepository#reposAreEqual" should "evaluate equality of the repositories" in {
     val r1 = new Repository("url1", "host1", "project1", "repository1", true, None, None, None)
-    val r2 = new Repository(null, "host2", "project2", "repository2", true, None, None, None)
+    val r2 = new Repository("url2", "host2", "project2", "repository2", true, None, None, None)
     repoImporter.reposAreEqual(r1, r2) shouldBe false
     repoImporter.reposAreEqual(r2, r2) shouldBe true
     repoImporter.reposAreEqual(r1, r1) shouldBe true

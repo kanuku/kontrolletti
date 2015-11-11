@@ -1,36 +1,24 @@
 package service
 
-import scala.Left
-import scala.Right
-import scala.concurrent.Await
-import scala.concurrent.Future
+import scala.{ Left, Right }
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
-
-import org.mockito.Mockito.reset
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.when
-import org.scalatest.BeforeAndAfter
-import org.scalatest.FlatSpec
+import org.mockito.Mockito.{ reset, times, verify, when }
+import org.scalatest.{ BeforeAndAfter, FlatSpec }
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneAppPerSuite
-
 import com.google.inject.ImplementedBy
-
 import client.RequestDispatcherImpl
-import client.scm.SCM
-import client.scm.SCMImpl
+import client.scm.{ GithubResolver, SCM, SCMImpl, SCMResolver, StashResolver }
 import configuration.GeneralConfiguration
-import javax.inject.Inject
-import javax.inject.Singleton
+import javax.inject.{ Inject, Singleton }
 import model.Link
-import play.api.libs.ws.WSClient
-import play.api.libs.ws.WSResponse
-import test.util.ConfigurableFakeApp
-import test.util.MockitoUtils
-import test.util.TestUtils.assertEitherIsLeft
-import test.util.TestUtils.assertEitherIsNotNull
-import test.util.TestUtils.assertEitherIsRight
+import play.api.libs.ws.{ WSClient, WSResponse }
+import test.util.{ ConfigurableFakeApp, MockitoUtils }
+import test.util.TestUtils.{ assertEitherIsLeft, assertEitherIsNotNull, assertEitherIsRight }
+import configuration.SCMConfigurationImpl
+import test.util.ConfigurationDefaults.SCMConfigurationDefaults._
+
 /**
  * This class tests the interaction between the Service and the Client(mock).
  */
@@ -45,6 +33,9 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
   val targetId = "targetId"
   val commitId = "commitId"
   val client = mock[SCM]
+  val conf = new SCMConfigurationImpl
+  val githubResolver = new GithubResolver(conf)
+  val stashResolver = new StashResolver(conf)
   val search: Search = new SearchImpl(client)
 
   implicit override lazy val app = fakeApplication
@@ -57,7 +48,6 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
     val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
     when(client.commits(host, project, repository, None, None, 1)).thenReturn(response)
     val result = Await.result(search.commits(host, project, repository, None, None, 1), Duration("5 seconds"))
-    println(">>>>>>  " + result)
     assertEitherIsRight(result)
     assertEitherIsNotNull(result)
     assert(!result.right.get.isEmpty, "Result must not be empty")
@@ -144,15 +134,15 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
 
   "Search#normalize" should "normalize the github URL" in {
     val url = "https://github.com/zalando-bus/kontrolletti"
-    val client = new SCMImpl(new RequestDispatcherImpl(mock[WSClient], mock[GeneralConfiguration]))
+    val client = new SCMImpl(new RequestDispatcherImpl(mock[WSClient], mock[GeneralConfiguration]), githubResolver, stashResolver)
     val search = new SearchImpl(client)
     assert(search.normalize(host, project, repository) == url)
   }
   "Search#normalize" should "normalize the stash URL" in {
-    val url = "https://stash.zalando.net/rest/api/1.0/projects/zalando-bus/repos/kontrolletti"
-    val client = new SCMImpl(new RequestDispatcherImpl(mock[WSClient], mock[GeneralConfiguration]))
+    val url = "https://stash.com/projects/zalando-bus/repos/kontrolletti/browse"
+    val client = new SCMImpl(new RequestDispatcherImpl(mock[WSClient], mock[GeneralConfiguration]), githubResolver, stashResolver)
     val search = new SearchImpl(client)
-    assert(search.normalize("stash.zalando.net", project, repository) == url)
+    assert(search.normalize("stash.com", project, repository) == url)
   }
 
   "Search#isRepo" should "return true when http-result is a 200 response" in {
@@ -222,35 +212,5 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
     verify(client, times(1)).diffUrl(host, project, repository, sourceId, targetId)
     verify(client, times(1)).head(host, url)
   }
-  "Search#tickets" should " return repositories when the result is not Empty" in {
-    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
-    when(client.tickets(host, project, repository)).thenReturn(response)
-    val result = Await.result(search.tickets(host, project, repository, None, None), Duration("5 seconds"))
-    assertEitherIsRight(result)
-    assertEitherIsNotNull(result)
-    assert(result.right.get != null)
-    assert(!result.right.get.isEmpty, "Result must not be empty")
-    verify(client, times(1)).tickets(host, project, repository)
-  }
-  it should " return empty List when the result is 404" in {
-    val response: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 404)
-    when(client.tickets(host, project, repository)).thenReturn(response)
-    val result = Await.result(search.tickets(host, project, repository, None, None), Duration("5 seconds"))
-    assertEitherIsRight(result)
-    assertEitherIsNotNull(result)
-    assert(result.right.get != null)
-    assert(result.right.get.isEmpty, "Result must be empty")
-    verify(client, times(1)).tickets(host, project, repository)
-  }
-  it should " return error when an exception occurs" in {
-    when(client.tickets(host, project, repository)).thenThrow(new RuntimeException())
-    val result = Await.result(search.tickets(host, project, repository, None, None), Duration("5 seconds"))
-    assertEitherIsLeft(result)
-    assertEitherIsNotNull(result)
-    assert(result == Left(defaultError), f"Result should be [$defaultError]")
-    verify(client, times(1)).tickets(host, project, repository)
-  }
-  override def configuration: Map[String, _] = Map(
-    "client.stash.host" -> "stash.zalando.net",
-    "client.github.host" -> "github.com")
+  override def configuration: Map[String, _] = scmConfigurations
 }

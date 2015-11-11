@@ -21,15 +21,22 @@ import configuration.GeneralConfiguration
  * we(you) can easily mock the calls to isolate and simplify the unit tests.
  */
 trait RequestDispatcher {
-
   def requestHolder(url: String): WSRequest
 }
 
 @Singleton
 class RequestDispatcherImpl @Inject() (client: WSClient, config: GeneralConfiguration) extends RequestDispatcher {
   val logger: Logger = Logger(this.getClass())
+
+  val client2 = {
+    val builder = new com.ning.http.client.AsyncHttpClientConfig.Builder()
+    builder.setAcceptAnyCertificate(true)
+    new play.api.libs.ws.ning.NingWSClient(builder.build())
+  }
+
   def requestHolder(url: String): WSRequest = {
     logger.info(s"Creating an dispatcher for $url")
-    client.url(url).withRequestTimeout(config.defaultClientTimeout.toLong)
+    client2.url(url).withRequestTimeout(config.defaultClientTimeout.toLong)
   }
+
 }
