@@ -13,12 +13,24 @@ import configuration.SCMConfiguration
  * The idea of this trait is to minimize the gap between the communication with different SCMs.
  */
 sealed trait SCMResolver {
-  private val logger: Logger = Logger(this.getClass())
+  val logger: Logger = Logger(this.getClass())
   def hostType: String
 
-  lazy val antecedents: Map[String, String] = combineMap(config().urlPrecedent(hostType))
-  lazy val authTokens: Map[String, String] = combineMap(config.authToken(hostType))
-  lazy val authUsers: Map[String, String] = combineMap(config.authUser(hostType))
+  lazy val antecedents: Map[String, String] = {
+    val result = combineMap(config().urlPrecedent(hostType))
+    logger.info(s"Loaded antecedentes for $hostType:" + result.size)
+    result
+  }
+  lazy val authTokens: Map[String, String] = {
+    val result = combineMap(config().authToken(hostType))
+    logger.info(s"Loaded authToken for $hostType:" + result.size)
+    result
+  }
+  lazy val authUsers: Map[String, String] = {
+    val result = combineMap(config().authUser(hostType))
+    logger.info(s"Loaded authUser for $hostType:" + result.size)
+    result
+  }
 
   private def combineMap(input: Map[Int, String]) = for {
     (host, key) <- hosts
@@ -147,7 +159,6 @@ sealed trait SCMResolver {
 
 @Singleton
 class GithubResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
-  private val logger: Logger = Logger(this.getClass())
   def hostType = "github"
 
   def config() = config
@@ -183,7 +194,7 @@ class GithubResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
 
 @Singleton
 class StashResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
-  private val logger: Logger = Logger(this.getClass())
+
   def hostType = "stash"
   def config() = config
 
