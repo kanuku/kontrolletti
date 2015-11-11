@@ -113,7 +113,7 @@ class SCMResolverTest extends PlaySpec //
   "Resolver#repoUrl" should {
     "return Github's repo-URL" in {
       github.repoUrl(ghost, project, repo) shouldBe s"https://$ghost/$project/$repo"
-      github.repoUrl("nothing.com", project, repo) shouldBe ""
+      github.repoUrl("nothing.com", project, repo) shouldBe s"https://nothing.com/$project/$repo"
 
     }
     "return Github-Enterprise's repo-URL" in {
@@ -121,7 +121,7 @@ class SCMResolverTest extends PlaySpec //
     }
     "return Stash's repo-URL" in {
       stash.repoUrl(shost, project, repo) shouldBe s"https://$shost/projects/$project/repos/$repo/browse"
-      stash.repoUrl("nothing.com", project, repo) shouldBe ""
+      stash.repoUrl("nothing.com", project, repo) shouldBe s"https://nothing.com/projects/$project/repos/$repo/browse"
     }
   }
 

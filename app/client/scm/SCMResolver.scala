@@ -165,11 +165,7 @@ class GithubResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
     val antecedent = antecedents(host)
     s"$antecedent$host/repos/$project/$repository"
   }
-  def repoUrl(host: String, project: String, repository: String) =
-    if (hosts.contains(host))
-      s"https://$host/$project/$repository"
-    else
-      "" // I do not like it either( Option should be used instead)
+  def repoUrl(host: String, project: String, repository: String) = s"https://$host/$project/$repository"
 
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
     val antecedent = antecedents(host)
@@ -204,12 +200,8 @@ class StashResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
     val antecedent = antecedents(host)
     s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository"
   }
-  def repoUrl(host: String, project: String, repository: String) = {
-    if (hosts.contains(host))
-      s"https://$host/projects/$project/repos/$repository/browse"
-    else
-      ""
-  }
+  def repoUrl(host: String, project: String, repository: String) = s"https://$host/projects/$project/repos/$repository/browse"
+
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
     val antecedent = antecedents(host)
     s"https://$host/rest/api/1.0/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
