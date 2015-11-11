@@ -118,10 +118,11 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
         .requestHolder(url) //
         .withQueryString(res.maximumPerPageQueryParameter()) //
         .withQueryString(res.startAtPageNumber(pageNr))
+        .withHeaders(res.authUserHeaderParameter(host))
         .withHeaders(res.accessTokenHeader(host))
     }
     val token = Option(res.accessTokenValue(host))
-    if (!token.isDefined || token.isEmpty) {
+    if (token == Some("") || !token.isDefined || token.isEmpty) {
       logger.error("No tokens configured for host " + host)
     }
     if (since.isDefined) {
