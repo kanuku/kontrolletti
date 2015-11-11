@@ -37,7 +37,12 @@ class KioClientImpl @Inject() (dispatcher: RequestDispatcher, //
   private val logger: Logger = Logger { this.getClass }
   private val transformer = Transformer
   private implicit val repositoryReader: Reads[Repository] = (
-    (JsPath \ "scm_url").readNullable[String].map { _.getOrElse("") } 
+    /*
+     *  Avoid importing repositories like: "https://stash.zalando.net/projects/STUPS/repos/zmon-appliance/browse"
+     *  Hence that url should be lowercased.
+     */
+
+    (JsPath \ "scm_url").readNullable[String].map { _.getOrElse("").toLowerCase() }
     and Reads.pure("") //
     and Reads.pure("") //
     and Reads.pure("") //
@@ -66,5 +71,3 @@ class KioClientImpl @Inject() (dispatcher: RequestDispatcher, //
   }
 
 }
-
- 
