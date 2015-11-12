@@ -23,24 +23,25 @@ class RepoWS @Inject() (searchService: Search, repoRepository: RepoRepository) e
   val logger: Logger = Logger { this.getClass }
 
   def normalize(repositoryUrl: String) = Action.async {
-    val url = UriEncoding.decodePath(repositoryUrl, "UTF-8")
-    logger.info(s"Request(Normalize): $url")
+    val originalURL = UriEncoding.decodePath(repositoryUrl, "UTF-8").toLowerCase()
+    logger.info(s"Request(Normalize): $originalURL")
 
-    searchService.parse(url) match {
+    searchService.parse(originalURL) match {
       case Left(error) =>
         logger.info("Result: 400:" + error)
         Future.successful(BadRequest)
 
       case Right((host, project, repo)) =>
-        val normalizedUrl = searchService.normalize(host, project, repo)
+        val normalizedUrl = searchService.normalize(host, project, repo).toLowerCase()
         logger.info(s"Normalized url $normalizedUrl")
+        val encodedURL = URLEncoder.encode(normalizedUrl, "UTF-8")
         searchService.isRepo(host, project, repo).map {
-          case Right(result) if (result && normalizedUrl.equals(url)) =>
+          case Right(result) if (result && normalizedUrl.equals(originalURL)) =>
             logger.info(s"Result: 200 $normalizedUrl")
-            Ok
+            Ok.withHeaders(X_NORMALIZED_REPOSITORY_URL_HEADER -> encodedURL)
           case Right(result) if result =>
             logger.info(s"Result: 301 $normalizedUrl")
-            MovedPermanently(routes.RepoWS.byUrl(URLEncoder.encode(normalizedUrl, "UTF-8")).url)
+            MovedPermanently(routes.RepoWS.byUrl(encodedURL).url).withHeaders(X_NORMALIZED_REPOSITORY_URL_HEADER -> encodedURL)
           case Left(error) =>
             logger.warn(s"Result: 500 $normalizedUrl")
             InternalServerError.as("application/problem+json")
