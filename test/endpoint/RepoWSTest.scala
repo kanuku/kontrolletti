@@ -59,7 +59,7 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
       val result = route(FakeRequest(HEAD, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual OK
       header(LOCATION, result) mustBe empty
-      header(X_NORMALIZED_REPOSITORY_URL_HEADER, result) mustBe Some(X_NORMALIZED_REPOSITORY_URL_HEADER -> defaultUrl)
+      header(X_NORMALIZED_REPOSITORY_URL_HEADER, result) mustBe Some(URLEncoder.encode(defaultUrl, "UTF-8"))
       contentAsString(result) mustBe empty
 
       verify(search, times(1)).parse(defaultUrl)
@@ -94,7 +94,7 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
 
       val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl").withHeaders(authorizationHeader)).get
       status(result) mustEqual MOVED_PERMANENTLY
-      header(X_NORMALIZED_REPOSITORY_URL_HEADER, result) mustBe Some(X_NORMALIZED_REPOSITORY_URL_HEADER -> defaultUrl)
+      header(X_NORMALIZED_REPOSITORY_URL_HEADER, result) mustBe Some(URLEncoder.encode(defaultUrl, "UTF-8"))
       header(LOCATION, result) === Some(LOCATION -> s"$reposRoute$encodedAlternativeUrl")
       contentAsString(result) mustBe empty
 
