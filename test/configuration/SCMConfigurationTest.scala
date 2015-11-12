@@ -33,7 +33,7 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
     "client.scm.stash.host.1" -> stashPrivate, // Server Stash2
     "client.scm.stash.host.2" -> stashMyCompany, // Server Stash3
 
-    //Rest API precedent Github-type
+    //Rest API Succeeder Github-type
     "client.scm.github.urlPrecedent.0" -> "https://api.", // Server Github
     "client.scm.github.urlPrecedent.1" -> "https://", // Server Github-Enterprise1
     "client.scm.github.urlPrecedent.2" -> "http://", // Server Github-Enterprise2
@@ -42,6 +42,16 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
     "client.scm.stash.urlPrecedent.0" -> "https://server.", // Server Stash1
     "client.scm.stash.urlPrecedent.1" -> "ftp://", // Server  Stash2 (Unrealistic precedent)
     "client.scm.stash.urlPrecedent.2" -> "ssh://", // Server Stash3(Unrealistic)
+
+    //Rest API precedent Github-type
+    "client.scm.github.urlSucceeder.0" -> "", // Server Github
+    "client.scm.github.urlSucceeder.1" -> "/api/v3", // Server Github-Enterprise1
+    "client.scm.github.urlSucceeder.2" -> "/api/v4", // Server Github-Enterprise2 (Unrealistic)
+
+    //Rest API precedent Stash-type
+    "client.scm.stash.urlSucceeder.0" -> "/rest/api/1.0", // Server Stash1
+    "client.scm.stash.urlSucceeder.1" -> "/rest/api/1.1", // Server  Stash2
+    "client.scm.stash.urlSucceeder.2" -> "/rest/api/1.2", // Server Stash3
 
     //Auth-tokens Github-type
     "client.scm.github.authToken.0" -> "GithubAccessToken0", // Server Github
@@ -94,6 +104,24 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
       result(0) shouldBe "https://server."
       result(1) shouldBe "ftp://"
       result(2) shouldBe "ssh://"
+    }
+  }
+  "OAuthConfiguration#urlSucceeder" should {
+    "return the succeeders for the github type" in {
+      //Github
+      val result = scmConfig.urlSucceeder(githubType)
+      result.size shouldBe 3
+      result(0) shouldBe ""
+      result(1) shouldBe "/api/v3"
+      result(2) shouldBe "/api/v4"
+    }
+    "return the succeeders for the stash type" in {
+      //Stash
+      val result = scmConfig.urlSucceeder(stashType)
+      result.size shouldBe 3
+      result(0) shouldBe "/rest/api/1.0"
+      result(1) shouldBe "/rest/api/1.1"
+      result(2) shouldBe "/rest/api/1.2"
     }
   }
 
