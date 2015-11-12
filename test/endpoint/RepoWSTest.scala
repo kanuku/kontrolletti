@@ -89,7 +89,7 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
       val existsResponse = Future.successful(Right(true))
 
       when(search.parse(alternativeUrl)).thenReturn(parsedResponse)
-      when(search.normalize(host, project, repoName)).thenReturn(s"/projects/$project/repos/$repoName")
+      when(search.normalize(host, project, repoName)).thenReturn(s"https://github.com/$project/$repoName")
       when(search.isRepo(host, project, repoName)).thenReturn(existsResponse)
 
       val result = route(FakeRequest(HEAD, s"$reposRoute$encodedAlternativeUrl").withHeaders(authorizationHeader)).get
