@@ -18,7 +18,12 @@ sealed trait SCMResolver {
 
   lazy val antecedents: Map[String, String] = {
     val result = combineMap(config().urlPrecedent(hostType))
-    logger.info(s"Loaded antecedentes for $hostType:" + result.size)
+    logger.info(s"Loaded URL-antecedentes for $hostType:" + result.size)
+    result
+  }
+  lazy val succeeders: Map[String, String] = {
+    val result = combineMap(config().urlSucceeder(hostType))
+    logger.info(s"Loaded URL-succeeders for $hostType:" + result.size)
     result
   }
   lazy val authTokens: Map[String, String] = {
@@ -165,16 +170,19 @@ class GithubResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
 
   def commits(host: String, project: String, repository: String) = {
     val antecedent = antecedents(host)
-    s"$antecedent$host/repos/$project/$repository/commits"
+    val succeeder = succeeders(host)
+    s"$antecedent$host$succeeder/repos/$project/$repository/commits"
   }
   def commit(host: String, project: String, repository: String, id: String): String = {
     val antecedent = antecedents(host)
-    s"$antecedent$host/repos/$project/$repository/commits/$id"
+    val succeeder = succeeders(host)
+    s"$antecedent$host$succeeder/repos/$project/$repository/commits/$id"
   }
 
   def repo(host: String, project: String, repository: String) = {
     val antecedent = antecedents(host)
-    s"$antecedent$host/repos/$project/$repository"
+    val succeeder = succeeders(host)
+    s"$antecedent$host$succeeder/repos/$project/$repository"
   }
   def repoUrl(host: String, project: String, repository: String) = s"https://$host/$project/$repository"
 
@@ -200,22 +208,26 @@ class StashResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
 
   def commits(host: String, project: String, repository: String) = {
     val antecedent = antecedents(host)
-    s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits"
+    val succeeder = succeeders(host)
+    s"$antecedent$host$succeeder/projects/$project/repos/$repository/commits"
   }
   def commit(host: String, project: String, repository: String, id: String): String = {
     val antecedent = antecedents(host)
-    s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository/commits/$id"
+    val succeeder = succeeders(host)
+    s"$antecedent$host$succeeder/projects/$project/repos/$repository/commits/$id"
   }
 
   def repo(host: String, project: String, repository: String) = {
     val antecedent = antecedents(host)
-    s"$antecedent$host/rest/api/1.0/projects/$project/repos/$repository"
+    val succeeder = succeeders(host)
+    s"$antecedent$host$succeeder/projects/$project/repos/$repository"
   }
   def repoUrl(host: String, project: String, repository: String) = s"https://$host/projects/$project/repos/$repository/browse"
 
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
     val antecedent = antecedents(host)
-    s"https://$host/rest/api/1.0/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
+    val succeeder = succeeders(host)
+    s"https://$host$succeeder/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
   }
   // Authorization variables
   def accessTokenHeader(host: String) = ("X-Auth-Token" -> accessTokenValue(host))

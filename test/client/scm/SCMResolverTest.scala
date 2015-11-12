@@ -67,7 +67,7 @@ class SCMResolverTest extends PlaySpec //
       github.commits(ghost, project, repo) shouldBe s"https://api.$ghost/repos/$project/$repo/commits"
     }
     "return Github-Enterprise's commits endpoint" in {
-      github.commits(ghehost, project, repo) shouldBe s"https://$ghehost/repos/$project/$repo/commits"
+      github.commits(ghehost, project, repo) shouldBe s"https://$ghehost/api/v3/repos/$project/$repo/commits"
     }
     "refere to Stash's commits endpoint" in {
       stash.commits(shost, project, repo) shouldBe s"https://$shost/rest/api/1.0/projects/$project/repos/$repo/commits"
@@ -79,7 +79,7 @@ class SCMResolverTest extends PlaySpec //
       github.commit(ghost, project, repo, id) shouldBe s"https://api.$ghost/repos/$project/$repo/commits/$id"
     }
     "refere to Github-Enterprise's commit endpoint" in {
-      github.commit(ghehost, project, repo, id) shouldBe s"https://$ghehost/repos/$project/$repo/commits/$id"
+      github.commit(ghehost, project, repo, id) shouldBe s"https://$ghehost/api/v3/repos/$project/$repo/commits/$id"
     }
     "refere to Stash's commit endpoint" in {
       stash.commit(shost, project, repo, id) shouldBe s"https://$shost/rest/api/1.0/projects/$project/repos/$repo/commits/$id"
@@ -91,7 +91,7 @@ class SCMResolverTest extends PlaySpec //
       github.repo(ghost, project, repo) shouldBe s"https://api.$ghost/repos/$project/$repo"
     }
     "refere to Github-Enterprise's repo endpoint" in {
-      github.repo(ghehost, project, repo) shouldBe s"https://$ghehost/repos/$project/$repo"
+      github.repo(ghehost, project, repo) shouldBe s"https://$ghehost/api/v3/repos/$project/$repo"
     }
     "refere to Stash's repo endpoint" in {
       stash.repo(shost, project, repo) shouldBe s"https://$shost/rest/api/1.0/projects/$project/repos/$repo"

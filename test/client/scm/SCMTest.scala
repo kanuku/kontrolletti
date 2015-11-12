@@ -58,6 +58,10 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
     val url = s"https://api.$github/repos/$project/$repository/commits"
     testGET(url, client.commits(github, project, repository, None, None, 1))
   }
+  it should "request commits from github-enterprise API" in {
+    val url = s"https://$ghehost/api/v3/repos/$project/$repository/commits"
+    testGET(url, client.commits(ghehost, project, repository, None, None, 1))
+  }
   it should "request commits from stash API" in {
     val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits"
     testGET(url, client.commits(stash, project, repository, None, None, 1))
@@ -67,6 +71,10 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
     val url = s"https://api.$github/repos/$project/$repository/commits/$id"
     testGET(url, client.commit(github, project, repository, id))
   }
+  "SCM#commit" should "request a single commit from github-enterprise API" in {
+    val url = s"https://$ghehost/api/v3/repos/$project/$repository/commits/$id"
+    testGET(url, client.commit(ghehost, project, repository, id))
+  }
   it should "request a single commit from stash API" in {
     val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits/$id"
     testGET(url, client.commit(stash, project, repository, id))
@@ -75,6 +83,10 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
   "SCM#repo" should "request a single repository from github API" in {
     val url = s"https://api.$github/repos/$project/$repository"
     testGET(url, client.repo(github, project, repository))
+  }
+  it should "request a single repository from github-Enterprise API" in {
+    val url = s"https://$ghehost/api/v3/repos/$project/$repository"
+    testGET(url, client.repo(ghehost, project, repository))
   }
   it should "request a single repository from stash API" in {
     val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository"

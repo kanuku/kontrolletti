@@ -21,10 +21,20 @@ sealed trait SCMConfiguration {
    * are necessary: <br>
    *  Github uses [https://api.] as precedent<br>
    *  Github-Enterprise uses [https://] as precedent<p>
-    * @param hostType - Type of SCM(github/stash).
+   * @param hostType - Type of SCM(github/stash).
    *  @return The precedent for the Rest API URLs.
    */
   def urlPrecedent(hostType: String): Map[Int, String]
+  /**
+   * Loads the list of Rest Api antecedents for the given host-type.
+   * Normally this is only necessary for github-enterprise and stash.
+   * I.e.: For using the SCM client to talk to Github-Enterprise and-or stash. <br>
+   *  Stash uses https://stash.com[/rest/api/1.0/] as precedent<br>
+   *  Github-Enterprise uses https://github-enterprise.com[/api/v3] as precedent<p>
+   * @param hostType - Type of SCM(github/stash).
+   *  @return The precedent for the Rest API URLs.
+   */
+  def urlSucceeder(hostType: String): Map[Int, String]
 
   /**
    * Loads the list of authentication-tokens of the Rest API for the given host-type.
@@ -55,8 +65,13 @@ class SCMConfigurationImpl extends SCMConfiguration with ConfigurationDefaults {
     } yield host -> number): _*)
   }
 
+  def urlSucceeder(hostType: String): Map[Int, String] = {
+    logger.info(s"Loading all url-succeeders for $hostType")
+    readValues(hostType, s"client.scm.$hostType.urlSucceeder")
+    
+  }
   def urlPrecedent(hostType: String): Map[Int, String] = {
-    logger.info(s"Loading all precedents for $hostType")
+    logger.info(s"Loading all url-precedents for $hostType")
     readValues(hostType, s"client.scm.$hostType.urlPrecedent")
   }
 
