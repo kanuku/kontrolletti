@@ -54,7 +54,7 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
           falseFuture
         case Some(result) =>
           val commitsWithoutDuplicates = removeIfExists(result, since)
-          logger.info("With Duplicates: " + result.size + "  - Without Duplicates: " + commitsWithoutDuplicates.size)
+          logger.info("From the " + result.size + " commits, only " + commitsWithoutDuplicates.size + " are not already saved in the database.")
           val updatedCommits = updateCommits(repo, commitsWithoutDuplicates)
           commitRepo.save(updatedCommits).flatMap { _ =>
             logger.info(s"Saved " + result.size + "commits from " + repo.url)
@@ -66,7 +66,7 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
 
   def removeIfExists(commits: List[Commit], commit: Option[Commit]) = commit match {
     case Some(commit2Remove) =>
-      for (commit2Check <- commits if (commit2Remove.id != commit2Check.id))
+      for (commit2Check <- commits if (commit2Remove.id != commit2Check.id) && commit2Check.date.isAfter(commit2Remove.date))
         yield commit2Check
     case None => commits
 
