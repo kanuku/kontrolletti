@@ -22,6 +22,7 @@ class CommitWS @Inject() (search: Search, commitRepo: CommitRepository) extends 
   val logger: Logger = Logger { this.getClass }
 
   def diff(host: String, project: String, repository: String, sourceId: String, targetId: String) = Action.async {
+    logger.info(s"Request(byId) - host:$host, project:$project, repository:$repository, from: $sourceId, to: $targetId")
     search.diff(host, project, repository, sourceId, targetId).map {
       case Left(error) =>
         logger.info("Result 500: " + error)
