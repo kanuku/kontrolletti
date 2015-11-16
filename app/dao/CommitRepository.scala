@@ -104,7 +104,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     logger.info(s"Get  from $host/$project/$repository since $since until $until, page number $pageNumber limit $perPage and valid $valid")
     (since, until) match {
       case (Some(sinceCommit), Some(untilCommit)) =>
-        pageQuery(getCommitsByRange(host, project, repository, sinceCommit, untilCommit, valid).sortBy(_.date.desc), pageNumber, perPage)
+        pageQuery(getCommitsByRange(host, project, repository, untilCommit, sinceCommit, valid).sortBy(_.date.desc), pageNumber, perPage)
       case (Some(sinceCommit), None) =>
         pageQuery(getCommitsSinceCommitDate(host, project, repository, sinceCommit, valid).sortBy(_.date.desc), pageNumber, perPage)
       case (None, Some(untilCommit)) =>
