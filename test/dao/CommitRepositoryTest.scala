@@ -51,7 +51,7 @@ class CommitRepositoryTest extends FlatSpec with Matchers with MockitoUtils with
     assert(result.size === 1, "Should return single commit!!")
     assert(result.contains(commitToday))
   }
-  it must "get commits since 1-week-ago until yesterday" in {
+  it must "get commits between since 1-week-ago until yesterday" in {
     val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitOneWeekAgo.id), Option(commitYesterday.id)), 15.seconds)
     assert(result.size === 3, "Only 3 Commits should be returned by the range query")
     assert(result.contains(commitYesterday), "commitYesterday should be in the result")
@@ -73,8 +73,8 @@ class CommitRepositoryTest extends FlatSpec with Matchers with MockitoUtils with
     assert(result.contains(commitOneMonthAgo), "commitOneMonthAgo should be in the result")
   }
 
-  it must "get commits between since yesterday untill 1-week-ago but pageNumber=2 and perPage=1" in {
-    val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitYesterday.id), Option(commitOneWeekAgo.id), pageNumber = Option(2), perPage = Option(1)), 15.seconds)
+  it must "get commits between since 1-week-ago until yesterday but pageNumber=2 and perPage=1" in {
+    val result = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitOneWeekAgo.id), Option(commitYesterday.id), pageNumber = Option(2), perPage = Option(1)), 15.seconds)
     assert(result.size === 1, "Only 1 Commit should be returned by the range query")
     assert(!result.contains(commitYesterday), "commitYesterday should be in the result")
     assert(result.contains(commitBeforeYesterday), "commitBeforeYesterday should be in the result")
