@@ -85,26 +85,3 @@ trait TicketParser {
   def githubHost: String
   def githubEnterpriseHost: String
 }
-
-//object Ay extends App with TicketParser {
-//  private val issueHashtag = """(.*?#){1}"""
-//  private val number = """(\d+){1}"""
-//  private val message = """(.*?)?"""
-//
-//  val jira = "https://jira/browse/"
-//  val githubEnterprise = "https://github-enterprise.com"
-//  val github = "https://github.com"
-//
-//  def githubHost = github
-//  def githubEnterpriseHost = githubEnterprise
-//  def jiraTicketUrl = jira
-//
-//  private val issueOnItselfRegex = s"$issueHashtag$number$message".r
-//  def d(value: String) = value match {
-//    case issueOnItselfRegex(issue, number, message) => println(s"Value: $number")
-//    case _ => println(value)
-//
-//  }
-//
-//  d("Merge pull request #104 from zalando/ticket-parsing\n\nParse valid message into a ticket. fixes #98")
-//}
