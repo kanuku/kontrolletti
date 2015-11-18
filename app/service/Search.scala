@@ -3,11 +3,8 @@ package service
 import scala.{ Left, Right }
 import scala.concurrent.Future
 import scala.util.{ Failure, Success, Try }
-
 import org.joda.time.format.DateTimeFormat
-
 import com.google.inject.ImplementedBy
-
 import client.scm.{ GithubToJsonParser, SCM, SCMImpl, SCMParser, StashToJsonParser }
 import javax.inject.{ Inject, Singleton }
 import model.{ Commit, Link, Repository, Ticket }
@@ -16,6 +13,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSResponse
 import utility.UrlParser
+import configuration.SCMConfiguration
 
 trait Search {
 
@@ -157,8 +155,18 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   def isRepo(host: String, project: String, repository: String): Future[Either[String, Boolean]] = {
     logger.info(s"isRepo: $host - $project - $repository")
-    val url = client.repoUrl(host, project, repository)
-    isUrlValid(host, url)
+    lazy val call = client.resolver(host).allowedProjects(host)
+    Try(call.toList) match {
+      case Success(Nil) =>
+        isUrlValid(host, client.repoUrl(host, project, repository))
+      case Success(allowedProjects) if allowedProjects.contains(project.toLowerCase()) =>
+        isUrlValid(host, client.repoUrl(host, project, repository))
+      case Success(allowedProjects) =>
+        Future.successful(Right(false))
+      case Failure(ex) =>
+        logger.info("An error occurred, see previous lines")
+        Future.successful(defaultError)
+    }
   }
 
   def diff(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]] = {
