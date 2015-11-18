@@ -88,14 +88,14 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
      * Allowed projects
      */
     //Allowed projects on github type
-    "client.scm.github.allowedProjects.0" -> Set("pGithub-1", "pGithub-2"),
-    "client.scm.github.allowedProjects.1" -> Set(),
-    "client.scm.github.allowedProjects.2" -> Set(),
+    "client.scm.github.allowedProjects.0" -> "pGithub-1, pGithub-2",
+    "client.scm.github.allowedProjects.1" -> "",
+    "client.scm.github.allowedProjects.2" -> "",
 
     //Allowed projects on stash (Unrealistic)
-    "client.scm.stash.allowedProjects.0" -> Set(),
-    "client.scm.stash.allowedProjects.1" -> Set(),
-    "client.scm.stash.allowedProjects.2" -> Set("CD", "ZALOS"))
+    "client.scm.stash.allowedProjects.0" -> "CD, ZALOS",
+    "client.scm.stash.allowedProjects.1" -> "",
+    "client.scm.stash.allowedProjects.2" -> "")
 
   "SCMConfiguration#hosts" should {
     "return github hosts are configured" in {
@@ -182,25 +182,19 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
   "SCMConfiguration#allowedProjects" should {
     "Return set of projects for github hosts" in {
       val result = scmConfig.allowedProjects(githubType)
-      result.size shouldBe 3
+      result.size shouldBe 1
 
       result(0).size shouldBe 2
       result(0) should contain("pGithub-1")
       result(0) should contain("pGithub-2")
-
-      result(1).size shouldBe 0
-      result(2).size shouldBe 0
     }
     "Return set of projects for stash hosts" in {
       val result = scmConfig.allowedProjects(stashType)
-      result.size shouldBe 3
+      result(0).size shouldBe 2
 
-      result(0).size shouldBe 0
+      result(0) should contain("CD")
+      result(0) should contain("ZALOS")
 
-      result(1).size shouldBe 0
-      result(2).size shouldBe 2
-      result(2) should contain("CD")
-      result(2) should contain("ZALOS")
     }
   }
 }

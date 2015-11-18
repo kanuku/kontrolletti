@@ -164,7 +164,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
       case Success(allowedProjects) =>
         Future.successful(Right(false))
       case Failure(ex) =>
-        logger.info("An error occurred, see previous lines")
+        logger.error("An error occurred:" + ex.getMessage)
         Future.successful(defaultError)
     }
   }

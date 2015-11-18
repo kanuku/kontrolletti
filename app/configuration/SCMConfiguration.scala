@@ -16,7 +16,8 @@ sealed trait SCMConfiguration {
   def hosts(hostType: String): Map[String, Int]
 
   /**
-   * Loads the list of projects allowed for the given hostType.
+   * Loads a string with multiple projects, separated by commas, from the configuration
+   * and splits it into a list of projects allowed for the given hostType.
    * @param hostType - Type of SCM(github/stash).
    * @return a map containing the unique identifying number(host) and a set of allowed projects for that host.
    */
@@ -106,8 +107,9 @@ class SCMConfigurationImpl extends SCMConfiguration with ConfigurationDefaults {
     val key = s"client.scm.$hostType.allowedProjects"
     Map((for {
       number <- startHost to maxHosts
-      host <- Play.current.configuration.getStringList(s"$key.$number")
-    } yield number -> host.asScala.toSet): _*)
+      host <- Play.current.configuration.getString(s"$key.$number")
+      if Option(host) != None && host != "" && host != " " && host != "null"
+    } yield number -> host.trim.split(",").toList.map { _.trim() }.toSet): _*)
   }
 
 }
