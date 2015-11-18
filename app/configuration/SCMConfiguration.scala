@@ -3,7 +3,7 @@ package configuration
 import scala.collection.mutable.MultiMap
 import play.api.{ Logger, Play }
 import scala.collection.immutable.HashMap
-
+import scala.collection.JavaConverters.{ asScalaBufferConverter, _ }
 /**
  * Configuration loader for parameters necessary in the SCM client.
  */
@@ -11,9 +11,16 @@ sealed trait SCMConfiguration {
   /**
    * Loads the list of configured scm hostnames for the given host type.
    * @param hostType - Type of SCM(github/stash).
-   * @return the list of `hosts` this client can communicate with.
+   * @return a map containing a `hosts` and a unique number identifying the host.
    */
   def hosts(hostType: String): Map[String, Int]
+
+  /**
+   * Loads the list of projects allowed for the given hostType.
+   * @param hostType - Type of SCM(github/stash).
+   * @return a map containing the unique identifying number(host) and a set of allowed projects for that host.
+   */
+  def allowedProjects(hostType: String): Map[Int, Set[String]]
 
   /**
    * Loads the list of Rest Api precedents for the given host-type.
@@ -22,9 +29,10 @@ sealed trait SCMConfiguration {
    *  Github uses [https://api.] as precedent<br>
    *  Github-Enterprise uses [https://] as precedent<p>
    * @param hostType - Type of SCM(github/stash).
-   *  @return The precedent for the Rest API URLs.
+   * @return a map containing the unique identifying number(host) and the URL precedent for that host.
    */
   def urlPrecedent(hostType: String): Map[Int, String]
+
   /**
    * Loads the list of Rest Api antecedents for the given host-type.
    * Normally this is only necessary for github-enterprise and stash.
@@ -32,21 +40,21 @@ sealed trait SCMConfiguration {
    *  Stash uses https://stash.com[/rest/api/1.0/] as precedent<br>
    *  Github-Enterprise uses https://github-enterprise.com[/api/v3] as precedent<p>
    * @param hostType - Type of SCM(github/stash).
-   *  @return The precedent for the Rest API URLs.
+   * @return a map containing the unique identifying number(host) and the URL succeeder for that host.
    */
   def urlSucceeder(hostType: String): Map[Int, String]
 
   /**
    * Loads the list of authentication-tokens of the Rest API for the given host-type.
    * @param hostType - Type of SCM(github/stash).
-   * @return The authentication token that belongs to the given host.
+   * @return a map containing the unique identifying number(host) the authorization token for that host.
    */
   def authToken(hostType: String): Map[Int, String]
 
   /**
    * Loads the list of authentication-users of the REST API for the given host.
    * @param hostType - Type of SCM(github/stash).
-   * @return The authentication user that belongs to the given host.
+   * @return a map containing the unique identifying number(host) the authorization user for that host.
    */
   def authUser(hostType: String): Map[Int, String]
 
@@ -55,12 +63,13 @@ sealed trait SCMConfiguration {
 class SCMConfigurationImpl extends SCMConfiguration with ConfigurationDefaults {
 
   private val logger: Logger = Logger(this.getClass())
+  private val startHost = 0
   private val maxHosts = 10
 
   def hosts(hostType: String): Map[String, Int] = {
     logger.info(s"Loading all hosts for $hostType")
     Map((for {
-      number <- 0 to maxHosts
+      number <- startHost to maxHosts
       host <- Play.current.configuration.getString(s"client.scm.$hostType.host.$number")
     } yield host -> number): _*)
   }
@@ -68,7 +77,7 @@ class SCMConfigurationImpl extends SCMConfiguration with ConfigurationDefaults {
   def urlSucceeder(hostType: String): Map[Int, String] = {
     logger.info(s"Loading all url-succeeders for $hostType")
     readValues(hostType, s"client.scm.$hostType.urlSucceeder")
-    
+
   }
   def urlPrecedent(hostType: String): Map[Int, String] = {
     logger.info(s"Loading all url-precedents for $hostType")
@@ -77,7 +86,7 @@ class SCMConfigurationImpl extends SCMConfiguration with ConfigurationDefaults {
 
   private def readValues(hostType: String, key: String): Map[Int, String] = {
     Map((for {
-      number <- 0 to maxHosts
+      number <- startHost to maxHosts
       host <- Play.current.configuration.getString(s"$key.$number")
     } yield number -> host): _*)
   }
@@ -90,7 +99,15 @@ class SCMConfigurationImpl extends SCMConfiguration with ConfigurationDefaults {
   def authUser(hostType: String): Map[Int, String] = {
     logger.info(s"Loading all auth-users for $hostType")
     readValues(hostType, s"client.scm.$hostType.user")
+  }
 
+  def allowedProjects(hostType: String): Map[Int, Set[String]] = {
+    logger.info(s"Loading allowed projects for $hostType")
+    val key = s"client.scm.$hostType.allowedProjects"
+    Map((for {
+      number <- startHost to maxHosts
+      host <- Play.current.configuration.getStringList(s"$key.$number")
+    } yield number -> host.asScala.toSet): _*)
   }
 
 }

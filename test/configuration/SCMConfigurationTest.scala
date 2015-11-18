@@ -23,6 +23,10 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
   val stashMyCompany = "stash-company.io"
 
   override def configuration: Map[String, _] = Map(
+
+    /*##############################
+     * Hostnames
+     */
     // Client hosts Github-type
     "client.scm.github.host.0" -> githubCom, // Server Github
     "client.scm.github.host.1" -> githubEnterprise, // Server Github-Enterprise1
@@ -33,6 +37,9 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
     "client.scm.stash.host.1" -> stashPrivate, // Server Stash2
     "client.scm.stash.host.2" -> stashMyCompany, // Server Stash3
 
+    /*##############################
+     * URL Precedent
+     */
     //Rest API Succeeder Github-type
     "client.scm.github.urlPrecedent.0" -> "https://api.", // Server Github
     "client.scm.github.urlPrecedent.1" -> "https://", // Server Github-Enterprise1
@@ -43,6 +50,9 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
     "client.scm.stash.urlPrecedent.1" -> "ftp://", // Server  Stash2 (Unrealistic precedent)
     "client.scm.stash.urlPrecedent.2" -> "ssh://", // Server Stash3(Unrealistic)
 
+    /*##############################
+     * URL Succeeder
+     */
     //Rest API precedent Github-type
     "client.scm.github.urlSucceeder.0" -> "", // Server Github
     "client.scm.github.urlSucceeder.1" -> "/api/v3", // Server Github-Enterprise1
@@ -53,6 +63,9 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
     "client.scm.stash.urlSucceeder.1" -> "/rest/api/1.1", // Server  Stash2
     "client.scm.stash.urlSucceeder.2" -> "/rest/api/1.2", // Server Stash3
 
+    /*##############################
+     * Authorization token
+     */
     //Auth-tokens Github-type
     "client.scm.github.authToken.0" -> "GithubAccessToken0", // Server Github
     "client.scm.github.authToken.1" -> "GithubAccessToken1", // Server Github-Enterprise1
@@ -63,13 +76,28 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
     "client.scm.stash.authToken.1" -> "StashAccessToken1", // Server Stash2
     "client.scm.stash.authToken.2" -> "StashAccessToken2", // Server Stash3
 
+    /*##############################
+     * Authorization user
+     */
     //Auth-user is for Stash only. Github does not need one.
     "client.scm.stash.user.0" -> "StashUser0", // Server Stash1
     "client.scm.stash.user.1" -> "StashUser1", // Server Stash2
-    "client.scm.stash.user.2" -> "StashUser2" /// Server Stash3
-    )
+    "client.scm.stash.user.2" -> "StashUser2", /// Server Stash3
 
-  "OAuthConfiguration#hosts" should {
+    /*##############################
+     * Allowed projects
+     */
+    //Allowed projects on github type
+    "client.scm.github.allowedProjects.0" -> Set("pGithub-1", "pGithub-2"),
+    "client.scm.github.allowedProjects.1" -> Set(),
+    "client.scm.github.allowedProjects.2" -> Set(),
+
+    //Allowed projects on stash (Unrealistic)
+    "client.scm.stash.allowedProjects.0" -> Set(),
+    "client.scm.stash.allowedProjects.1" -> Set(),
+    "client.scm.stash.allowedProjects.2" -> Set("CD", "ZALOS"))
+
+  "SCMConfiguration#hosts" should {
     "return github hosts are configured" in {
       val result = scmConfig.hosts(githubType)
       result.size shouldBe 3
@@ -88,7 +116,7 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
     }
   }
 
-  "OAuthConfiguration#urlPrecedent" should {
+  "SCMConfiguration#urlPrecedent" should {
     "return the precedents for the github type" in {
       //Github
       val result = scmConfig.urlPrecedent(githubType)
@@ -106,7 +134,7 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
       result(2) shouldBe "ssh://"
     }
   }
-  "OAuthConfiguration#urlSucceeder" should {
+  "SCMConfiguration#urlSucceeder" should {
     "return the succeeders for the github type" in {
       //Github
       val result = scmConfig.urlSucceeder(githubType)
@@ -125,7 +153,7 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
     }
   }
 
-  "OAuthConfiguration#authToken" should {
+  "SCMConfiguration#authToken" should {
     "Return auth-token for corresponding scm server type (github)" in {
       val result = scmConfig.authToken(githubType)
       result.size shouldBe 3
@@ -142,13 +170,37 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
     }
   }
 
-  "OAuthConfiguration#authUser" should {
+  "SCMConfiguration#authUser" should {
     "Return user for the corresponding scm server" in {
       val result = scmConfig.authUser(stashType)
       result.size shouldBe 3
       result(0) shouldBe "StashUser0"
       result(1) shouldBe "StashUser1"
       result(2) shouldBe "StashUser2"
+    }
+  }
+  "SCMConfiguration#allowedProjects" should {
+    "Return set of projects for github hosts" in {
+      val result = scmConfig.allowedProjects(githubType)
+      result.size shouldBe 3
+
+      result(0).size shouldBe 2
+      result(0) should contain("pGithub-1")
+      result(0) should contain("pGithub-2")
+
+      result(1).size shouldBe 0
+      result(2).size shouldBe 0
+    }
+    "Return set of projects for stash hosts" in {
+      val result = scmConfig.allowedProjects(stashType)
+      result.size shouldBe 3
+
+      result(0).size shouldBe 0
+
+      result(1).size shouldBe 0
+      result(2).size shouldBe 2
+      result(2) should contain("CD")
+      result(2) should contain("ZALOS")
     }
   }
 }
