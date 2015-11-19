@@ -387,10 +387,6 @@ definitions:
         type: string
       repository:
         type: string
-      commits:
-        type: array
-        items:
-          $ref: "#/definitions/Commit"
       links:
         type: array
         items:
