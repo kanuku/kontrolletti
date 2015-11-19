@@ -378,7 +378,7 @@ definitions:
           $ref: "#/definitions/Link"
   Repository:
     properties:
-      uri:
+      url:
         type: string
         format: uri
       host:
