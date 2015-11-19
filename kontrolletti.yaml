@@ -348,8 +348,6 @@ definitions:
         type: string
       message:
         type: string
-      valid:
-        type: boolean
       author:
         $ref: "#/definitions/Author"
       parents:
