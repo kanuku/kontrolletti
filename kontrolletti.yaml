@@ -119,7 +119,7 @@ paths:
         description: Only commits made before this commitId will be returned.
         required: false
         type: string
-      - name: isValid
+      - name: is_valid
         in: query
         description: Only commits with a valid(`true`)/unvalid(`false`) commmit-message will be returned.
         required: false
