@@ -9,6 +9,8 @@ import model.Repository
 import play.api.Logger
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.db.slick.HasDatabaseConfigProvider
+import dao.KontrollettiPostgresDriver.api._
+import utility.FutureUtil._
 
 /**
  * @author fbenjamin
@@ -25,8 +27,6 @@ trait RepoRepository {
 
 @Singleton
 class RepoRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext) extends RepoRepository with HasDatabaseConfigProvider[KontrollettiPostgresDriver] {
-  import dao.KontrollettiPostgresDriver.api._
-  import utility.FutureUtil._
 
   val logger: Logger = Logger(this.getClass())
 

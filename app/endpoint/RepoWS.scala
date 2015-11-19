@@ -17,6 +17,9 @@ import scala.concurrent.Future
 import model.RepositoryResult
 import model.KontrollettiToJsonParser._
 import dao.RepoRepository
+import scala.util.Try
+import scala.util.Failure
+import scala.util.Success
 
 @Singleton
 class RepoWS @Inject() (searchService: Search, repoRepository: RepoRepository) extends Controller {
@@ -30,24 +33,28 @@ class RepoWS @Inject() (searchService: Search, repoRepository: RepoRepository) e
       case Left(error) =>
         logger.info("Result: 400:" + error)
         Future.successful(BadRequest)
-
       case Right((host, project, repo)) =>
-        val normalizedUrl = searchService.normalize(host, project, repo).toLowerCase()
-        logger.info(s"Normalized url $normalizedUrl")
-        val encodedURL = URLEncoder.encode(normalizedUrl, "UTF-8")
-        searchService.isRepo(host, project, repo).map {
-          case Right(result) if (result && normalizedUrl.equals(originalURL)) =>
-            logger.info(s"Result: 200 $normalizedUrl")
-            Ok.withHeaders(X_NORMALIZED_REPOSITORY_URL_HEADER -> encodedURL)
-          case Right(result) if result =>
-            logger.info(s"Result: 301 $normalizedUrl")
-            MovedPermanently(routes.RepoWS.byUrl(encodedURL).url).withHeaders(X_NORMALIZED_REPOSITORY_URL_HEADER -> encodedURL)
-          case Left(error) =>
-            logger.warn(s"Result: 500 $normalizedUrl")
-            InternalServerError.as("application/problem+json")
-          case Right(result) =>
-            logger.info(s"Result: 404 $normalizedUrl")
-            NotFound
+        Try(searchService.normalize(host, project, repo).toLowerCase()) match {
+          case Failure(ex) =>
+            logger.info(s"Result: 404 Unknown host")
+            Future.successful(NotFound)
+          case Success(normalizedUrl) =>
+            logger.info(s"Normalized url $normalizedUrl")
+            val encodedURL = URLEncoder.encode(normalizedUrl, "UTF-8")
+            searchService.isRepo(host, project, repo).map {
+              case Right(result) if (result && normalizedUrl.equals(originalURL)) =>
+                logger.info(s"Result: 200 $normalizedUrl")
+                Ok.withHeaders(X_NORMALIZED_REPOSITORY_URL_HEADER -> encodedURL)
+              case Right(result) if result =>
+                logger.info(s"Result: 301 $normalizedUrl")
+                MovedPermanently(routes.RepoWS.byUrl(encodedURL).url).withHeaders(X_NORMALIZED_REPOSITORY_URL_HEADER -> encodedURL)
+              case Left(error) =>
+                logger.warn(s"Result: 500 $normalizedUrl")
+                InternalServerError.as("application/problem+json")
+              case Right(result) =>
+                logger.info(s"Result: 404 $normalizedUrl")
+                NotFound
+            }
         }
     }
   }

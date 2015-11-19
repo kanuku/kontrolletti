@@ -16,6 +16,12 @@ sealed trait SCMResolver {
   val logger: Logger = Logger(this.getClass())
   def hostType: String
 
+  lazy val allowedProjects: Map[String, Set[String]] = {
+    val result = combineMap(config().allowedProjects(hostType)).withDefaultValue(Set())
+    logger.info(s"Loaded set of allowed projects for $hostType: " + result)
+    result
+  }
+
   lazy val antecedents: Map[String, String] = {
     val result = combineMap(config().urlPrecedent(hostType))
     logger.info(s"Loaded URL-antecedentes for $hostType:" + result.size)
@@ -37,7 +43,7 @@ sealed trait SCMResolver {
     result
   }
 
-  private def combineMap(input: Map[Int, String]) = for {
+  private def combineMap[T](input: Map[Int, T]) = for {
     (host, key) <- hosts
     if input.contains(key)
     value <- input.get(key)

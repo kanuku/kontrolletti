@@ -26,6 +26,7 @@ object ConfigurationDefaults {
       "client.scm.github.urlPrecedent.0" -> httpsAPI,
       "client.scm.github.urlSucceeder.0" -> "",
       "client.scm.github.authToken.0" -> githubAccessToken,
+      "client.scm.github.allowedProjects.0" -> "zalando, zalando-stups",
 
       //github-enterprise
       "client.scm.github.host.1" -> ghehost,

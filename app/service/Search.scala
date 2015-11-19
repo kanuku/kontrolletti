@@ -3,11 +3,8 @@ package service
 import scala.{ Left, Right }
 import scala.concurrent.Future
 import scala.util.{ Failure, Success, Try }
-
 import org.joda.time.format.DateTimeFormat
-
 import com.google.inject.ImplementedBy
-
 import client.scm.{ GithubToJsonParser, SCM, SCMImpl, SCMParser, StashToJsonParser }
 import javax.inject.{ Inject, Singleton }
 import model.{ Commit, Link, Repository, Ticket }
@@ -16,6 +13,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSResponse
 import utility.UrlParser
+import configuration.SCMConfiguration
 
 trait Search {
 
@@ -157,8 +155,19 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   def isRepo(host: String, project: String, repository: String): Future[Either[String, Boolean]] = {
     logger.info(s"isRepo: $host - $project - $repository")
-    val url = client.repoUrl(host, project, repository)
-    isUrlValid(host, url)
+    Try(client.resolver(host)) match {
+      case Success(call) if !call.allowedProjects(host).isEmpty =>
+        if (call.allowedProjects(host).contains(project)) {
+          isUrlValid(host, client.repoUrl(host, project, repository))
+        } else {
+          logger.info(s"Allowed projects for host[$host] >>" + call.allowedProjects(host))
+          Future.successful(Right(false))
+        }
+      case Success(call) => isUrlValid(host, client.repoUrl(host, project, repository))
+      case Failure(ex) =>
+        logger.warn(ex.getMessage)
+        Future.successful(Right(false))
+    }
   }
 
   def diff(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]] = {
@@ -179,8 +188,12 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
     executeCall(client.head(host, url)).map { response =>
       response.right.map {
         _.status match {
-          case status if acceptableCodes.contains(status) => true
-          case _ => false
+          case status if acceptableCodes.contains(status) =>
+            logger.info(s"$url is valid")
+            true
+          case _ =>
+            logger.info(s"$url is not valid")
+            false
         }
       }
     }

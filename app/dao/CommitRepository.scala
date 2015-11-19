@@ -74,8 +74,8 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
 
   private def getCommitsByRange(host: String, project: String, repository: String, since: String, until: String, isValid: Option[Boolean]) = for {
     repo <- repos.filter { repo => repo.host === host && repo.project === project && repo.repository === repository }
-    firstCommit <- commits.filter { c => c.id === since && c.repoURL === repo.url }
-    lastCommit <- commits.filter { c => c.id === until && c.repoURL === repo.url }
+    firstCommit <- commits.filter { c => c.id === until && c.repoURL === repo.url }
+    lastCommit <- commits.filter { c => c.id === since && c.repoURL === repo.url }
     result <- isValid match {
       case Some(valid) => commits.filter { c => c.date >= lastCommit.date && c.date <= firstCommit.date && ((c.nrOfTickets > 0) === valid) && c.repoURL === repo.url }
       case None        => commits.filter { c => c.date >= lastCommit.date && c.date <= firstCommit.date && c.repoURL === repo.url }
@@ -104,7 +104,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     logger.info(s"Get  from $host/$project/$repository since $since until $until, page number $pageNumber limit $perPage and valid $valid")
     (since, until) match {
       case (Some(sinceCommit), Some(untilCommit)) =>
-        pageQuery(getCommitsByRange(host, project, repository, untilCommit, sinceCommit, valid).sortBy(_.date.desc), pageNumber, perPage)
+        pageQuery(getCommitsByRange(host, project, repository, sinceCommit, untilCommit, valid).sortBy(_.date.desc), pageNumber, perPage)
       case (Some(sinceCommit), None) =>
         pageQuery(getCommitsSinceCommitDate(host, project, repository, sinceCommit, valid).sortBy(_.date.desc), pageNumber, perPage)
       case (None, Some(untilCommit)) =>

@@ -14,7 +14,7 @@ class ErrorHandler extends HttpErrorHandler {
   private val logger: Logger = Logger(this.getClass())
   // 500 - internal server error
   def onServerError(request: RequestHeader, throwable: Throwable) = {
-    logger.error("A Server error occurred" + throwable.getMessage)
+    logger.error("A Server error occurred: " + throwable.getMessage)
     Future.successful(InternalServerError(views.html.errors.onError(throwable)).as("application/problem+json"))
   }
 
