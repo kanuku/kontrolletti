@@ -155,17 +155,18 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   def isRepo(host: String, project: String, repository: String): Future[Either[String, Boolean]] = {
     logger.info(s"isRepo: $host - $project - $repository")
-    lazy val call = client.resolver(host).allowedProjects(host)
-    Try(call.toList) match {
-      case Success(Nil) =>
-        isUrlValid(host, client.repoUrl(host, project, repository))
-      case Success(allowedProjects) if allowedProjects.contains(project.toLowerCase()) =>
-        isUrlValid(host, client.repoUrl(host, project, repository))
-      case Success(allowedProjects) =>
-        Future.successful(Right(false))
+    Try(client.resolver(host)) match {
+      case Success(call) if !call.allowedProjects(host).isEmpty =>
+        if (call.allowedProjects(host).contains(project)) {
+          isUrlValid(host, client.repoUrl(host, project, repository))
+        } else {
+          logger.info(s"Allowed projects for host[$host] >>" + call.allowedProjects(host))
+          Future.successful(Right(false))
+        }
+      case Success(call) => isUrlValid(host, client.repoUrl(host, project, repository))
       case Failure(ex) =>
-        logger.error("An error occurred:" + ex.getMessage)
-        Future.successful(defaultError)
+        logger.warn(ex.getMessage)
+        Future.successful(Right(false))
     }
   }
 
@@ -187,8 +188,12 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
     executeCall(client.head(host, url)).map { response =>
       response.right.map {
         _.status match {
-          case status if acceptableCodes.contains(status) => true
-          case _ => false
+          case status if acceptableCodes.contains(status) =>
+            logger.info(s"$url is valid")
+            true
+          case _ =>
+            logger.info(s"$url is not valid")
+            false
         }
       }
     }

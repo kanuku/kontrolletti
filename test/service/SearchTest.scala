@@ -29,7 +29,7 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
   val host = "github.com"
   val project = "zalando"
   val repository = "kontrolletti"
-  val url = s"https://github.com/zalando/kontrolletti"
+  val url = s"https://$host/$project/$repository"
   val sourceId = "sourceId"
   val targetId = "targetId"
   val commitId = "commitId"
@@ -124,7 +124,6 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
   }
 
   "Search#normalize" should "normalize the github URL" in {
-    val url = "https://github.com/zalando/kontrolletti"
     val client = new SCMImpl(new RequestDispatcherImpl(mock[WSClient], mock[GeneralConfiguration]), githubResolver, stashResolver)
     val search = new SearchImpl(client)
     assert(search.normalize(host, project, repository) == url)
@@ -140,7 +139,7 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
     val diffLink = "https://github.com/zalando/kontrolletti/compare/sourceId...targetId"
     when(client.diffUrl(host, project, repository, sourceId, targetId)).thenReturn(diffLink)
     when(client.head(host, diffLink)).thenReturn(response200)
-    val Right(result) = Await.result(search.diff(host, project, repository, sourceId, targetId), Duration("5 seconds"))
+    val Right(result) = Await.result(search.diff(host, project, repository, sourceId, targetId), Duration("500 seconds"))
     assert(result == Some(Link(diffLink, null, null, null)), "The Link object should have a href")
     verify(client, times(1)).diffUrl(host, project, repository, sourceId, targetId)
     verify(client, times(1)).head(host, diffLink)
@@ -179,23 +178,20 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
     verify(client, times(1)).head(host, url)
   }
   it should "return error when client throws exception" in {
-    val repoUrl = s"https://$host/$project/kontrolletti"
-    when(client.repoUrl(host, project, repository)).thenReturn(repoUrl)
-    when(client.head(host, repoUrl)).thenThrow(new RuntimeException())
+    when(client.repoUrl(host, project, repository)).thenReturn(url)
+    when(client.head(host, url)).thenThrow(new RuntimeException())
     val Left(result) = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     result shouldBe "Something went wrong, check the logs!"
   }
   it should "return true if the project is allowed" in {
-    val repoUrl = "https://github.com/zalando/kontrolletti"
-    when(client.repoUrl(host, project, repository)).thenReturn(repoUrl)
-    when(client.head(host, repoUrl)).thenReturn(response200)
+    when(client.repoUrl(host, project, repository)).thenReturn(url)
+    when(client.head(host, url)).thenReturn(response200)
     val Right(result) = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     result shouldBe true
   }
   it should "return false if the result of the url returns a 404" in {
-    val repoUrl = "https://github.com/zalando/kontrolletti"
-    when(client.repoUrl(host, project, repository)).thenReturn(repoUrl)
-    when(client.head(host, repoUrl)).thenReturn(response404)
+    when(client.repoUrl(host, project, repository)).thenReturn(url)
+    when(client.head(host, url)).thenReturn(response404)
     val Right(result) = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     result shouldBe false
   }
@@ -209,8 +205,11 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
     result shouldBe true
   }
   it should "return false if the project is not allowed" in {
-    val repoUrl = "https://github.com/zalando/kontrolletti"
-    val Right(result) = Await.result(search.isRepo(host, "cagda", repository), Duration("5 seconds"))
+    val project = "kanuku"
+    val repoUrl = s"https://$host/$project/$repository"
+    when(client.repoUrl(host, project, repository)).thenReturn(repoUrl)
+    when(client.head(host, repoUrl)).thenReturn(response200)
+    val Right(result) = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     result shouldBe false
   }
 
