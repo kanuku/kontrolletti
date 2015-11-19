@@ -161,7 +161,7 @@
                         "type": "string"
                     },
                     {
-                        "name": "isValid",
+                        "name": "is_valid",
                         "in": "query",
                         "description": "Only commits with a valid(`true`)/unvalid(`false`) commmit-message will be returned.",
                         "required": false,
@@ -490,9 +490,6 @@
                 "message": {
                     "type": "string"
                 },
-                "valid": {
-                    "type": "boolean"
-                },
                 "author": {
                     "$ref": "#/definitions/Author"
                 },
@@ -536,7 +533,7 @@
         },
         "Repository": {
             "properties": {
-                "uri": {
+                "url": {
                     "type": "string",
                     "format": "uri"
                 },
@@ -548,12 +545,6 @@
                 },
                 "repository": {
                     "type": "string"
-                },
-                "commits": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Commit"
-                    }
                 },
                 "links": {
                     "type": "array",
