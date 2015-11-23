@@ -49,6 +49,15 @@ class UrlParserTest extends FunSuite   {
   test("test-12") {
     test("https://kanuku@stash.zalando.net/scm/cd/ansible-playbooks.git", "stash.zalando.net", "cd", "ansible-playbooks")
   }
+  test("test-13") {
+    test("https://mystash.com/scm/~project/repository.git", "mystash.com", "~project", "repository")    
+  }
+  test("test-14") {
+    test("https://git@mystash.com:4999/~nzimnicki/stock-chart-demo.git", "mystash.com:4999", "~nzimnicki", "stock-chart-demo")
+  }
+  test("test-15") {
+    test("ssh://git@mystash.com:4999/~lschumacher/eventlog-remote-writer-demoapp.git", "mystash.com:4999", "~lschumacher", "eventlog-remote-writer-demoapp")
+  }
 
    
 

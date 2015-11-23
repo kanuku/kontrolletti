@@ -40,3 +40,4 @@ dist
 aws_host.txt
 scm-source.json
 *.notes
+kontrolletti.environment.sh

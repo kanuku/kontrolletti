@@ -5,7 +5,7 @@ object ParsingData {
   val repoSucceeders = List("", ".git", "/", "/browse", "/browse/", "/browse/dockerfiles/fashion-advice/master", "/browse/asdf/lest")
   val repos = List("___", "-", "Test_Repo", "repo", "...", "_-", "1_1_2_3_", "ZKON_-A.ZKON_-A.", "_Guess-_11_-D", "Proje123", "Test-repo")
   val repoAntecedents = List("/", "/repos/")
-  val projects = List("-", "Test_Now", "asdf", "...", "_-", "1_1_2_3_", "ZKON_-A.ZKON_-A.", "_Guess-_11_-D", "Proje123", "Test-project")
+  val projects = List("-", "Test_Now", "asdf", "...","_-", "1_1_2_3_", "ZKON_-A.ZKON_-A.", "_Guess-_11_-D", "Proje123", "Test-project", "~myproject")  
   val projectAntecedents = List("/", "/projects/")
   val ports = List("", ":8080", ":80")
   val hostnames = List("stash", "stash-server", "stash.net", "stash-zalando", "live-stash-zalando", "stash.cd.zalando")

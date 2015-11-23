@@ -16,7 +16,7 @@ trait UrlParser {
   val repoSucceederRgx = """(/.*|.git)?"""
   val repoRgx = """([\w.-]*?){1,1}"""
   val repoAntecedentRgx = """(/repos/|/){1,1}"""
-  val projectRgx = """([\w-.]+){1,1}"""
+  val projectRgx = """([0-~-.]+){1,1}""" // inspired by ([ -~]+){1,1} - http://www.catonmat.net/blog/my-favorite-regex/ but from 0 (zero) to ~ (tilde) plus - (dash) and . (dot)   
   val projectAntecedentRgx = """(/projects/|/scm/|/|:){1,1}"""
   val hostnameRgx = """(\w+[-.\w]*\w*[:\d]*){1,1}"""
   val userRgx = """(\w+@)?"""
