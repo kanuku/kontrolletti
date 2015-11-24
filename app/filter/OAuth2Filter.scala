@@ -18,7 +18,7 @@ import play.api.mvc.{ Filter, RequestHeader, Result, Results }
  */
 class OAuth2Filter @Inject() (config: OAuthConfiguration, client: OAuth)(implicit ec: ExecutionContext) extends Filter {
   private val missingTokenResult = Future.successful(Results.Unauthorized(Json.toJson(new Error("Unauthorized", 0, "Authentication info is missing"))))
-  private val UnathorizedResult = Future.successful(Results.Unauthorized(Json.toJson(new Error("Unauthorized", 0, "Validation failed"))))
+  private val unathorizedResult = Future.successful(Results.Unauthorized(Json.toJson(new Error("Unauthorized", 0, "Validation failed"))))
   private val logger: Logger = Logger { this.getClass }
   private val areInThisPath = (requestHeader: RequestHeader) => (input: String) => requestHeader.path.startsWith(input)
   private val authorizationHeader = "Authorization"
@@ -37,7 +37,7 @@ class OAuth2Filter @Inject() (config: OAuthConfiguration, client: OAuth)(implici
               case Some(OAuthTokenInfo(_, _, _, _, _, expiresIn, accessToken)) if (expiresIn > 0 && accessToken == token) =>
                 nextFilter.apply(requestHeader)
               case None =>
-                UnathorizedResult
+                unathorizedResult
             }
           }
         case None =>
