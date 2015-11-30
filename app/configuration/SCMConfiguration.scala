@@ -59,6 +59,13 @@ sealed trait SCMConfiguration {
    */
   def authUser(hostType: String): Map[Int, String]
 
+  /**
+   * Loads the list of forward-host (dns names) for the given host-type.
+   * @param hostType - Type of SCM(github/stash).
+   * @return a map containing the unique identifying number(host) and the forward-host name for that host number.
+   */
+  def forwardHost(hostType: String): Map[Int, String]
+
 }
 
 class SCMConfigurationImpl extends SCMConfiguration with ConfigurationDefaults {
@@ -66,6 +73,9 @@ class SCMConfigurationImpl extends SCMConfiguration with ConfigurationDefaults {
   private val logger: Logger = Logger(this.getClass())
   private val startHost = 0
   private val maxHosts = 10
+  private val isNotNulNorEmpty: String => Boolean = {
+    host => Option(host) != None && host != "" && host != " " && host != "null"
+  }
 
   def hosts(hostType: String): Map[String, Int] = {
     logger.info(s"Loading all hosts for $hostType")
@@ -85,12 +95,11 @@ class SCMConfigurationImpl extends SCMConfiguration with ConfigurationDefaults {
     readValues(hostType, s"client.scm.$hostType.urlPrecedent")
   }
 
-  private def readValues(hostType: String, key: String): Map[Int, String] = {
+  private def readValues(hostType: String, key: String): Map[Int, String] =
     Map((for {
       number <- startHost to maxHosts
       host <- Play.current.configuration.getString(s"$key.$number")
     } yield number -> host): _*)
-  }
 
   def authToken(hostType: String): Map[Int, String] = {
     logger.info(s"Loading all auth-tokens for $hostType")
@@ -108,8 +117,13 @@ class SCMConfigurationImpl extends SCMConfiguration with ConfigurationDefaults {
     Map((for {
       number <- startHost to maxHosts
       host <- Play.current.configuration.getString(s"$key.$number")
-      if Option(host) != None && host != "" && host != " " && host != "null"
+      if isNotNulNorEmpty(host)
     } yield number -> host.trim.split(",").toList.map { _.trim() }.toSet): _*)
+  }
+
+  def forwardHost(hostType: String): Map[Int, String] = {
+    logger.info(s"Loading all forward-hosts for $hostType")
+    readValues(hostType, s"client.scm.$hostType.forwardHost")
   }
 
 }
