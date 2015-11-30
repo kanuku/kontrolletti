@@ -19,6 +19,9 @@ import test.util.{ ConfigurableFakeApp, MockitoUtils }
 import test.util.TestUtils.{ assertEitherIsLeft, assertEitherIsNotNull, assertEitherIsRight }
 import configuration.SCMConfigurationImpl
 import test.util.ConfigurationDefaults.SCMConfigurationDefaults._
+import client.scm.SCMParser
+import client.oauth.OAuth
+import client.scm.GithubToJsonParser
 
 /**
  * This class tests the interaction between the Service and the Client(mock).
@@ -34,10 +37,13 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
   val targetId = "targetId"
   val commitId = "commitId"
   val client = mock[SCM]
+  val oauth = mock[OAuth]
   val conf = new SCMConfigurationImpl
   val githubResolver = new GithubResolver(conf)
-  val stashResolver = new StashResolver(conf)
-  val search: Search = new SearchImpl(client)
+  val stashResolver = new StashResolver(conf, oauth)
+  val stashParser = new GithubToJsonParser(stashResolver)
+  val githubParser = new GithubToJsonParser(githubResolver)
+  val search: Search = new SearchImpl(client, stashParser, githubParser)
   val response200: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse("{}", 200)
   val response404: Future[WSResponse] = mockSuccessfullParsableFutureWSResponse(null, 404)
 
@@ -46,6 +52,7 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
     reset(client)
     when(client.resolver("stash.com")).thenReturn(stashResolver)
     when(client.resolver("github.com")).thenReturn(githubResolver)
+
   }
 
   "Search#commits" should "return commits when the http-result  is 200 and body is not empty" in {
@@ -125,13 +132,13 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
 
   "Search#normalize" should "normalize the github URL" in {
     val client = new SCMImpl(new RequestDispatcherImpl(mock[WSClient], mock[GeneralConfiguration]), githubResolver, stashResolver)
-    val search = new SearchImpl(client)
+    val search = new SearchImpl(client, stashParser, githubParser)
     assert(search.normalize(host, project, repository) == url)
   }
   "Search#normalize" should "normalize the stash URL" in {
     val url = "https://stash.com/projects/zalando/repos/kontrolletti/browse"
     val client = new SCMImpl(new RequestDispatcherImpl(mock[WSClient], mock[GeneralConfiguration]), githubResolver, stashResolver)
-    val search = new SearchImpl(client)
+    val search = new SearchImpl(client, stashParser, githubParser)
     assert(search.normalize("stash.com", project, repository) == url)
   }
 

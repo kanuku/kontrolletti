@@ -1,25 +1,37 @@
 package client.scm
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.Matchers._
+import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.{ OneAppPerSuite, PlaySpec }
-
 import configuration.SCMConfigurationImpl
 import javax.inject.{ Inject, Singleton }
 import test.util.{ ConfigurableFakeApp, MockitoUtils }
 import test.util.ConfigurationDefaults.SCMConfigurationDefaults._
+import configuration.OAuthConfigurationImpl
+import configuration.OAuthConfiguration
+import client.oauth.OAuth
+import org.scalatest.BeforeAndAfter
+import com.sun.org.glassfish.external.statistics.annotations.Reset
+import scala.concurrent.Future
 
 class SCMResolverTest extends PlaySpec //
-    with OneAppPerSuite with ConfigurableFakeApp with MockitoSugar with MockitoUtils {
+    with OneAppPerSuite with ConfigurableFakeApp with MockitoSugar with MockitoUtils with BeforeAndAfter {
   implicit override lazy val app = fakeApplication
 
-  val config = new SCMConfigurationImpl
-  val github: SCMResolver = new GithubResolver(config)
-  val stash: SCMResolver = new StashResolver(config)
-
+  private val config = new SCMConfigurationImpl
+  private val oAuthCred = createOAuthAccessToken("token_type", "access_token", "scope", 3599)
+  private val oAuthclient = mock[OAuth]
+  private val github: SCMResolver = new GithubResolver(config)
+  private val stash: SCMResolver = new StashResolver(config, oAuthclient)
+  before {
+    reset(oAuthclient)
+    when(oAuthclient.accessToken()).thenReturn(Future.successful(oAuthCred))
+  }
   //Project
   val project = "zalando"
   val repo = "kontrolletti"
+  val accessToken = "01ba-92hg-8j93-k7l4-6a4q-65m6-25a3-918kj"
 
   //Commit-ids
   val id = "7a82007"
@@ -60,6 +72,10 @@ class SCMResolverTest extends PlaySpec //
       stash.isCompatible(ghehost) shouldBe false
       stash.isCompatible(shost) shouldBe true
     }
+  }
+
+  "Resolver#" should {
+
   }
 
   "Resolver#commits" should {
@@ -218,6 +234,16 @@ class SCMResolverTest extends PlaySpec //
     "return Stash's userQueryParameter" in {
       stash.accessTokenHeader(shost) shouldBe ("X-Auth-Token" -> stashAccessToken)
     }
+  }
+
+  "Resolver#proxyAuthorizationValue" should {
+    "return empty tuple for github" in {
+      github.proxyAuthorizationValue() shouldBe ("" -> "")
+    }
+    "return non-empty tuple for stash" in {
+      stash.proxyAuthorizationValue() shouldBe ("Authorization" -> "Bearer access_token")
+    }
+
   }
   override def configuration: Map[String, _] = scmConfigurations
 }

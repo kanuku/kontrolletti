@@ -120,7 +120,9 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
         .withQueryString(res.startAtPageNumber(pageNr))
         .withHeaders(res.authUserHeaderParameter(host))
         .withHeaders(res.accessTokenHeader(host))
+        .withHeaders(res.proxyAuthorizationValue())
     }
+
     val token = Option(res.accessTokenValue(host))
     if (token == Some("") || !token.isDefined || token.isEmpty) {
       logger.error("No tokens configured for host " + host)

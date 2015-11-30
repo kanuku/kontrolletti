@@ -21,6 +21,7 @@ import test.util.ConfigurableFakeApp
 import test.util.MockitoUtils
 import configuration.SCMConfigurationImpl
 import test.util.ConfigurationDefaults.SCMConfigurationDefaults._
+import client.oauth.OAuth
 
 /**
  * The tests in this class will assure:
@@ -37,7 +38,9 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
   val mockedDispatcher = mock[RequestDispatcher]
   val conf = new SCMConfigurationImpl
   val githubResolver = new GithubResolver(conf)
-  val stashResolver = new StashResolver(conf)
+  val oauth = mock[OAuth]
+  private val oAuthCred = createOAuthAccessToken("token_type", "access_token", "scope", 3599)
+  val stashResolver = new StashResolver(conf, oauth)
   val mockedResponse = mockSuccessfullParsableFutureWSResponse("", 200)
   val github = "github.com"
   val stash = "stash.com"
@@ -52,6 +55,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
   def client = new SCMImpl(mockedDispatcher, githubResolver, stashResolver)
   before {
     reset(mockedRequestHolder, mockedDispatcher)
+    when(oauth.accessToken()).thenReturn(Future.successful(oAuthCred))
   }
 
   "SCM#commits" should "request commits from github API" in {
@@ -117,7 +121,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
 
   "SCM#head" should "GET github url" in {
     val url = s"Test"
-    when(mockedDispatcher.requestHolder(anyString)).thenReturn(mockedRequestHolder)
+    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.withHeaders(any[Tuple2[String, String]]())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.head()).thenReturn(mockedResponse)
     val result = client.head(github, url)
@@ -128,7 +132,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
   }
   "SCM#head" should "HEAD stash url" in {
     val url = s"Test"
-    when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
+    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.withHeaders(any[Tuple2[String, String]]())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.withQueryString(any[Tuple2[String, String]]())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.get()).thenReturn(mockedResponse)
@@ -140,7 +144,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
   }
 
   def testGET(url: String, call: => Future[WSResponse]) = {
-    when(mockedDispatcher.requestHolder(anyString())).thenReturn(mockedRequestHolder)
+    when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.withHeaders(any[Tuple2[String, String]]())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.withQueryString(any[Tuple2[String, String]]())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.get()).thenReturn(mockedResponse)

@@ -1,17 +1,20 @@
 package client.scm
 
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
+import org.joda.time.DateTime
+import org.scalatest.{ FunSuite, Matchers }
 import model.Commit
 import play.api.libs.json._
 import play.api.libs.json.Json._
 import test.util.FakeResponseData
-import org.joda.time.DateTime
+import org.scalatest.mock.MockitoSugar
 
 /**
  * This class tests the Parsing process implemented in SCMParser file.
  */
-class SCMParserTest extends FunSuite with Matchers {
+class SCMParserTest extends FunSuite with Matchers with MockitoSugar {
+  private val mock = mock[SCMResolver];
+  private val GithubToJsonParser = new GithubToJsonParser(mock)
+  private val StashToJsonParser = new StashToJsonParser(mock)
 
   test("Deserialize multiple json Commits with the GithubParser") {
     val jsonData = Json.parse(FakeResponseData.multiGithubCommit)

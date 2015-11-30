@@ -14,6 +14,9 @@ import client.scm.SCMResolver
 import client.scm.GithubResolver
 import configuration.SCMConfiguration
 import com.google.inject.name.Names
+import client.scm.GithubToJsonParser
+import client.scm.SCMParser
+import client.scm.StashToJsonParser
 
 class Development extends AbstractModule {
 
@@ -33,5 +36,8 @@ class Development extends AbstractModule {
     bind(classOf[RepoRepository]).to(classOf[RepoRepositoryImpl])
     bind(classOf[SCMResolver]).annotatedWith(Names.named("github")).to(classOf[GithubResolver])
     bind(classOf[SCMResolver]).annotatedWith(Names.named("stash")).to(classOf[StashResolver])
+    bind(classOf[SCMParser]).annotatedWith(Names.named("github")).to(classOf[GithubToJsonParser])
+    bind(classOf[SCMParser]).annotatedWith(Names.named("stash")).to(classOf[StashToJsonParser])
+
   }
 }
