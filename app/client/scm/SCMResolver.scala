@@ -42,6 +42,11 @@ sealed trait SCMResolver {
     logger.info(s"Loaded authUser for $hostType:" + result.size)
     result
   }
+  lazy val forwardHosts: Map[String, String] = {
+    val result = combineMap(config().forwardHost(hostType))
+    logger.info(s"Loaded forward-hosts for $hostType:" + result.size)
+    result
+  }
 
   private def combineMap[T](input: Map[Int, T]) = for {
     (host, key) <- hosts
@@ -171,6 +176,17 @@ sealed trait SCMResolver {
    * to bypass the OAuth proxy.
    */
   def proxyAuthorizationValue(): (String, String)
+
+  /**
+   * Decides upon configured values, which host should be the final host.
+   * @Returns final host
+   */
+  def getFinalHost(host: String): String = {
+    forwardHosts(host) match {
+      case h if h != "" && Option(h) != None => h
+      case _                                 => host
+    }
+  }
 }
 
 @Singleton
@@ -182,24 +198,28 @@ class GithubResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
   def commits(host: String, project: String, repository: String) = {
     val antecedent = antecedents(host)
     val succeeder = succeeders(host)
-    s"$antecedent$host$succeeder/repos/$project/$repository/commits"
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost$succeeder/repos/$project/$repository/commits"
   }
   def commit(host: String, project: String, repository: String, id: String): String = {
     val antecedent = antecedents(host)
     val succeeder = succeeders(host)
-    s"$antecedent$host$succeeder/repos/$project/$repository/commits/$id"
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost$succeeder/repos/$project/$repository/commits/$id"
   }
 
   def repo(host: String, project: String, repository: String) = {
     val antecedent = antecedents(host)
     val succeeder = succeeders(host)
-    s"$antecedent$host$succeeder/repos/$project/$repository"
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost$succeeder/repos/$project/$repository"
   }
   def repoUrl(host: String, project: String, repository: String) = s"https://$host/$project/$repository"
 
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
     val antecedent = antecedents(host)
-    s"$antecedent$host/$project/$repository/compare/$source...$target"
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost/$project/$repository/compare/$source...$target"
   }
 
   def accessTokenHeader(host: String) = ("access_token" -> accessTokenValue(host))
@@ -224,25 +244,29 @@ class StashResolver @Inject() (config: SCMConfiguration, oauth: OAuth) extends S
   def commits(host: String, project: String, repository: String) = {
     val antecedent = antecedents(host)
     val succeeder = succeeders(host)
-    s"$antecedent$host$succeeder/projects/$project/repos/$repository/commits"
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost$succeeder/projects/$project/repos/$repository/commits"
   }
   def commit(host: String, project: String, repository: String, id: String): String = {
     val antecedent = antecedents(host)
     val succeeder = succeeders(host)
-    s"$antecedent$host$succeeder/projects/$project/repos/$repository/commits/$id"
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost$succeeder/projects/$project/repos/$repository/commits/$id"
   }
 
   def repo(host: String, project: String, repository: String) = {
     val antecedent = antecedents(host)
     val succeeder = succeeders(host)
-    s"$antecedent$host$succeeder/projects/$project/repos/$repository"
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost$succeeder/projects/$project/repos/$repository"
   }
   def repoUrl(host: String, project: String, repository: String) = s"https://$host/projects/$project/repos/$repository/browse"
 
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
     val antecedent = antecedents(host)
     val succeeder = succeeders(host)
-    s"https://$host$succeeder/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
+    val finalHost = getFinalHost(host)
+    s"https://$finalHost$succeeder/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
   }
   // Authorization variables
   def accessTokenHeader(host: String) = ("X-Auth-Token" -> accessTokenValue(host))

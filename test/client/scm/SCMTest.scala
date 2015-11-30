@@ -44,6 +44,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
   val mockedResponse = mockSuccessfullParsableFutureWSResponse("", 200)
   val github = "github.com"
   val stash = "stash.com"
+  val stashForwardHost = "proxy.secret.com"
   val project = "project"
   val repository = "repository"
   //  val since = Some("since")
@@ -67,7 +68,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
     testGET(url, client.commits(ghehost, project, repository, None, None, 1))
   }
   it should "request commits from stash API" in {
-    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits"
+    val url = s"https://$stashForwardHost/rest/api/1.0/projects/$project/repos/$repository/commits"
     testGET(url, client.commits(stash, project, repository, None, None, 1))
   }
 
@@ -80,7 +81,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
     testGET(url, client.commit(ghehost, project, repository, id))
   }
   it should "request a single commit from stash API" in {
-    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/commits/$id"
+    val url = s"https://$stashForwardHost/rest/api/1.0/projects/$project/repos/$repository/commits/$id"
     testGET(url, client.commit(stash, project, repository, id))
   }
 
@@ -93,7 +94,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
     testGET(url, client.repo(ghehost, project, repository))
   }
   it should "request a single repository from stash API" in {
-    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository"
+    val url = s"https://$stashForwardHost/rest/api/1.0/projects/$project/repos/$repository"
     testGET(url, client.repo(stash, project, repository))
   }
 
@@ -103,7 +104,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
     assert(result == url)
   }
   it should "return a repository-url for stash API" in {
-    val url = s"https://$stash/projects/$project/repos/$repository/browse"
+    val url = s"https://$stashForwardHost/projects/$project/repos/$repository/browse"
     val result = client.repoUrl(stash, project, repository)
     assert(result == url)
   }
@@ -114,7 +115,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
     assert(result == url)
   }
   it should "return a diffUrl for stash frontend" in {
-    val url = s"https://$stash/rest/api/1.0/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
+    val url = s"https://$stashForwardHost/rest/api/1.0/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
     val result = client.diffUrl(stash, project, repository, source, target)
     assert(result == url)
   }
