@@ -179,7 +179,7 @@ sealed trait SCMResolver {
 
   /**
    * Decides upon configured values, which host should be the final host.
-   * @Returns final host
+   * @return final host
    */
   def getFinalHost(host: String): String = {
     forwardHosts(host) match {
