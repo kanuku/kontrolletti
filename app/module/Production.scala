@@ -12,6 +12,9 @@ import play.api.Logger
 import service.{ ImportCommit, ImportCommitImpl, ImportRepositoriesImpl, ImportRepository, Search, SearchImpl }
 import configuration.SCMConfigurationImpl
 import configuration.SCMConfiguration
+import client.scm.SCMParser
+import client.scm.GithubToJsonParser
+import client.scm.StashToJsonParser
 
 class Production extends AbstractModule {
 
@@ -31,6 +34,8 @@ class Production extends AbstractModule {
     bind(classOf[RepoRepository]).to(classOf[RepoRepositoryImpl])
     bind(classOf[SCMResolver]).annotatedWith(Names.named("github")).to(classOf[GithubResolver])
     bind(classOf[SCMResolver]).annotatedWith(Names.named("stash")).to(classOf[StashResolver])
+    bind(classOf[SCMParser]).annotatedWith(Names.named("github")).to(classOf[GithubToJsonParser])
+    bind(classOf[SCMParser]).annotatedWith(Names.named("stash")).to(classOf[StashToJsonParser])
     bind(classOf[Bootstrap]).to(classOf[BootstrapImpl]).asEagerSingleton()
   }
 }

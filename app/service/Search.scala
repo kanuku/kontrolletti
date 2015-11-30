@@ -14,6 +14,12 @@ import play.api.libs.json.JsValue
 import play.api.libs.ws.WSResponse
 import utility.UrlParser
 import configuration.SCMConfiguration
+import client.scm.GithubToJsonParser
+import client.scm.StashToJsonParser
+import client.scm.SCMResolver
+import javax.inject.Named
+import client.scm.GithubToJsonParser
+import client.scm.StashToJsonParser
 
 trait Search {
 
@@ -102,7 +108,7 @@ trait Search {
  */
 
 @Singleton
-class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
+class SearchImpl @Inject() (client: SCM, @Named("stash") stashParser: SCMParser, @Named("github") githubParser: SCMParser) extends Search with UrlParser {
 
   type Parser[B] = JsValue => B
 
@@ -259,7 +265,7 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
    *
    */
   private def resolveParser(host: String): Either[String, SCMParser] =
-    (GithubToJsonParser.resolve(host) orElse StashToJsonParser.resolve(host)) match {
+    (githubParser.resolve(host) orElse stashParser.resolve(host)) match {
       case Some(parser) => Right(parser)
       case None         => Left(s"Could not resolve the client for $host")
     }

@@ -1,12 +1,12 @@
 package client.scm
 
-import scala.collection.JavaConverters.{ asScalaBufferConverter, _ }
-import play.api.Logger
-import play.api.Play.current
-import javax.inject._
-import client.RequestDispatcher
+import client.oauth.OAuth
 import configuration.SCMConfiguration
-
+import javax.inject.{ Inject, Singleton }
+import play.api.Logger
+import utility.Transformer
+import scala.concurrent.Await
+import scala.concurrent.duration.DurationInt
 /**
  * Resolves the URL's in the communication context with the SCM REST API. <br> Holds configurations like URL's
  * and Headers for communicating with the Rest Interface of a SCM server.
@@ -166,6 +166,11 @@ sealed trait SCMResolver {
    */
   def accessTokenValue(host: String): String = authTokens.getOrElse(host, "")
 
+  /**
+   * Returns the header(with the credentials) for the OAuth Authorization
+   * to bypass the OAuth proxy.
+   */
+  def proxyAuthorizationValue(): (String, String)
 }
 
 @Singleton
@@ -204,10 +209,14 @@ class GithubResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
   def isGithubServerType(): Boolean = true
   def sinceCommitQueryParameter(since: String) = ("date" -> since)
   def startAtPageNumber(pageNr: Int) = ("page" -> pageNr.toString())
+
+  //This is should be coming from configuration
+  def isBehindOAuthProxy(): Boolean = false
+  def proxyAuthorizationValue(): (String, String) = ("" -> "")
 }
 
 @Singleton
-class StashResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
+class StashResolver @Inject() (config: SCMConfiguration, oauth: OAuth) extends SCMResolver {
 
   def hostType = "stash"
   def config() = config
@@ -243,4 +252,10 @@ class StashResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
   def isGithubServerType: Boolean = false
   def sinceCommitQueryParameter(since: String) = ("since" -> since)
   def startAtPageNumber(pageNr: Int) = ("start" -> (pageNr - 1).toString())
+
+  //This is should be coming from configuration
+  def isBehindOAuthProxy(): Boolean = true
+  def proxyAuthorizationValue(): (String, String) = ("Authorization" -> ("Bearer " + getToken()))
+
+  private def getToken(): String = Await.result(oauth.accessToken(), 30.seconds).accessToken
 }
