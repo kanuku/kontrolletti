@@ -79,25 +79,30 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
   private val logger: Logger = Logger(this.getClass())
 
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNr: Int): Future[WSResponse] = {
+    logger.info(s"Commits for $host $project $repository")
     val res: SCMResolver = resolver(host)
     val url = res.commits(host, project, repository)
     get(host, url, since, pageNr)
   }
   def commit(host: String, project: String, repository: String, id: String): Future[WSResponse] = {
+    logger.info(s"Commit for $host $project $repository")
     val res: SCMResolver = resolver(host)
     get(host, res.commit(host, project, repository, id), None)
   }
   def repo(host: String, project: String, repository: String): Future[WSResponse] = {
+    logger.info(s"Repo for $host $project $repository")
     val res: SCMResolver = resolver(host)
     val url = res.repo(host, project, repository)
     get(host, url, None)
   }
 
   def repoUrl(host: String, project: String, repository: String): String = {
+    logger.info(s"Repo-URL for $host $project $repository")
     val res: SCMResolver = resolver(host)
     res.repoUrl(host, project, repository)
   }
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
+    logger.info(s"Diff-URL for $host $project $repository")
     val res: SCMResolver = resolver(host)
     res.diffUrl(host, project, repository, source, target)
   }
@@ -154,7 +159,10 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
     case Some(resolver) => resolver
     case _ => stashResolver.resolve(host) match {
       case Some(resolver) => resolver
-      case _              => throw new IllegalStateException(s"Could not resolve SCM context for $host")
+      case _ =>
+        var msg = s"Could not resolve SCM context for $host"
+        logger.warn(msg)
+        throw new IllegalStateException(msg)
     }
   }
 

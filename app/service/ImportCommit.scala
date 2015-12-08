@@ -40,9 +40,9 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
           logger.info("Last commit:" + lastCommit)
           synchCommit(repo, lastCommit)
         }
-        logger.info("Finished synchronizing Commits.")
       }
     }
+    logger.info("Finished synchronizing Commits.")
   }
 
   private def synchCommit(repo: Repository, since: Option[Commit], pageNumber: Int = 1): Future[Boolean] = {
