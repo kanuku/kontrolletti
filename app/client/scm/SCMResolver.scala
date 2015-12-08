@@ -182,9 +182,11 @@ sealed trait SCMResolver {
    * @return final host
    */
   def getFinalHost(host: String): String = {
-    forwardHosts(host) match {
+    forwardHosts.getOrElse(host, host) match {
       case h if h != "" && Option(h) != None => h
-      case _                                 => host
+      case _ =>
+        logger.info(s"No forward host for $host")
+        host
     }
   }
 }
