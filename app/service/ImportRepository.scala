@@ -40,21 +40,11 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
       savedRepos <- repoRepo.all()
       validRepos <- keepValidRepos(kioRepos)
       reposNotInDatabase <- notInRightHandFilter(validRepos, savedRepos.toList)
-      result <- {
-        reposNotInDatabase.map { x => (x.url -> x) } match {
-          case Nil => Future.successful {}
-          case valid =>
-            logger.info("from " + kioRepos.size + " Repositories(Kio) only " + valid.size + " are usable and " + savedRepos.size + " are already in database")
-            repoRepo.save(valid.toMap.values.toList).map { _ =>
-              logger.info("Finished saving apps")
-            }
-        }
-      }
-    } yield (savedRepos, result)
+    } yield saveExistingRepos(reposNotInDatabase)
   }
 
   /**
-   * Removes repos that do not have a parsable scm-url or are duplicate, or that
+   * Removes repos that do not have a parsable scm-url or are duplicate.
    */
   private def keepValidRepos(repositories: List[Repository]): Future[List[Repository]] = Future {
     removeDuplicates {
@@ -65,8 +55,6 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
           case Right(result) => Option(result)
           case Left(error)   => None
         }
-        if exists(host, project, repoName)
-
       } yield repo.copy(host = host, project = project, repository = repoName)
     }
   }
@@ -74,15 +62,25 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
   /**
    *
    */
-  def exists(host: String, project: String, repository: String): Boolean = {
-    Await.result(tryFuture(search.isRepo(host, project, repository).map { result =>
-      result match {
-        case Left(error) =>
-          logger.warn(s"Project might not exist $host - $project - $repository")
-          false
-        case Right(value) => value
-      }
-    }, Future.successful(false)), Duration("30 seconds"))
+  def existsInSCM(repo: Repository): Future[Boolean] = search.isRepo(repo.host, repo.project, repo.repository).map {
+    _ match {
+      case Right(exists) => exists
+      case _             => false
+
+    }
+  }
+
+  def saveExistingRepos(repos: List[Repository]) = {
+    Future.traverse(repos)(saveIfExists)
+  }
+
+  def saveIfExists(repo: Repository): Future[Unit] = {
+    existsInSCM(repo).map { exists =>
+      if (exists)
+        repoRepo.save(repo)
+      else
+        logger.info("Repo may not exist:" + repo.url)
+    }
   }
 
   def removeDuplicates(repos: List[Repository]): List[Repository] = repos match {
