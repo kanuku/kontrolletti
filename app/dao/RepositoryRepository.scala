@@ -19,6 +19,7 @@ trait RepoRepository {
 
   def initializeDatabase: Future[Unit]
   def save(repos: List[Repository]): Future[Unit]
+  def save(repos: Repository): Future[Unit]
   def enabled(): Future[Seq[Repository]]
   def byParameters(host: String, project: String, repository: String): Future[Option[Repository]]
   def all(): Future[Seq[Repository]]
@@ -40,8 +41,12 @@ class RepoRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseConf
   }
 
   def save(input: List[Repository]): Future[Unit] = {
-    logger.info(s"Number of AppInfo's to save:" + input.size)
+    logger.info(s"Number of Repo to save:" + input.size)
     handleError(db.run(repos ++= input).map(_ => ()))
+  }
+  def save(input: Repository): Future[Unit] = {
+    logger.info(s"Saving single Repo:" + input.url)
+    handleError(db.run(repos ++= List(input)).map(_ => ()))
   }
   def enabled(): Future[Seq[Repository]] = {
     logger.info("Getting enabled Repositories")

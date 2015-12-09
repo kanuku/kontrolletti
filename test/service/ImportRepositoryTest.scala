@@ -3,6 +3,7 @@ package service
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
+import org.scalatest.Matchers._
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.mockito.Mockito.when
@@ -20,6 +21,7 @@ import model.Repository
 import configuration.GeneralConfiguration
 import org.scalatest.Matchers
 import org.scalatest.BeforeAndAfter
+import model.Repository
 import model.Repository
 
 class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils with Matchers with BeforeAndAfter {
@@ -44,7 +46,7 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
   val unvalidRepo = createRepository(url = s"url1", host = host, project = project, repository = repository)
   val validRepo1 = createRepository(url = s"$repoPrefix/repo1")
   val validRepo2 = createRepository(url = s"$repoPrefix/repo2")
-  val validRepo3 = createRepository(url = s"$repoPrefix/repo3")
+  val validRepo3 = createRepository(url = s"$repoPrefix/repo3", host = "github.com", project = "zalando-bus", repository = "repo3")
 
   private val repoImporter = new ImportRepositoriesImpl(oAuthClient, kioClient, repoRepository, search, config)
 
@@ -60,7 +62,7 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
     val appIds = List("kontrolletti", "cloud-lobster")
     val appIdsResult = Future.successful(appIds)
 
-    val reposToSave = List(validRepo1, validRepo2)
+    val reposToSave = List(validRepo1)
     val emptySavedRepos = Future.successful(List())
     val savedRepos = Future.successful(List(validRepo3))
     val reposReturnedByKio = Future.successful(reposToSave ++ List(unvalidRepo, validRepo3))
@@ -73,12 +75,11 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
 
     Await.result(repoImporter.syncApps(), Duration("500 seconds"))
 
-    val capturedRepos = ArgumentCaptor.forClass(classOf[List[Repository]])
+    val capturedRepos = ArgumentCaptor.forClass(classOf[Repository])
     verify(oAuthClient, times(1)).accessToken()
     verify(kioClient, times(1)).repositories(accessToken)
     verify(repoRepository, times(1)).save(capturedRepos.capture())
-    assert(capturedRepos.getValue.find(x => x.url == validRepo1.url) != None)
-    assert(capturedRepos.getValue.find(x => x.url == validRepo2.url) != None)
+    assert(capturedRepos.getValue.url == validRepo1.url)
   }
 
   "ImportRepository#removeDuplicates" should "return Collection without duplicates" in {
@@ -100,6 +101,7 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
     result.contains(d4) shouldBe true
 
   }
+
   "ImportRepository#notInRightHandFilter" should "return Collection without duplicates" in {
     val r1 = new Repository("url1", "host1", "project1", "repository1", true, None, None, None)
     val r2 = new Repository("", "host2", "project2", "repository2", true, None, None, None)
@@ -125,11 +127,13 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
     repoImporter.reposAreEqual(r1, r1) shouldBe true
   }
   "ImportRepository#exists" should "true if the of the call results in true" in {
+    val repo = new Repository("", host, project, repository, false, None, None, None)
     when(search.isRepo(host, project, repository)).thenReturn(Future.successful(Right(true)))
-    repoImporter.exists(host, project, repository) shouldBe true
+    Await.result(repoImporter.existsInSCM(repo), Duration("50 seconds")) shouldBe true
   }
   "ImportRepository#exists" should "false if the of the call results in false" in {
+    val repo = new Repository("", host, project, repository, false, None, None, None)
     when(search.isRepo(host, project, repository)).thenReturn(Future.successful(Right(false)))
-    repoImporter.exists(host, project, repository) shouldBe false
+    Await.result(repoImporter.existsInSCM(repo), Duration("50 seconds")) shouldBe false
   }
 }
