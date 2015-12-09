@@ -9,7 +9,7 @@ A service that aggregates and stores information from different Source Control M
 
 ===
 #### Development
-You need scala(2.11) and sbt(0.13.8) installed to build or develop.  
+You need scala(2.11) and sbt(0.13.7) installed to build or develop.  
 ```sh
 ## Export the access-token of stash and github REST API's:  
 export AUTH_TOKEN_GITHUB="19j1923u4Jh866ahsWLS==aw$"
