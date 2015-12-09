@@ -30,6 +30,7 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
   private val actorSystem = mock[ActorSystem]
   private val scheduler = mock[Scheduler]
   private val repoRepository = mock[RepoRepository]
+  private val search = mock[Search]
   private val config = mock[GeneralConfiguration]
   when(actorSystem.scheduler).thenReturn(scheduler)
 
@@ -37,15 +38,18 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
 
   //repositories
   val repoPrefix = "https://github.com/zalando-bus"
-  val unvalidRepo = createRepository(url = s"url1", host = "host1", project = "project1", repository = "repository")
+  val host = "host1"
+  val project = "project1"
+  val repository = "repository"
+  val unvalidRepo = createRepository(url = s"url1", host = host, project = project, repository = repository)
   val validRepo1 = createRepository(url = s"$repoPrefix/repo1")
   val validRepo2 = createRepository(url = s"$repoPrefix/repo2")
   val validRepo3 = createRepository(url = s"$repoPrefix/repo3")
 
-  private val repoImporter = new ImportRepositoriesImpl(oAuthClient, kioClient, repoRepository, config)
+  private val repoImporter = new ImportRepositoriesImpl(oAuthClient, kioClient, repoRepository, search, config)
 
   before {
-    reset(kioClient, oAuthClient, scheduler, repoRepository, config)
+    reset(kioClient, oAuthClient, scheduler, repoRepository, search, config)
 
   }
 
@@ -64,6 +68,7 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
     when(oAuthClient.accessToken()).thenReturn(accessTokenResult)
     when(kioClient.repositories(accessToken)).thenReturn(reposReturnedByKio)
     when(repoRepository.all()).thenReturn(savedRepos)
+    when(search.isRepo(anyString(), anyString(), anyString())).thenReturn(Future.successful(Right(true)))
     when(repoRepository.save(any[List[Repository]]())).thenReturn(Future.successful {})
 
     Await.result(repoImporter.syncApps(), Duration("500 seconds"))
@@ -118,6 +123,13 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
     repoImporter.reposAreEqual(r1, r2) shouldBe false
     repoImporter.reposAreEqual(r2, r2) shouldBe true
     repoImporter.reposAreEqual(r1, r1) shouldBe true
-
+  }
+  "ImportRepository#exists" should "true if the of the call results in true" in {
+    when(search.isRepo(host, project, repository)).thenReturn(Future.successful(Right(true)))
+    repoImporter.exists(host, project, repository) shouldBe true
+  }
+  "ImportRepository#exists" should "false if the of the call results in false" in {
+    when(search.isRepo(host, project, repository)).thenReturn(Future.successful(Right(false)))
+    repoImporter.exists(host, project, repository) shouldBe false
   }
 }
