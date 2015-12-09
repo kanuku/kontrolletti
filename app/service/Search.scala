@@ -20,6 +20,7 @@ import client.scm.SCMResolver
 import javax.inject.Named
 import client.scm.GithubToJsonParser
 import client.scm.StashToJsonParser
+import utility.FutureUtil._
 
 trait Search {
 
@@ -161,18 +162,16 @@ class SearchImpl @Inject() (client: SCM, @Named("stash") stashParser: SCMParser,
 
   def isRepo(host: String, project: String, repository: String): Future[Either[String, Boolean]] = {
     logger.info(s"isRepo: $host - $project - $repository")
-    Try(client.resolver(host)) match {
-      case Success(call) if !call.allowedProjects(host).isEmpty =>
+    tryFuture(client.resolver(host)) match {
+      case Some(call) if !call.allowedProjects(host).isEmpty =>
         if (call.allowedProjects(host).contains(project)) {
           isUrlValid(host, client.repoUrl(host, project, repository))
         } else {
           logger.info(s"Allowed projects for host[$host] >>" + call.allowedProjects(host))
           Future.successful(Right(false))
         }
-      case Success(call) => isUrlValid(host, client.repoUrl(host, project, repository))
-      case Failure(ex) =>
-        logger.warn(ex.getMessage)
-        Future.successful(Right(false))
+      case Some(call) => isUrlValid(host, client.repoUrl(host, project, repository))
+      case None       => Future.successful(Right(false))
     }
   }
 
