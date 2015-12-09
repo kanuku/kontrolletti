@@ -37,6 +37,15 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
     "client.scm.stash.host.1" -> stashPrivate, // Server Stash2
     "client.scm.stash.host.2" -> stashMyCompany, // Server Stash3
 
+    //Client hosts forward
+    "client.scm.github.forwardHost.0" -> "",
+    "client.scm.github.forwardHost.1" -> "proxy.secret-1.com",
+    "client.scm.github.forwardHost.2" -> "proxy.secret-2.com",
+
+    "client.scm.stash.forwardHost.0" -> "proxy.secret-0.com", // Server Stash1
+    "client.scm.stash.forwardHost.1" -> "", // Server Stash2
+    "client.scm.stash.forwardHost.2" -> "", // Server Stash3
+
     /*##############################
      * URL Precedent
      */
@@ -195,6 +204,20 @@ class SCMConfigurationTest extends PlaySpec with ConfigurableFakeApp with OneApp
       result(0) should contain("CD")
       result(0) should contain("ZALOS")
 
+    }
+  }
+  "SCMConfiguration#forwardHost" should {
+    "Return forward-hosts for github" in {
+      val result = scmConfig.forwardHost(githubType)
+      result(0) shouldBe ""
+      result(1) shouldBe "proxy.secret-1.com"
+      result(2) shouldBe "proxy.secret-2.com"
+    }
+    "Return forward-hosts for stash" in {
+      val result = scmConfig.forwardHost(stashType)
+      result(0) shouldBe "proxy.secret-0.com"
+      result(1) shouldBe ""
+      result(2) shouldBe ""
     }
   }
 }

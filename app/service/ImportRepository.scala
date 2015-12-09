@@ -1,22 +1,22 @@
 package service
 
 import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
 import client.kio.KioClient
 import client.oauth.OAuth
-import dao.RepoRepository
-import dao.CommitRepository
-import javax.inject.Inject
-import javax.inject.Singleton
+import configuration.GeneralConfiguration
+import dao.{ CommitRepository, RepoRepository }
+import javax.inject.{ Inject, Singleton }
 import model.Repository
-import model.Commit
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import utility.FutureUtil._
 import utility.UrlParser
 import scala.concurrent.Await
-import scala.concurrent.duration.DurationInt
-import configuration.GeneralConfiguration
-import utility.TicketParser
+import scala.concurrent.duration.Duration
+import scala.util.Try
+import scala.util.Failure
+import scala.util.Success
 
 trait ImportRepository {
   def syncApps(): Future[Unit]
@@ -25,6 +25,7 @@ trait ImportRepository {
 @Singleton
 class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient,
                                         repoRepo: RepoRepository,
+                                        search: Search,
                                         config: GeneralConfiguration) extends ImportRepository with UrlParser {
 
   val logger: Logger = Logger { this.getClass }
@@ -53,18 +54,35 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
   }
 
   /**
-   * Removes repos that do not have a parsable scm-url or are duplicate.
+   * Removes repos that do not have a parsable scm-url or are duplicate, or that
    */
   private def keepValidRepos(repositories: List[Repository]): Future[List[Repository]] = Future {
-    val result = for {
-      repo <- repositories
-      if (Option(repo.url) != None && !repo.url.isEmpty())
-      (host, project, repository) <- extract(repo.url) match {
-        case Right((host, project, repoName)) => Option((host, project, repoName))
-        case Left(_)                          => None
+    removeDuplicates {
+      for {
+        repo <- repositories
+        if (Option(repo.url) != None && !repo.url.isEmpty())
+        (host, project, repoName) <- extract(repo.url) match {
+          case Right(result) => Option(result)
+          case Left(error)   => None
+        }
+        if exists(host, project, repoName)
+
+      } yield repo.copy(host = host, project = project, repository = repoName)
+    }
+  }
+
+  /**
+   *
+   */
+  def exists(host: String, project: String, repository: String): Boolean = {
+    Await.result(tryFuture(search.isRepo(host, project, repository).map { result =>
+      result match {
+        case Left(error) =>
+          logger.warn(s"Project might not exist $host - $project - $repository")
+          false
+        case Right(value) => value
       }
-    } yield repo.copy(host = host, project = project, repository = repository)
-    removeDuplicates(result)
+    }, Future.successful(false)), Duration("30 seconds"))
   }
 
   def removeDuplicates(repos: List[Repository]): List[Repository] = repos match {

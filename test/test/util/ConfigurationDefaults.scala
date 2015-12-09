@@ -8,6 +8,7 @@ object ConfigurationDefaults {
     val ghehost = "github-enterprise.company.io"
     //stash host
     val shost = "stash.com"
+    val stashProxy = "proxy.secret.com"
     //OAuth
     val githubAccessToken = "IfyividCysaiTwacEabWytNararacDuKuesyapnaunairtyunhyecidCowfoshIn"
     val githubEnterpriseAccessToken = "VucdamishGivogcudiphQuonJeevEtKekdajLaithaugjunBevReajNeQuidIrd6"
@@ -23,6 +24,7 @@ object ConfigurationDefaults {
     def scmConfigurations: Map[String, _] = Map(
       // github
       "client.scm.github.host.0" -> ghost,
+      "client.scm.github.forwardHost.0" -> "",
       "client.scm.github.urlPrecedent.0" -> httpsAPI,
       "client.scm.github.urlSucceeder.0" -> "",
       "client.scm.github.authToken.0" -> githubAccessToken,
@@ -30,12 +32,14 @@ object ConfigurationDefaults {
 
       //github-enterprise
       "client.scm.github.host.1" -> ghehost,
+      "client.scm.github.forwardHost.1" -> "",
       "client.scm.github.urlPrecedent.1" -> https,
       "client.scm.github.urlSucceeder.1" -> githubEntSucceeder,
       "client.scm.github.authToken.1" -> githubEnterpriseAccessToken,
 
       //stash
       "client.scm.stash.host.0" -> shost,
+      "client.scm.stash.forwardHost.0" -> stashProxy,
       "client.scm.stash.urlPrecedent.0" -> https,
       "client.scm.stash.urlSucceeder.0" -> stashSucceder,
       "client.scm.stash.authToken.0" -> stashAccessToken,

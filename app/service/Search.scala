@@ -14,6 +14,13 @@ import play.api.libs.json.JsValue
 import play.api.libs.ws.WSResponse
 import utility.UrlParser
 import configuration.SCMConfiguration
+import client.scm.GithubToJsonParser
+import client.scm.StashToJsonParser
+import client.scm.SCMResolver
+import javax.inject.Named
+import client.scm.GithubToJsonParser
+import client.scm.StashToJsonParser
+import utility.FutureUtil._
 
 trait Search {
 
@@ -102,7 +109,7 @@ trait Search {
  */
 
 @Singleton
-class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
+class SearchImpl @Inject() (client: SCM, @Named("stash") stashParser: SCMParser, @Named("github") githubParser: SCMParser) extends Search with UrlParser {
 
   type Parser[B] = JsValue => B
 
@@ -155,18 +162,16 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
 
   def isRepo(host: String, project: String, repository: String): Future[Either[String, Boolean]] = {
     logger.info(s"isRepo: $host - $project - $repository")
-    Try(client.resolver(host)) match {
-      case Success(call) if !call.allowedProjects(host).isEmpty =>
+    tryFuture(client.resolver(host)) match {
+      case Some(call) if !call.allowedProjects(host).isEmpty =>
         if (call.allowedProjects(host).contains(project)) {
           isUrlValid(host, client.repoUrl(host, project, repository))
         } else {
           logger.info(s"Allowed projects for host[$host] >>" + call.allowedProjects(host))
           Future.successful(Right(false))
         }
-      case Success(call) => isUrlValid(host, client.repoUrl(host, project, repository))
-      case Failure(ex) =>
-        logger.warn(ex.getMessage)
-        Future.successful(Right(false))
+      case Some(call) => isUrlValid(host, client.repoUrl(host, project, repository))
+      case None       => Future.successful(Right(false))
     }
   }
 
@@ -259,9 +264,12 @@ class SearchImpl @Inject() (client: SCM) extends Search with UrlParser {
    *
    */
   private def resolveParser(host: String): Either[String, SCMParser] =
-    (GithubToJsonParser.resolve(host) orElse StashToJsonParser.resolve(host)) match {
+    (githubParser.resolve(host) orElse stashParser.resolve(host)) match {
       case Some(parser) => Right(parser)
-      case None         => Left(s"Could not resolve the client for $host")
+      case None =>
+        var msg = s"Could not resolve the client for $host"
+        logger.warn(msg)
+        Left(msg)
     }
 
 }

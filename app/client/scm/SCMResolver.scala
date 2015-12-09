@@ -1,12 +1,12 @@
 package client.scm
 
-import scala.collection.JavaConverters.{ asScalaBufferConverter, _ }
-import play.api.Logger
-import play.api.Play.current
-import javax.inject._
-import client.RequestDispatcher
+import client.oauth.OAuth
 import configuration.SCMConfiguration
-
+import javax.inject.{ Inject, Singleton }
+import play.api.Logger
+import utility.Transformer
+import scala.concurrent.Await
+import scala.concurrent.duration.DurationInt
 /**
  * Resolves the URL's in the communication context with the SCM REST API. <br> Holds configurations like URL's
  * and Headers for communicating with the Rest Interface of a SCM server.
@@ -40,6 +40,11 @@ sealed trait SCMResolver {
   lazy val authUsers: Map[String, String] = {
     val result = combineMap(config().authUser(hostType))
     logger.info(s"Loaded authUser for $hostType:" + result.size)
+    result
+  }
+  lazy val forwardHosts: Map[String, String] = {
+    val result = combineMap(config().forwardHost(hostType))
+    logger.info(s"Loaded forward-hosts for $hostType:" + result.size)
     result
   }
 
@@ -166,6 +171,24 @@ sealed trait SCMResolver {
    */
   def accessTokenValue(host: String): String = authTokens.getOrElse(host, "")
 
+  /**
+   * Returns the header(with the credentials) for the OAuth Authorization
+   * to bypass the OAuth proxy.
+   */
+  def proxyAuthorizationValue(): (String, String)
+
+  /**
+   * Decides upon configured values, which host should be the final host.
+   * @return final host
+   */
+  def getFinalHost(host: String): String = {
+    forwardHosts.getOrElse(host, host) match {
+      case h if h != "" && Option(h) != None => h
+      case _ =>
+        logger.info(s"No forward host for $host")
+        host
+    }
+  }
 }
 
 @Singleton
@@ -177,24 +200,28 @@ class GithubResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
   def commits(host: String, project: String, repository: String) = {
     val antecedent = antecedents(host)
     val succeeder = succeeders(host)
-    s"$antecedent$host$succeeder/repos/$project/$repository/commits"
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost$succeeder/repos/$project/$repository/commits"
   }
   def commit(host: String, project: String, repository: String, id: String): String = {
     val antecedent = antecedents(host)
     val succeeder = succeeders(host)
-    s"$antecedent$host$succeeder/repos/$project/$repository/commits/$id"
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost$succeeder/repos/$project/$repository/commits/$id"
   }
 
   def repo(host: String, project: String, repository: String) = {
     val antecedent = antecedents(host)
     val succeeder = succeeders(host)
-    s"$antecedent$host$succeeder/repos/$project/$repository"
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost$succeeder/repos/$project/$repository"
   }
   def repoUrl(host: String, project: String, repository: String) = s"https://$host/$project/$repository"
 
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
     val antecedent = antecedents(host)
-    s"$antecedent$host/$project/$repository/compare/$source...$target"
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost/$project/$repository/compare/$source...$target"
   }
 
   def accessTokenHeader(host: String) = ("access_token" -> accessTokenValue(host))
@@ -204,10 +231,14 @@ class GithubResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
   def isGithubServerType(): Boolean = true
   def sinceCommitQueryParameter(since: String) = ("date" -> since)
   def startAtPageNumber(pageNr: Int) = ("page" -> pageNr.toString())
+
+  //This is should be coming from configuration
+  def isBehindOAuthProxy(): Boolean = false
+  def proxyAuthorizationValue(): (String, String) = ("" -> "")
 }
 
 @Singleton
-class StashResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
+class StashResolver @Inject() (config: SCMConfiguration, oauth: OAuth) extends SCMResolver {
 
   def hostType = "stash"
   def config() = config
@@ -215,25 +246,29 @@ class StashResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
   def commits(host: String, project: String, repository: String) = {
     val antecedent = antecedents(host)
     val succeeder = succeeders(host)
-    s"$antecedent$host$succeeder/projects/$project/repos/$repository/commits"
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost$succeeder/projects/$project/repos/$repository/commits"
   }
   def commit(host: String, project: String, repository: String, id: String): String = {
     val antecedent = antecedents(host)
     val succeeder = succeeders(host)
-    s"$antecedent$host$succeeder/projects/$project/repos/$repository/commits/$id"
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost$succeeder/projects/$project/repos/$repository/commits/$id"
   }
 
   def repo(host: String, project: String, repository: String) = {
     val antecedent = antecedents(host)
     val succeeder = succeeders(host)
-    s"$antecedent$host$succeeder/projects/$project/repos/$repository"
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost$succeeder/projects/$project/repos/$repository"
   }
   def repoUrl(host: String, project: String, repository: String) = s"https://$host/projects/$project/repos/$repository/browse"
 
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
     val antecedent = antecedents(host)
     val succeeder = succeeders(host)
-    s"https://$host$succeeder/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
+    val finalHost = getFinalHost(host)
+    s"https://$finalHost$succeeder/projects/$project/repos/$repository/compare/commits?from=$source&to=$target"
   }
   // Authorization variables
   def accessTokenHeader(host: String) = ("X-Auth-Token" -> accessTokenValue(host))
@@ -243,4 +278,10 @@ class StashResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
   def isGithubServerType: Boolean = false
   def sinceCommitQueryParameter(since: String) = ("since" -> since)
   def startAtPageNumber(pageNr: Int) = ("start" -> (pageNr - 1).toString())
+
+  //This is should be coming from configuration
+  def isBehindOAuthProxy(): Boolean = true
+  def proxyAuthorizationValue(): (String, String) = ("Authorization" -> ("Bearer " + getToken()))
+
+  private def getToken(): String = Await.result(oauth.accessToken(), 30.seconds).accessToken
 }

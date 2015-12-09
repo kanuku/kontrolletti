@@ -1,25 +1,37 @@
 package client.scm
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.Matchers._
+import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.{ OneAppPerSuite, PlaySpec }
-
 import configuration.SCMConfigurationImpl
 import javax.inject.{ Inject, Singleton }
 import test.util.{ ConfigurableFakeApp, MockitoUtils }
 import test.util.ConfigurationDefaults.SCMConfigurationDefaults._
+import configuration.OAuthConfigurationImpl
+import configuration.OAuthConfiguration
+import client.oauth.OAuth
+import org.scalatest.BeforeAndAfter
+import com.sun.org.glassfish.external.statistics.annotations.Reset
+import scala.concurrent.Future
 
 class SCMResolverTest extends PlaySpec //
-    with OneAppPerSuite with ConfigurableFakeApp with MockitoSugar with MockitoUtils {
+    with OneAppPerSuite with ConfigurableFakeApp with MockitoSugar with MockitoUtils with BeforeAndAfter {
   implicit override lazy val app = fakeApplication
 
-  val config = new SCMConfigurationImpl
-  val github: SCMResolver = new GithubResolver(config)
-  val stash: SCMResolver = new StashResolver(config)
-
+  private val config = new SCMConfigurationImpl
+  private val oAuthCred = createOAuthAccessToken("token_type", "access_token", "scope", 3599)
+  private val oAuthclient = mock[OAuth]
+  private val github: SCMResolver = new GithubResolver(config)
+  private val stash: SCMResolver = new StashResolver(config, oAuthclient)
+  before {
+    reset(oAuthclient)
+    when(oAuthclient.accessToken()).thenReturn(Future.successful(oAuthCred))
+  }
   //Project
   val project = "zalando"
   val repo = "kontrolletti"
+  val accessToken = "01ba-92hg-8j93-k7l4-6a4q-65m6-25a3-918kj"
 
   //Commit-ids
   val id = "7a82007"
@@ -62,6 +74,20 @@ class SCMResolverTest extends PlaySpec //
     }
   }
 
+  "Resolver#forwardHosts" should {
+    "be empty for github-types" in {
+      github.forwardHosts.keys.size shouldBe 2
+      github.forwardHosts(ghost) shouldBe ""
+      github.forwardHosts(ghehost) shouldBe ""
+    }
+
+    "not be empty for stash" in {
+      stash.forwardHosts.keys.size shouldBe 1
+      stash.forwardHosts(shost) shouldBe stashProxy
+    }
+
+  }
+
   "Resolver#commits" should {
     "return Github's commits endpoint" in {
       github.commits(ghost, project, repo) shouldBe s"https://api.$ghost/repos/$project/$repo/commits"
@@ -70,7 +96,7 @@ class SCMResolverTest extends PlaySpec //
       github.commits(ghehost, project, repo) shouldBe s"https://$ghehost/api/v3/repos/$project/$repo/commits"
     }
     "refere to Stash's commits endpoint" in {
-      stash.commits(shost, project, repo) shouldBe s"https://$shost/rest/api/1.0/projects/$project/repos/$repo/commits"
+      stash.commits(shost, project, repo) shouldBe s"https://$stashProxy/rest/api/1.0/projects/$project/repos/$repo/commits"
     }
   }
 
@@ -82,7 +108,7 @@ class SCMResolverTest extends PlaySpec //
       github.commit(ghehost, project, repo, id) shouldBe s"https://$ghehost/api/v3/repos/$project/$repo/commits/$id"
     }
     "refere to Stash's commit endpoint" in {
-      stash.commit(shost, project, repo, id) shouldBe s"https://$shost/rest/api/1.0/projects/$project/repos/$repo/commits/$id"
+      stash.commit(shost, project, repo, id) shouldBe s"https://$stashProxy/rest/api/1.0/projects/$project/repos/$repo/commits/$id"
     }
   }
 
@@ -94,7 +120,7 @@ class SCMResolverTest extends PlaySpec //
       github.repo(ghehost, project, repo) shouldBe s"https://$ghehost/api/v3/repos/$project/$repo"
     }
     "refere to Stash's repo endpoint" in {
-      stash.repo(shost, project, repo) shouldBe s"https://$shost/rest/api/1.0/projects/$project/repos/$repo"
+      stash.repo(shost, project, repo) shouldBe s"https://$stashProxy/rest/api/1.0/projects/$project/repos/$repo"
     }
   }
 
@@ -133,7 +159,7 @@ class SCMResolverTest extends PlaySpec //
       github.diffUrl(ghehost, project, repo, source, target) shouldBe s"https://$ghehost/$project/$repo/compare/$source...$target"
     }
     "return Stash's diff-URL" in {
-      stash.diffUrl(shost, project, repo, source, target) shouldBe s"https://$shost/rest/api/1.0/projects/$project/repos/$repo/compare/commits?from=$source&to=$target"
+      stash.diffUrl(shost, project, repo, source, target) shouldBe s"https://$stashProxy/rest/api/1.0/projects/$project/repos/$repo/compare/commits?from=$source&to=$target"
     }
   }
 
@@ -217,6 +243,15 @@ class SCMResolverTest extends PlaySpec //
     }
     "return Stash's userQueryParameter" in {
       stash.accessTokenHeader(shost) shouldBe ("X-Auth-Token" -> stashAccessToken)
+    }
+  }
+
+  "Resolver#proxyAuthorizationValue" should {
+    "return empty tuple for github" in {
+      github.proxyAuthorizationValue() shouldBe ("" -> "")
+    }
+    "return non-empty tuple for stash" in {
+      stash.proxyAuthorizationValue() shouldBe ("Authorization" -> "Bearer access_token")
     }
   }
   override def configuration: Map[String, _] = scmConfigurations

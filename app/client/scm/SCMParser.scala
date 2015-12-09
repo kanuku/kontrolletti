@@ -1,25 +1,17 @@
 package client.scm
 
-import play.api.libs.functional.syntax.functionalCanBuildApplicative
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.JsError
-import play.api.libs.json.JsPath
-import play.api.libs.json.JsResult
-import play.api.libs.json.JsSuccess
-import play.api.libs.json.JsValue
-import play.api.libs.json.Reads
-import model.Author
-import model.Commit
-import model.Link
-import model.Ticket
-import play.api.Logger
-import model.Repository
-import play.api.libs.json.JsArray
-import play.api.libs.json.Json
-import utility.Transformer
 import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
 import configuration.SCMConfigurationImpl
+import javax.inject.Inject
+import model.{ Author, Commit }
+import model.{ Repository, Ticket }
+import play.api.Logger
+import play.api.libs.functional.syntax.{ functionalCanBuildApplicative, toFunctionalBuilderOps }
+import play.api.libs.json.{ JsPath, JsResult }
+import play.api.libs.json.{ JsValue, Json, Reads }
+import play.api.libs.json.JsArray
+import utility.Transformer
+import javax.inject.Named
 
 /**
  * Json deserializer for converting external json types, from the SCM,
@@ -79,10 +71,7 @@ sealed trait SCMParser {
  * Deserializer for JsonObjects from Github.com
  *
  */
-object GithubToJsonParser extends SCMParser {
-  //TODO Inject Resolver with GUICE
-  private val config = new SCMConfigurationImpl
-  private val resolver = new GithubResolver(config)
+class GithubToJsonParser @Inject() (@Named("github") resolver: SCMResolver) extends SCMParser {
   private val transformer = Transformer
   def domains = resolver.hosts.keySet
   val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = (value) => transformer.deserialize2Either[List[Commit]](value)
@@ -137,10 +126,8 @@ object GithubToJsonParser extends SCMParser {
  * Deserializer for JsonObjects from Stash
  *
  */
-object StashToJsonParser extends SCMParser {
-  //TODO Inject Resolver with GUICE
-  private val config = new SCMConfigurationImpl
-  private val resolver = new StashResolver(config)
+
+class StashToJsonParser @Inject() (@Named("stash") resolver: SCMResolver) extends SCMParser {
   private val transformer = Transformer
   def domains = resolver.hosts.keys.toSet
   val commitToModel: Parser[JsValue, Either[String, List[Commit]]] = { value =>
