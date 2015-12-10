@@ -27,10 +27,10 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
       }
     }
     def executeParallellRepoUrlWithSucceeder(input: List[String]): Future[List[String]] = Future.successful {
-      val regex = s"$protocolRgx$userRgx$hostnameRgx$projectAntecedentRgx$projectRgx$repoAntecedentRgx$repoRgx$repoSucceederRgx".r
+      val regex = s"$protocolRgx$userRgx$hostnameRgx$portRgx$projectAntecedentRgx$projectRgx$repoAntecedentRgx$repoRgx$repoSucceederRgx".r
       for (value <- input) yield value match {
-        case regex(protocol, user, host, prjAntecedent, project, repoAntecedent, repo, succeeder) =>
-          concat(protocol, user, host, prjAntecedent, project, repoAntecedent, repo, succeeder)
+        case regex(protocol, user, host, port, prjAntecedent, project, repoAntecedent, repo, succeeder) =>
+          concat(protocol, user, host, port, prjAntecedent, project, repoAntecedent, repo, succeeder)
       }
     }
 
@@ -49,20 +49,20 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
       }
     }
     def executeParallellRepoUrl(input: List[String]): Future[List[String]] = Future.successful {
-      val regex = s"$protocolRgx$userRgx$hostnameRgx$projectAntecedentRgx$projectRgx$repoAntecedentRgx$repoRgx".r
+      val regex = s"$protocolRgx$userRgx$hostnameRgx$portRgx$projectAntecedentRgx$projectRgx$repoAntecedentRgx$repoRgx".r
       for (value <- input) yield value match {
-        case regex(protocol, user, host, prjAntecedent, project, repoAntecedent, repo) =>
-          concat(protocol, user, host, prjAntecedent, project, repoAntecedent, repo)
+        case regex(protocol, user, host, port, prjAntecedent, project, repoAntecedent, repo) =>
+          concat(protocol, user, host, port, prjAntecedent, project, repoAntecedent, repo)
       }
     }
   }
 
   test("extract(protocol+user+hostname+antecedent+project+antecedent) and get (protocol+user+hostname+antecedent+project+antecedent)") {
     val input = fixture.protocolUserHostAntecedentsProjectAntecedents
-    val regex = s"$protocolRgx$userRgx$hostnameRgx$projectAntecedentRgx$projectRgx$repoAntecedentRgx".r
+    val regex = s"$protocolRgx$userRgx$hostnameRgx$portRgx$projectAntecedentRgx$projectRgx$repoAntecedentRgx".r
     val parsed = for (value <- input if !value.isEmpty()) yield value match {
-      case regex(protocol, user, host, prjAntecedent, project, repoAntecedent) =>
-        concat(protocol, user, host, prjAntecedent, project, repoAntecedent)
+      case regex(protocol, user, host, port, prjAntecedent, project, repoAntecedent) =>
+        concat(protocol, user, host, port, prjAntecedent, project, repoAntecedent)
     }
     val diff = input.filterNot { x => parsed.contains(x) }
     diff shouldBe empty
@@ -70,24 +70,24 @@ class UrlParserMixedRegexExpressionsTest extends FunSuite with Matchers with Url
 
   test("extract(protocol+user+hostname+antecedent+project) and get (protocol+user+hostname+antecedent+project)") {
     val input = fixture.protocolUserHostAntecedentsProjects
-    val regex = s"$protocolRgx$userRgx$hostnameRgx$projectAntecedentRgx$projectRgx".r
-    val parsed = for (value <- input if !value.isEmpty()) yield value match { case regex(protocol, user, host, antecedent, project) => concat(protocol, user, host, antecedent, project) }
+    val regex = s"$protocolRgx$userRgx$hostnameRgx$portRgx$projectAntecedentRgx$projectRgx".r
+    val parsed = for (value <- input if !value.isEmpty()) yield value match { case regex(protocol, user, host, port, antecedent, project) => concat(protocol, user, host, port, antecedent, project) }
     val diff = input.filterNot { x => x.isEmpty() }.filterNot { x => parsed.contains(x) }
     diff shouldBe empty
   }
 
   test("extract(protocol+user+hostname+antecedent) and get (protocol+user+hostname+antecedent)") {
     val input = fixture.protocolUserHostAntecedents
-    val regex = s"$protocolRgx$userRgx$hostnameRgx$projectAntecedentRgx".r
-    val parsed = for (value <- input if !value.isEmpty()) yield value match { case regex(protocol, user, host, antecedent) => concat(protocol, user, host, antecedent) }
+    val regex = s"$protocolRgx$userRgx$hostnameRgx$portRgx$projectAntecedentRgx".r
+    val parsed = for (value <- input if !value.isEmpty()) yield value match { case regex(protocol, user, host, port, antecedent) => concat(protocol, user, host, port, antecedent) }
     val diff = input.filterNot { x => x.isEmpty() }.filterNot { x => parsed.contains(x) }
     diff shouldBe empty
   }
 
   test("extract(protocol+user+hostname) and get (protocol+user+hostname)") {
     val input = fixture.protocolUserHosts
-    val regex = s"$protocolRgx$userRgx$hostnameRgx".r
-    val parsed = for (value <- input) yield value match { case regex(protocol, user, host) => concat(protocol, user, host) }
+    val regex = s"$protocolRgx$userRgx$hostnameRgx$portRgx".r
+    val parsed = for (value <- input) yield value match { case regex(protocol, user, host, port) => concat(protocol, user, host, port) }
     val diff = input.filterNot { x => x.isEmpty() }.filterNot { x => parsed.contains(x) }
 
     diff shouldBe empty

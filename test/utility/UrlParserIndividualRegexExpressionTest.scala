@@ -34,9 +34,9 @@ class UrlParserIndividualRegexExpressionTest extends FunSuite with Matchers with
   }
 
   test("parse (hostname+port) and get hostname+port") {
-    val regex = s"$hostnameRgx".r
+    val regex = s"$hostnameRgx$portRgx".r
     val input = fixture.hosts
-    val parsed = for (value <- input) yield value match { case regex(result) => result }
+    val parsed = for (value <- input) yield value match { case regex(host, port) => host + port }
     val diff1 = input.filterNot { x => parsed.contains(x) }
     val diff2 = parsed.filterNot { x => input.contains(x) }
     diff1 shouldBe empty

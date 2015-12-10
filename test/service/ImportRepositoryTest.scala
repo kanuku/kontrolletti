@@ -129,11 +129,11 @@ class ImportRepositoryTest extends FlatSpec with MockitoSugar with MockitoUtils 
   "ImportRepository#exists" should "true if the of the call results in true" in {
     val repo = new Repository("", host, project, repository, false, None, None, None)
     when(search.isRepo(host, project, repository)).thenReturn(Future.successful(Right(true)))
-    Await.result(repoImporter.existsInSCM(repo), Duration("50 seconds")) shouldBe true
+    Await.result(repoImporter.existsInSCM(repo), Duration("50 seconds")) shouldBe Some(repo)
   }
   "ImportRepository#exists" should "false if the of the call results in false" in {
     val repo = new Repository("", host, project, repository, false, None, None, None)
     when(search.isRepo(host, project, repository)).thenReturn(Future.successful(Right(false)))
-    Await.result(repoImporter.existsInSCM(repo), Duration("50 seconds")) shouldBe false
+    Await.result(repoImporter.existsInSCM(repo), Duration("50 seconds")) shouldBe None
   }
 }

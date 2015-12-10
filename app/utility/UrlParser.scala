@@ -16,12 +16,15 @@ trait UrlParser {
   val repoSucceederRgx = """(/.*|.git)?"""
   val repoRgx = """([\w.-]*?){1,1}"""
   val repoAntecedentRgx = """(/repos/|/){1,1}"""
-  val projectRgx = """([0-~-.]+){1,1}""" // inspired by ([ -~]+){1,1} - http://www.catonmat.net/blog/my-favorite-regex/ but from 0 (zero) to ~ (tilde) plus - (dash) and . (dot)   
+  val projectRgx = """([0-~-.]+){1,1}""" // inspired by ([ -~]+){1,1} - http://www.catonmat.net/blog/my-favorite-regex/ but from 0 (zero) to ~ (tilde) plus - (dash) and . (dot)
   val projectAntecedentRgx = """(/projects/|/scm/|/|:){1,1}"""
-  val hostnameRgx = """(\w+[-.\w]*\w*[:\d]*){1,1}"""
+  val portRgx = """([:\d]*)?"""
+  val hostnameRgx = """(\w+[-.\w]*\w*){1,1}"""
   val userRgx = """(\w+@)?"""
   val protocolRgx = """(\w+://)?"""
-  val urlRegex = s"$protocolRgx$userRgx$hostnameRgx$projectAntecedentRgx$projectRgx$repoAntecedentRgx$repoRgx$repoSucceederRgx".r
+  val sshRgx = """(ssh://){1,1}"""
+  val urlRegex = s"$protocolRgx$userRgx$hostnameRgx$portRgx$projectAntecedentRgx$projectRgx$repoAntecedentRgx$repoRgx$repoSucceederRgx".r
+  val sshUrlRegex = s"$sshRgx$userRgx$hostnameRgx$portRgx$projectAntecedentRgx$projectRgx$repoAntecedentRgx$repoRgx$repoSucceederRgx".r
 
   /**
    * Extracts the `host`, `project` and `repo` from a repository-url of a github or stash project
@@ -49,10 +52,12 @@ trait UrlParser {
     case link if (Option(link) == None || link.isEmpty()) =>
       Left("Repository-url should not be empty/null")
 
-    case urlRegex(protocol, user, host, prjAntecedent, project, repoAntecedent, repo, succeeder) =>
-      logger.debug(s"Extracted ($host, $project, $repo)")
+    case sshUrlRegex(protocol, user, host, port, prjAntecedent, project, repoAntecedent, repo, succeeder) =>
+      logger.debug(s"SSH extract ($host, $project, $repo)")
       Right(transformer(PartionedURL(protocol, user, host, prjAntecedent, project, repoAntecedent, repo, succeeder)))
-
+    case urlRegex(protocol, user, host, port, prjAntecedent, project, repoAntecedent, repo, succeeder) =>
+      logger.debug(s"Regular extracted ($host, $project, $repo)")
+      Right(transformer(PartionedURL(protocol, user, host + port, prjAntecedent, project, repoAntecedent, repo, succeeder)))
     case _ =>
       logger.warn(s"Could not parse $url")
       Left(s"Could not parse $url")
@@ -60,3 +65,14 @@ trait UrlParser {
   }
 
 }
+
+//object test extends App {
+//  val a = """(\w+[-.\w]*\w*){1,1}"""
+//  val b = """([:\d]*)?"""
+//  val pattern = s"$a$b".r
+//  val result = "asdf" match {
+//    case pattern(one, two) => one + "+" + two
+//    case _                 => "Nothing"
+//  }
+//  println("Result >> " + result)
+//}
