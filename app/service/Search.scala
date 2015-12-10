@@ -268,7 +268,7 @@ class SearchImpl @Inject() (client: SCM, @Named("stash") stashParser: SCMParser,
     (githubParser.resolve(host) orElse stashParser.resolve(host)) match {
       case Some(parser) => Right(parser)
       case None =>
-        var msg = s"Could not resolve the client for $host"
+        val msg = s"Could not resolve the client for $host"
         logger.warn(msg)
         Left(msg)
     }

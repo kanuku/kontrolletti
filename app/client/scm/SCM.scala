@@ -160,7 +160,7 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
     case _ => stashResolver.resolve(host) match {
       case Some(resolver) => resolver
       case _ =>
-        var msg = s"Could not resolve SCM context for $host"
+        val msg = s"Could not resolve SCM context for $host"
         logger.warn(msg)
         throw new IllegalStateException(msg)
     }
