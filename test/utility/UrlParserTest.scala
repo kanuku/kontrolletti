@@ -64,9 +64,6 @@ class UrlParserTest extends FunSuite {
   test("test-17") { //Bug -> https://github.com/zalando/kontrolletti/issues/138
     test("ssh://lschumacher@stash.com:7999/~lschumacher/eventlog-remote-writer-demoapp.git", "stash.com", "~lschumacher", "eventlog-remote-writer-demoapp")
   }
-  test("test-17") { //Bug -> https://github.com/zalando/kontrolletti/issues/138
-    test("ssh://lschumacher@stash.com:7999/~lschumacher/eventlog-remote-writer-demoapp.git", "stash.com", "~lschumacher", "eventlog-remote-writer-demoapp")
-  }
 
   def test(url: String, host: String, project: String, repo: String) = {
 
