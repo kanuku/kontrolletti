@@ -17,6 +17,7 @@ import scala.concurrent.duration.Duration
 import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
+import java.util.concurrent.TimeUnit
 
 trait ImportRepository {
   def syncApps(): Future[Unit]
@@ -34,13 +35,26 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
 
   def syncApps(): Future[Unit] = {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
+    val now = System.nanoTime
     for {
       accessToken <- logErrorOnFailure(oAuthclient.accessToken())
       kioRepos <- kioClient.repositories(accessToken)
       savedRepos <- repoRepo.all()
       validRepos <- keepValidRepos(kioRepos)
       reposNotInDatabase <- notInRightHandFilter(validRepos, savedRepos.toList)
-    } yield saveExistingRepos(reposNotInDatabase)
+      optinalSavedRepos <- Future.traverse(reposNotInDatabase)(saveIfExists)
+      savedInDatabase <- Future { optinalSavedRepos.flatten }
+      if {
+        logger.info("Result, apps from kio: " + kioRepos.size)
+        logger.info("Result, valid apps: " + validRepos.size)
+        logger.info("Result, apps already in database:" + savedRepos.size)
+        logger.info("Result, new apps saved db:" + savedInDatabase.size)
+        val elapsed = TimeUnit.SECONDS.convert((System.nanoTime - now), TimeUnit.NANOSECONDS)
+
+        logger.info(s"Result, job took $elapsed seconds")
+        true
+      }
+    } yield Future {}
   }
 
   /**
@@ -62,24 +76,24 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
   /**
    *
    */
-  def existsInSCM(repo: Repository): Future[Boolean] = search.isRepo(repo.host, repo.project, repo.repository).map {
+  def existsInSCM(repo: Repository): Future[Option[Repository]] = search.isRepo(repo.host, repo.project, repo.repository).map {
     _ match {
-      case Right(exists) => exists
-      case _             => false
+      case Right(exists) if exists => Some(repo)
+      case _                       => None
 
     }
   }
 
-  def saveExistingRepos(repos: List[Repository]) = {
-    Future.traverse(repos)(saveIfExists)
-  }
-
-  def saveIfExists(repo: Repository): Future[Unit] = {
-    existsInSCM(repo).map { exists =>
-      if (exists)
-        repoRepo.save(repo)
-      else
-        logger.info("Repo may not exist:" + repo.url)
+  def saveIfExists(repo: Repository): Future[Option[Repository]] = {
+    existsInSCM(repo).map {
+      _ match {
+        case Some(existent) =>
+          repoRepo.save(existent)
+          Some(existent)
+        case None =>
+          logger.info("Repo may not exist:" + repo.url)
+          None
+      }
     }
   }
 

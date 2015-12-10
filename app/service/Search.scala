@@ -115,7 +115,7 @@ class SearchImpl @Inject() (client: SCM, @Named("stash") stashParser: SCMParser,
 
   private val logger: Logger = Logger(this.getClass())
   private val defaultError = Left("Something went wrong, check the logs!")
-  private val acceptableCodes = List(200)
+  private val acceptableCodes = List(200, 301, 302)
   private val githubDateParser = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ");
 
   def commits(host: String, project: String, repository: String, since: Option[Commit], until: Option[Commit], pageNr: Int): Future[Either[String, Option[List[Commit]]]] = {
@@ -167,12 +167,13 @@ class SearchImpl @Inject() (client: SCM, @Named("stash") stashParser: SCMParser,
         if (call.allowedProjects(host).contains(project)) {
           isUrlValid(host, client.repoUrl(host, project, repository))
         } else {
-          logger.info(s"Allowed projects for host[$host] >>" + call.allowedProjects(host))
+          logger.info(s"$host/$project/$repository is not allowed. Only those($host): " + call.allowedProjects(host))
           Future.successful(Right(false))
         }
       case Some(call) => isUrlValid(host, client.repoUrl(host, project, repository))
       case None       => Future.successful(Right(false))
     }
+
   }
 
   def diff(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]] = {
@@ -196,8 +197,8 @@ class SearchImpl @Inject() (client: SCM, @Named("stash") stashParser: SCMParser,
           case status if acceptableCodes.contains(status) =>
             logger.info(s"$url is valid")
             true
-          case _ =>
-            logger.info(s"$url is not valid")
+          case status =>
+            logger.info(s"$url is not valid HTTP code:$status")
             false
         }
       }
