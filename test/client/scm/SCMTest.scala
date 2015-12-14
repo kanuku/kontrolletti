@@ -108,6 +108,16 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
     val result = client.repoUrl(stash, project, repository)
     assert(result == url)
   }
+  "SCM#checkRepoUrl" should "return a repository-url for github API" in {
+    val url = s"https://$github/$project/$repository"
+    val result = client.checkRepoUrl(github, project, repository)
+    assert(result == url)
+  }
+  it should "return a repository-url for stash API" in {
+    val url = s"https://$stashProxy/projects/$project/repos/$repository/browse"
+    val result = client.checkRepoUrl(stash, project, repository)
+    assert(result == url)
+  }
 
   "SCM#diffUrl" should "return a diffUrl for github frontend" in {
     val url = s"https://api.$github/$project/$repository/compare/$source...$target"

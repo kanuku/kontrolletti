@@ -66,8 +66,12 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
         repo <- repositories
         if (Option(repo.url) != None && !repo.url.isEmpty())
         (host, project, repoName) <- extract(repo.url) match {
-          case Right(result) => Option(result)
-          case Left(error)   => None
+          case Right(result) =>
+            logger.info("Parsed " + repo.url + " to " + result)
+            Option(result)
+          case Left(error) =>
+            logger.info("Failed to parse " + repo.url + ": " + error)
+            None
         }
       } yield repo.copy(host = host, project = project, repository = repoName)
     }
@@ -88,6 +92,7 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
     existsInSCM(repo).map {
       _ match {
         case Some(existent) =>
+          logger.info("Existing repo will be saved:" + repo.url)
           repoRepo.save(existent)
           Some(existent)
         case None =>

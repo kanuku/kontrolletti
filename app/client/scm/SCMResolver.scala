@@ -129,6 +129,14 @@ sealed trait SCMResolver {
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String
 
   /**
+   * Parses and returns the a github/stash repository-URL which can be used
+   * for testing  the existence of the Repository.
+   * @param host host of the SCM server
+   * @return either an error(left) or the normalized URI (right)
+   */
+  def checkRepoUrl(host: String, project: String, repository: String): String
+
+  /**
    * The access-token key to use for accessing the SCM Rest api.
    */
   def accessTokenHeader(host: String): (String, String)
@@ -218,6 +226,8 @@ class GithubResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
   }
   def repoUrl(host: String, project: String, repository: String) = s"https://$host/$project/$repository"
 
+  def checkRepoUrl(host: String, project: String, repository: String) = repoUrl(host, project, repository)
+
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
     val antecedent = antecedents(host)
     val finalHost = getFinalHost(host)
@@ -263,6 +273,13 @@ class StashResolver @Inject() (config: SCMConfiguration, oauth: OAuth) extends S
     s"$antecedent$finalHost$succeeder/projects/$project/repos/$repository"
   }
   def repoUrl(host: String, project: String, repository: String) = s"https://$host/projects/$project/repos/$repository/browse"
+
+  def checkRepoUrl(host: String, project: String, repository: String) = {
+    val antecedent = antecedents(host)
+    val succeeder = succeeders(host)
+    val finalHost = getFinalHost(host)
+    s"$antecedent$finalHost/projects/$project/repos/$repository/browse"
+  }
 
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
     val antecedent = antecedents(host)

@@ -165,15 +165,14 @@ class SearchImpl @Inject() (client: SCM, @Named("stash") stashParser: SCMParser,
     tryFuture(client.resolver(host)) match {
       case Some(call) if !call.allowedProjects(host).isEmpty =>
         if (call.allowedProjects(host).contains(project)) {
-          isUrlValid(host, client.repoUrl(host, project, repository))
+          isUrlValid(host, client.checkRepoUrl(host, project, repository))
         } else {
           logger.info(s"$host/$project/$repository is not allowed. Only those($host): " + call.allowedProjects(host))
           Future.successful(Right(false))
         }
-      case Some(call) => isUrlValid(host, client.repoUrl(host, project, repository))
+      case Some(call) => isUrlValid(host, client.checkRepoUrl(host, project, repository))
       case None       => Future.successful(Right(false))
     }
-
   }
 
   def diff(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]] = {
