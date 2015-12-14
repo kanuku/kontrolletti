@@ -46,6 +46,14 @@ sealed trait SCM {
    * @return The url that points to the repository.
    */
   def repoUrl(host: String, project: String, repository: String): String
+  /**
+   * Composes an URL of the give repository based on the SCM configured with the matching host.
+   * @param host DNS/IP of the SCM server <br/>
+   * @param project name of the project
+   * @param repo name of the repository
+   * @return The url that points to the repository.
+   */
+  def checkRepoUrl(host: String, project: String, repository: String): String
 
   /**
    * Composes a diff-URL for the given of the given  repository based on the SCM configured with the matching host.
@@ -101,6 +109,11 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
     val res: SCMResolver = resolver(host)
     res.repoUrl(host, project, repository)
   }
+  def checkRepoUrl(host: String, project: String, repository: String): String = {
+    logger.info(s"Check-Repo-URL for $host $project $repository")
+    val res: SCMResolver = resolver(host)
+    res.checkRepoUrl(host, project, repository)
+  }
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
     logger.info(s"Diff-URL for $host $project $repository")
     val res: SCMResolver = resolver(host)
@@ -118,7 +131,7 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
         .withQueryString(res.startAtPageNumber(pageNr))
         .withQueryString(res.accessTokenHeader(host))
     } else {
-      logger.info("Putting the access-token in head")
+      logger.info(s"Putting the access-token in head($url)" + res.proxyAuthorizationValue())
       dispatcher //
         .requestHolder(url) //
         .withQueryString(res.maximumPerPageQueryParameter()) //
@@ -149,7 +162,12 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
           .head()
       case resolver if resolver.hostType == "stash" =>
         logger.info(s"Calling(stash) GET on $url")
-        get(host, url, None)
+        dispatcher //
+          .requestHolder(url) //
+          .withHeaders(resolver.authUserHeaderParameter(host))
+          .withHeaders(resolver.accessTokenHeader(host))
+          .withHeaders(resolver.proxyAuthorizationValue())
+          .get()
     }
   }
 

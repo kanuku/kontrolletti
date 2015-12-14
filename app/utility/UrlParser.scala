@@ -13,7 +13,7 @@ trait UrlParser {
   /**
    * The link gets split up into multiple parts
    */
-  val repoSucceederRgx = """(/.*|.git)?"""
+  val repoSucceederRgx = """(/.*|.git.*)?"""
   val repoRgx = """([\w.-]*?){1,1}"""
   val repoAntecedentRgx = """(/repos/|/){1,1}"""
   val projectRgx = """([0-~-.]+){1,1}""" // inspired by ([ -~]+){1,1} - http://www.catonmat.net/blog/my-favorite-regex/ but from 0 (zero) to ~ (tilde) plus - (dash) and . (dot)
@@ -67,11 +67,12 @@ trait UrlParser {
 }
 
 //object test extends App {
-//  val a = """(\w+[-.\w]*\w*){1,1}"""
-//  val b = """([:\d]*)?"""
+//  val repoRgx = """([\w.-]*?){1,1}"""
+//  val a = """([\w.-]*?){1,1}"""
+//  val b = """(/.*|.git|.git/)?"""
 //  val pattern = s"$a$b".r
-//  val result = "asdf" match {
-//    case pattern(one, two) => one + "+" + two
+//  val result = "zalos-moenchengladbach-backend-openig.git/" match {
+//    case pattern(one, two) => one + "-" + two
 //    case _                 => "Nothing"
 //  }
 //  println("Result >> " + result)

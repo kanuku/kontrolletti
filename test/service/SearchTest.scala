@@ -169,35 +169,35 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
     verify(client, times(1)).head(host, url)
   }
   "Search#isRepo" should "return true when http-result is a 200 response" in {
-    when(client.repoUrl(host, project, repository)).thenReturn(url)
+    when(client.checkRepoUrl(host, project, repository)).thenReturn(url)
     when(client.head(host, url)).thenReturn(response200)
     val Right(result) = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     assert(result == true, "Result must be true")
-    verify(client, times(1)).repoUrl(host, project, repository)
+    verify(client, times(1)).checkRepoUrl(host, project, repository)
     verify(client, times(1)).head(host, url)
   }
   it should "return false when receiving a 404 response" in {
-    when(client.repoUrl(host, project, repository)).thenReturn(url)
+    when(client.checkRepoUrl(host, project, repository)).thenReturn(url)
     when(client.head(host, url)).thenReturn(response404)
     val Right(result) = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     assert(result == false, "Result must be false")
-    verify(client, times(1)).repoUrl(host, project, repository)
+    verify(client, times(1)).checkRepoUrl(host, project, repository)
     verify(client, times(1)).head(host, url)
   }
   it should "return error when client throws exception" in {
-    when(client.repoUrl(host, project, repository)).thenReturn(url)
+    when(client.checkRepoUrl(host, project, repository)).thenReturn(url)
     when(client.head(host, url)).thenThrow(new RuntimeException())
     val Left(result) = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     result shouldBe "Something went wrong, check the logs!"
   }
   it should "return true if the project is allowed" in {
-    when(client.repoUrl(host, project, repository)).thenReturn(url)
+    when(client.checkRepoUrl(host, project, repository)).thenReturn(url)
     when(client.head(host, url)).thenReturn(response200)
     val Right(result) = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     result shouldBe true
   }
   it should "return false if the result of the url returns a 404" in {
-    when(client.repoUrl(host, project, repository)).thenReturn(url)
+    when(client.checkRepoUrl(host, project, repository)).thenReturn(url)
     when(client.head(host, url)).thenReturn(response404)
     val Right(result) = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     result shouldBe false
@@ -206,7 +206,7 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
     val host = "stash.com"
     val project = "kanuku"
     val repoUrl = s"https://$host/$project/kontrolletti"
-    when(client.repoUrl(host, project, repository)).thenReturn(repoUrl)
+    when(client.checkRepoUrl(host, project, repository)).thenReturn(repoUrl)
     when(client.head(host, repoUrl)).thenReturn(response200)
     val Right(result) = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     result shouldBe true
@@ -214,7 +214,7 @@ class SearchTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAp
   it should "return false if the project is not allowed" in {
     val project = "kanuku"
     val repoUrl = s"https://$host/$project/$repository"
-    when(client.repoUrl(host, project, repository)).thenReturn(repoUrl)
+    when(client.checkRepoUrl(host, project, repository)).thenReturn(repoUrl)
     when(client.head(host, repoUrl)).thenReturn(response200)
     val Right(result) = Await.result(search.isRepo(host, project, repository), Duration("5 seconds"))
     result shouldBe false
