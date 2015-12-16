@@ -71,6 +71,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual SEE_OTHER
       header(LOCATION, result) === Some(LOCATION -> URLEncoder.encode(link.href, "UTF-8"))
+      header(X_TOTAL_COUNT, result) mustBe None
       contentAsString(result) mustBe empty
 
       verify(search, times(1)).diff(host, project, repository, source, target)
@@ -88,6 +89,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual NOT_FOUND
       header(LOCATION, result) mustBe empty
+      header(X_TOTAL_COUNT, result) mustBe None
       contentAsString(result) mustBe empty
       verify(search, times(1)).diff(host, project, repository, source, target)
     }
@@ -104,6 +106,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual INTERNAL_SERVER_ERROR
       header(LOCATION, result) mustBe empty
+      header(X_TOTAL_COUNT, result) mustBe None
       contentAsString(result) mustBe empty
       contentType(result) mustEqual Some("application/problem+json")
       verify(search, times(1)).diff(host, project, repository, source, target)
@@ -124,6 +127,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       when(commitRepository.get(host, project, repository, since = sinceId, until = untilId, valid = None, pageNumber = None, perPage = None)).thenReturn(commitResult)
       val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual OK
+      header(X_TOTAL_COUNT, result) mustBe Some(1.toString())
       contentType(result) mustEqual Some("application/x.zalando.commit+json")
       contentAsString(result) mustEqual Json.stringify(Json.toJson(response))
     }
@@ -133,6 +137,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       val url = commitsRoute(sinceId = sinceId, untilId = untilId)
       when(commitRepository.get(host, project, repository, since = sinceId, until = untilId, valid = None, pageNumber = None, perPage = None)).thenReturn(commitResult)
       val Some(result) = route(FakeRequest(GET, url).withHeaders(authorizationHeader))
+      header(X_TOTAL_COUNT, result) mustBe None
       status(result) mustEqual NOT_FOUND
     }
 
@@ -147,6 +152,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       when(commitRepository.byId(host, project, repository, commitId)).thenReturn(commitResult)
       val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual OK
+      header(X_TOTAL_COUNT, result) mustBe None
       contentType(result) mustEqual Some("application/x.zalando.commit+json")
       contentAsString(result) mustEqual Json.stringify(Json.toJson(response))
     }
@@ -159,6 +165,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       val response = new CommitResult(List(), commit)
       when(commitRepository.byId(host, project, repository, commitId)).thenReturn(commitResult)
       val Some(result) = route(FakeRequest(GET, url).withHeaders(authorizationHeader))
+      header(X_TOTAL_COUNT, result) mustBe None
       status(result) mustEqual NOT_FOUND
       contentAsString(result) mustBe empty
     }
