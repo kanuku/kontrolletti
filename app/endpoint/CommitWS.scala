@@ -15,6 +15,7 @@ import service.Search
 import model.CommitResult
 import model.CommitsResult
 import dao.CommitRepository
+import dao.PagedResult
 
 @Singleton
 class CommitWS @Inject() (search: Search, commitRepo: CommitRepository) extends Controller {
@@ -40,12 +41,13 @@ class CommitWS @Inject() (search: Search, commitRepo: CommitRepository) extends 
     logger.info(s"Request(commits) - host:$host, project:$project, repository:$repository, since:$since, until:$until, isValid:$isValid, page $page, perPage $perPage")
 
     commitRepo.get(host, project, repository, since = since, until = until, valid = isValid, pageNumber = page, perPage = perPage).map {
-      case Nil =>
+      case PagedResult(Nil, _) =>
         logger.info("Result 404")
         NotFound
-      case result =>
+      case PagedResult(result, total) =>
         logger.info("Result 200")
-        Ok(Json.toJson(new CommitsResult(List(), result.toList))).as("application/x.zalando.commit+json")
+        Ok(Json.toJson(new CommitsResult(List(), result.toList))).as("application/x.zalando.commit+json") //
+          .withHeaders(X_TOTAL_COUNT -> String.valueOf(total))
     }
   }
 

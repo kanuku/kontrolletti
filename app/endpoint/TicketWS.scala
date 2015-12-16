@@ -11,6 +11,7 @@ import play.api.libs.json.Json
 import model.KontrollettiToJsonParser._
 import model.KontrollettiToModelParser._
 import dao.CommitRepository
+import dao.PagedResult
 
 @Singleton
 class TicketWS @Inject() (commitRepo: CommitRepository) extends Controller {
@@ -18,14 +19,13 @@ class TicketWS @Inject() (commitRepo: CommitRepository) extends Controller {
   def tickets(host: String, project: String, repository: String, sinceId: Option[String], untilId: Option[String], page: Option[Int], perPage: Option[Int]) = Action.async {
     logger.info(s"host: $host, project: $project repository: $repository, sinceId: $sinceId, untilId: $untilId")
     commitRepo.tickets(host, project, repository, since = sinceId, until = untilId, pageNumber = page, perPage = perPage).map {
-      _.toList match {
-        case Nil =>
+      _ match {
+        case PagedResult(Nil, _) =>
           logger.info(s"Result: 404 ")
           NotFound
-        case tickets =>
+        case PagedResult(tickets, total) =>
           logger.info(s"Result: 200 ")
           Ok(Json.toJson(tickets)).as("application/x.zalando.ticket+json")
-
       }
     }
   }

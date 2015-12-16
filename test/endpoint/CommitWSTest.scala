@@ -1,15 +1,12 @@
 package endpoint
 
 import java.net.URLEncoder
-
 import scala.{ Left, Right }
 import scala.concurrent.Future
-
 import org.mockito.Mockito.{ reset, times, verify, when }
 import org.scalatest.BeforeAndAfter
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-
 import client.RequestDispatcher
 import client.oauth.OAuth
 import configuration.OAuthConfiguration
@@ -24,6 +21,8 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{ GET, INTERNAL_SERVER_ERROR, LOCATION, NOT_FOUND, OK, SEE_OTHER, contentAsString, contentType, defaultAwaitTimeout, header, route, status, writeableOf_AnyContentAsEmpty }
 import service.Search
 import test.util.{ KontrollettiOneAppPerTestWithOverrides, MockitoUtils, OAuthTestBuilder }
+import dao.PagedResult
+import model.Commit
 
 class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides with MockitoSugar with MockitoUtils with BeforeAndAfter with OAuthTestBuilder {
   val host = "github.com"
@@ -120,7 +119,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       val commit = createCommit()
       val commits = List(commit)
       val response = new CommitsResult(List(), commits)
-      val commitResult = Future.successful(commits)
+      val commitResult = Future.successful(new PagedResult(commits, 1))
       val url = commitsRoute(sinceId = sinceId, untilId = untilId)
       when(commitRepository.get(host, project, repository, since = sinceId, until = untilId, valid = None, pageNumber = None, perPage = None)).thenReturn(commitResult)
       val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
@@ -130,7 +129,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
     }
 
     "Return 404 when objects are not found" in {
-      val commitResult = Future.successful(List())
+      val commitResult = Future.successful(new PagedResult[Commit](Seq(), 0))
       val url = commitsRoute(sinceId = sinceId, untilId = untilId)
       when(commitRepository.get(host, project, repository, since = sinceId, until = untilId, valid = None, pageNumber = None, perPage = None)).thenReturn(commitResult)
       val Some(result) = route(FakeRequest(GET, url).withHeaders(authorizationHeader))

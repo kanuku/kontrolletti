@@ -31,10 +31,10 @@ trait CommitRepository {
 
   def save(commits: List[Commit]): Future[Unit]
   def byId(host: String, project: String, repository: String, id: String): Future[Option[Commit]]
-  def get(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage), valid: Option[Boolean] = None): Future[Seq[Commit]]
+  def get(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage), valid: Option[Boolean] = None): Future[PagedResult[Commit]]
   def youngest(repoUrl: String): Future[Option[Commit]]
   def oldest(repoUrl: String): Future[Option[Commit]]
-  def tickets(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage), valid: Option[Boolean] = Some(true)): Future[Seq[Ticket]]
+  def tickets(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage), valid: Option[Boolean] = Some(true)): Future[PagedResult[Ticket]]
 
 }
 
@@ -100,7 +100,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     }
   } yield result
 
-  def get(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Option[Int], perPage: Option[Int], valid: Option[Boolean]): Future[Seq[Commit]] = {
+  def get(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Option[Int], perPage: Option[Int], valid: Option[Boolean]): Future[PagedResult[Commit]] = {
     logger.info(s"Get  from $host/$project/$repository since $since until $until, page number $pageNumber limit $perPage and valid $valid")
     (since, until) match {
       case (Some(sinceCommit), Some(untilCommit)) =>
@@ -114,23 +114,29 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     }
   }
 
-  def pageQuery(query: Query[Tables.CommitTable, Commit, Seq], pageNumber: Option[Int], perPage: Option[Int]) = {
+  def pageQuery[E, T](query: Query[T, E, Seq], pageNumber: Option[Int], perPage: Option[Int]): Future[PagedResult[E]] = executeQuery {
     logger.info(s"Query pagination -page $pageNumber, perPage $perPage")
-    (pageNumber, perPage) match {
+    val pagedQuery = (pageNumber, perPage) match {
       case (Some(page), Some(perPage)) if page >= 1 && perPage <= defaultMaxPerPage =>
-        logger.info("0")
-        handleError(db.run(query.drop((page - 1) * perPage).take(perPage).result))
+        logger.info("0 - Both")
+        query.drop((page - 1) * perPage).take(perPage)
       case (Some(page), None) if page >= 1 =>
-        logger.info("1")
-        handleError(db.run(query.drop((page - 1) * defaultPerPage).take(defaultPerPage).result))
+        logger.info("1 - PageNumber only")
+        query.drop((page - 1) * defaultPerPage).take(defaultPerPage)
       case (None, Some(perPage)) if perPage <= defaultMaxPerPage =>
-        logger.info("2")
-        handleError(db.run(query.drop((defaultPageNumber - 1) * perPage).take(perPage).result))
+        logger.info("2 - PerPage only")
+        query.drop((defaultPageNumber - 1) * perPage).take(perPage)
       case (_, _) =>
-        logger.info("3")
-        handleError(db.run(query.take(defaultPerPage).result))
+        logger.info("3 - None")
+        query.take(defaultPerPage)
     }
+    for {
+      result <- pagedQuery.result
+      totalCount <- query.length.result
+    } yield new PagedResult(result, totalCount)
   }
+
+  private def executeQuery[R](action: DBIOAction[R, NoStream, Nothing]): Future[R] = handleError(db.run(action))
 
   def youngest(repoUrl: String): Future[Option[Commit]] = {
     logger.debug(s"Getting youngest commit for $repoUrl")
@@ -142,11 +148,11 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     handleError(db.run(commits.filter { x => x.repoURL === repoUrl }.sortBy(_.date.asc).result.headOption))
   }
 
-  def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Option[Int], perPage: Option[Int], valid: Option[Boolean]): Future[Seq[Ticket]] =
-    get(host, project, repository, since, until, pageNumber, perPage, valid).map { commits =>
-      (for {
-        commit <- commits.toList
-        tickets <- commit.tickets
-      } yield tickets).flatten.toSeq
-    }
+  def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Option[Int], perPage: Option[Int], valid: Option[Boolean]): Future[PagedResult[Ticket]] = ???
+  //    get(host, project, repository, since, until, pageNumber, perPage, valid).map { commits =>
+  //      (for {
+  //        commit <- commits.toList
+  //        tickets <- commit.tickets
+  //      } yield tickets).flatten.toSeq
+  //    }
 }

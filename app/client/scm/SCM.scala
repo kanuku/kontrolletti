@@ -124,14 +124,14 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
     val res = resolver(host)
 
     val call = if (res.isGithubServerType) {
-      logger.info("Putting the access-token in url")
+      logger.info(s"Putting the access-token in url($url)")
       dispatcher //
         .requestHolder(url) //
         .withQueryString(res.maximumPerPageQueryParameter()) //
         .withQueryString(res.startAtPageNumber(pageNr))
         .withQueryString(res.accessTokenHeader(host))
     } else {
-      logger.info(s"Putting the access-token in head($url)" + res.proxyAuthorizationValue())
+      logger.info(s"Putting the access-token in head($url)")
       dispatcher //
         .requestHolder(url) //
         .withQueryString(res.maximumPerPageQueryParameter()) //
