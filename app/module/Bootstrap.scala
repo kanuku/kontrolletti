@@ -28,13 +28,13 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
 
   def scheduleSyncAppsJob() = actorSystem.scheduler.schedule(12.seconds, 300.seconds) {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
-    Await.result(repoImporter.syncApps(), 240.seconds)
+    Await.result(repoImporter.syncApps(), 290.seconds)
     logger.info("Finished the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
   }
 
-  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(12.seconds, 600.seconds) {
+  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(312.seconds, 300.seconds) {
     logger.info("Started the job for synchronizing Commits from the SCM's")
-    Await.result(commitImporter.synchCommits(), 300.seconds)
+    Await.result(commitImporter.synchCommits(), 290.seconds)
   }
 
   def scheduleDatabaseBootstrap() = actorSystem.scheduler.scheduleOnce(7.seconds) {
