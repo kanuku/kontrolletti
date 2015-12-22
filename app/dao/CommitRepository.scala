@@ -34,7 +34,7 @@ trait CommitRepository {
   def get(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage), valid: Option[Boolean] = None): Future[PagedResult[Commit]]
   def youngest(repoUrl: String): Future[Option[Commit]]
   def oldest(repoUrl: String): Future[Option[Commit]]
-  def tickets(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage), valid: Option[Boolean] = Some(true)): Future[PagedResult[Ticket]]
+  def tickets(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage)): Future[PagedResult[Ticket]]
 
 }
 
@@ -102,15 +102,20 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
 
   def get(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Option[Int], perPage: Option[Int], valid: Option[Boolean]): Future[PagedResult[Commit]] = {
     logger.info(s"Get  from $host/$project/$repository since $since until $until, page number $pageNumber limit $perPage and valid $valid")
+    pageQuery(createQuery(host, project, repository, since, until, valid).sortBy(_.date.desc), pageNumber, perPage)
+  }
+
+  def createQuery(host: String, project: String, repository: String, since: Option[String], until: Option[String], valid: Option[Boolean]) = {
+    logger.info(s"Get  from $host/$project/$repository since $since until $until and valid($valid)")
     (since, until) match {
       case (Some(sinceCommit), Some(untilCommit)) =>
-        pageQuery(getCommitsByRange(host, project, repository, sinceCommit, untilCommit, valid).sortBy(_.date.desc), pageNumber, perPage)
+        getCommitsByRange(host, project, repository, sinceCommit, untilCommit, valid)
       case (Some(sinceCommit), None) =>
-        pageQuery(getCommitsSinceCommitDate(host, project, repository, sinceCommit, valid).sortBy(_.date.desc), pageNumber, perPage)
+        getCommitsSinceCommitDate(host, project, repository, sinceCommit, valid)
       case (None, Some(untilCommit)) =>
-        pageQuery(getCommitsUntilCommitDate(host, project, repository, untilCommit, valid).sortBy(_.date.desc), pageNumber, perPage)
+        getCommitsUntilCommitDate(host, project, repository, untilCommit, valid)
       case _ =>
-        pageQuery(getByRepositoryQuery(host, project, repository, valid).sortBy(_.date.desc), pageNumber, perPage)
+        getByRepositoryQuery(host, project, repository, valid)
     }
   }
 
@@ -148,11 +153,17 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     handleError(db.run(commits.filter { x => x.repoURL === repoUrl }.sortBy(_.date.asc).result.headOption))
   }
 
-  def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Option[Int], perPage: Option[Int], valid: Option[Boolean]): Future[PagedResult[Ticket]] = ???
-  //    get(host, project, repository, since, until, pageNumber, perPage, valid).map { commits =>
-  //      (for {
-  //        commit <- commits.toList
-  //        tickets <- commit.tickets
-  //      } yield tickets).flatten.toSeq
-  //    }
+  def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Option[Int], perPage: Option[Int]): Future[PagedResult[Ticket]] = {
+    logger.info(s"Get tickets  from $host/$project/$repository since $since until $until, page number $pageNumber limit $perPage")
+    val commitQuery = createQuery(host, project, repository, since, until, Some(true)).sortBy(_.date.desc)
+    val future = pageQuery(commitQuery, pageNumber, perPage)
+    future.map { result =>
+      result match {
+        case PagedResult(Nil, totalCount) => PagedResult(Nil, totalCount)
+        case PagedResult(items, totalCount) =>
+          val r: Seq[List[Ticket]] = items.flatMap { x => x.tickets }
+          PagedResult(r.flatten, totalCount)
+      }
+    }
+  }
 }

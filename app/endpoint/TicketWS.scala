@@ -25,7 +25,8 @@ class TicketWS @Inject() (commitRepo: CommitRepository) extends Controller {
           NotFound
         case PagedResult(tickets, total) =>
           logger.info(s"Result: 200 ")
-          Ok(Json.toJson(tickets)).as("application/x.zalando.ticket+json")
+          Ok(Json.toJson(tickets)).as("application/x.zalando.ticket+json") //
+            .withHeaders(X_TOTAL_COUNT -> String.valueOf(total))
       }
     }
   }
