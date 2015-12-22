@@ -18,6 +18,8 @@ import play.api.test.Helpers.{ GET, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, conten
 import service.Search
 import test.util.{ KontrollettiOneAppPerTestWithOverrides, MockitoUtils, OAuthTestBuilder }
 import dao.CommitRepository
+import dao.PagedResult
+import model.Ticket
 
 class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with KontrollettiOneAppPerTestWithOverrides with OAuthTestBuilder with BeforeAndAfter {
   val reposRoute = "/api/repos/"
@@ -50,7 +52,7 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with Kon
       val tickets = List(ticket)
       val commits = List(createCommit(tickets = Option(tickets)))
       val commitResult = Future.successful(commits)
-      val ticketResult = Future.successful(tickets.toSeq)
+      val ticketResult = Future.successful(new PagedResult(tickets.toSeq, 1))
 
       when(commitRepository.tickets(host, project, repo, sinceId, untilId, None, None)).thenReturn(ticketResult)
 
@@ -66,7 +68,7 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with Kon
       val url = ticketRoute(sinceId = sinceId, untilId = untilId)
       val ticketResult = Future.successful(Right(None))
 
-      when(commitRepository.tickets(host, project, repo, sinceId, untilId, None, None)).thenReturn(Future.successful(Nil))
+      when(commitRepository.tickets(host, project, repo, sinceId, untilId, None, None)).thenReturn(Future.successful(new PagedResult[Ticket](Nil, 0)))
 
       val Some(result) = route(FakeRequest(GET, url).withHeaders(authorizationHeader))
       status(result) mustEqual NOT_FOUND
