@@ -18,8 +18,8 @@ GET    /api/repos/:repositoryUrl                                                
 
 # COMMITS 
 GET    /api/hosts/:host/projects/:project/repos/:repository/commits/:id              @endpoint.CommitWS.byId(host: String, project: String, repository: String, id: String)
-GET    /api/hosts/:host/projects/:project/repos/:repository/commits                  @endpoint.CommitWS.commits(host: String, project: String, repository: String, since:Option[String] , until:Option[String], is_valid:Option[Boolean], page:Option[Int], per_page:Option[Int])
+GET    /api/hosts/:host/projects/:project/repos/:repository/commits                  @endpoint.CommitWS.commits(host: String, project: String, repository: String, since:Option[String] , until:Option[String], is_valid:Option[Boolean], page:Option[Int], per_page:Option[Int], from_date:Option[String], to_date:Option[String])
 GET    /api/hosts/:host/projects/:project/repos/:repository/diff/:source...:target   @endpoint.CommitWS.diff(host: String, project: String, repository: String, source:String, target:String)
 
 # TICKETS 
-GET    /api/hosts/:host/projects/:project/repos/:repository/tickets                  @endpoint.TicketWS.tickets(host: String, project: String, repository: String, since:Option[String] , until:Option[String], page:Option[Int], per_page:Option[Int])
+GET    /api/hosts/:host/projects/:project/repos/:repository/tickets                  @endpoint.TicketWS.tickets(host: String, project: String, repository: String, since:Option[String] , until:Option[String], page:Option[Int], per_page:Option[Int], from_date:Option[String], to_date:Option[String])

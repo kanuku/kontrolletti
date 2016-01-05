@@ -1,40 +1,33 @@
 package dao
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import org.joda.time.DateTime
 import dao.KontrollettiPostgresDriver.api._
-import javax.inject.Inject
-import javax.inject.Singleton
+import javax.inject.{ Inject, Singleton }
 import model.Commit
-import play.api.Logger
-import play.api.db.slick.DatabaseConfigProvider
-import play.api.db.slick.HasDatabaseConfig
-import play.api.db.slick.HasDatabaseConfigProvider
-import utility.FutureUtil
-import play.api.libs.json.JsValue
-import slick.jdbc.GetResult
-import model.KontrollettiToModelParser
-import play.api.libs.json.Json
+import model.Repository
 import model.Ticket
+import play.api.Logger
+import play.api.db.slick.{ DatabaseConfigProvider, HasDatabaseConfig, HasDatabaseConfigProvider }
+import utility.FutureUtil
+import model.Repository
+import dao.Tables.CommitTable
+import dao.Tables.RepositoryTable
 
 /**
  * @author fbenjamin
  */
+
 trait CommitRepository {
-  val defaultPageNumber = 1
-  val defaultMaxPerPage = 500
-  val defaultPerPage = 50
+
   def initializeDatabase: Future[Unit]
-
   def all(): Future[Seq[Commit]]
-
   def save(commits: List[Commit]): Future[Unit]
-  def byId(host: String, project: String, repository: String, id: String): Future[Option[Commit]]
-  def get(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage), valid: Option[Boolean] = None): Future[PagedResult[Commit]]
+  def byId(info: RepoParameters, id: String): Future[Option[Commit]]
+  def get(repo: RepoParameters, filter: FilterParameters, pagination: PageParameters): Future[PagedResult[Commit]]
   def youngest(repoUrl: String): Future[Option[Commit]]
   def oldest(repoUrl: String): Future[Option[Commit]]
-  def tickets(host: String, project: String, repository: String, since: Option[String] = None, until: Option[String] = None, pageNumber: Option[Int] = Option(defaultPageNumber), perPage: Option[Int] = Option(defaultPerPage)): Future[PagedResult[Ticket]]
+  def tickets(repo: RepoParameters, filter: FilterParameters, pagination: PageParameters): Future[PagedResult[Ticket]]
 
 }
 
@@ -45,11 +38,14 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
   private val logger: Logger = Logger(this.getClass())
   private val commits = Tables.commits
   private val repos = Tables.repositories
+  private val defaultPageNumber = 1
+  private val defaultMaxPerPage = 500
+  private val defaultPerPage = 50
 
   def initializeDatabase = {
-    logger.info("Started initializing table for Commit")
+    logger.info("Started initializing the Commit table!")
     db.run { commits.schema.create }.map { x =>
-      logger.info("Fisnihed initializing table for Commit")
+      logger.info("Fisnihed initializing the Commit table!")
     }
   }
 
@@ -60,78 +56,91 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     handleError(db.run(commits ++= input).map(_ => ()))
   }
 
-  def byId(host: String, project: String, repository: String, id: String): Future[Option[Commit]] = db.run {
-    getByRepositoryQuery(host, project, repository, None).filter(_.id === id).result.headOption
+  def byId(info: RepoParameters, id: String): Future[Option[Commit]] = db.run {
+    getByRepositoryQuery(info, None).filter(_.id === id).result.headOption
   }
 
-  private def getByRepositoryQuery(host: String, project: String, repository: String, isValid: Option[Boolean]): Query[Tables.CommitTable, Commit, Seq] = for {
-    repo <- repos.filter { repo => repo.host === host && repo.project === project && repo.repository === repository }
+  private def getByRepositoryQuery(info: RepoParameters, isValid: Option[Boolean]): Query[Tables.CommitTable, Commit, Seq] = for {
+    repo <- filterRepos(info)
     commit <- isValid match {
       case Some(valid) => commits.filter { c => c.repoURL === repo.url && ((c.nrOfTickets > 0) === valid) }
       case None        => commits.filter { _.repoURL === repo.url }
     }
   } yield commit
 
-  private def getCommitsByRange(host: String, project: String, repository: String, since: String, until: String, isValid: Option[Boolean]) = for {
-    repo <- repos.filter { repo => repo.host === host && repo.project === project && repo.repository === repository }
-    firstCommit <- commits.filter { c => c.id === until && c.repoURL === repo.url }
-    lastCommit <- commits.filter { c => c.id === since && c.repoURL === repo.url }
+  private def filterRepos(info: RepoParameters): Query[RepositoryTable, Repository, Seq] = repos.filter { repo => repo.host === info.host && repo.project === info.project && repo.repository === info.repository }
+  private def filterCommitById(until: String): Rep[String] => Query[CommitTable, Commit, Seq] = (url: Rep[String]) => commits.filter { c => c.id === until && c.repoURL === url }
+  private def filterCommitByDate(until: DateTime): Rep[String] => Query[CommitTable, Commit, Seq] = (url: Rep[String]) => commits.filter { c => c.date === until && c.repoURL === url }
+
+  private def getCommitsByRange(info: RepoParameters, lastCommit: Rep[String] => Query[CommitTable, Commit, Seq], firstCommit: Rep[String] => Query[CommitTable, Commit, Seq], isValid: Option[Boolean]) = for {
+    repo <- filterRepos(info)
+    firstCommit <- firstCommit(repo.url)
+    lastCommit <- lastCommit(repo.url)
     result <- isValid match {
       case Some(valid) => commits.filter { c => c.date >= lastCommit.date && c.date <= firstCommit.date && ((c.nrOfTickets > 0) === valid) && c.repoURL === repo.url }
       case None        => commits.filter { c => c.date >= lastCommit.date && c.date <= firstCommit.date && c.repoURL === repo.url }
     }
   } yield result
 
-  private def getCommitsUntilCommitDate(host: String, project: String, repository: String, until: String, isValid: Option[Boolean]) = for {
-    repo <- repos.filter { repo => repo.host === host && repo.project === project && repo.repository === repository }
-    targetCommit <- commits.filter { c => c.id === until && c.repoURL === repo.url }
+  private def getCommitsUntil(info: RepoParameters, targetCommit: Rep[String] => Query[CommitTable, Commit, Seq], isValid: Option[Boolean]) = for {
+    repo <- filterRepos(info)
+    firstCommit <- targetCommit(repo.url)
     result <- isValid match {
-      case Some(valid) => commits.filter { c => c.date <= targetCommit.date && ((c.nrOfTickets > 0) === valid) && c.repoURL === repo.url }
-      case None        => commits.filter { c => c.date <= targetCommit.date && c.repoURL === repo.url }
+      case Some(valid) => commits.filter { c => c.date <= firstCommit.date && ((c.nrOfTickets > 0) === valid) && c.repoURL === repo.url }
+      case None        => commits.filter { c => c.date <= firstCommit.date && c.repoURL === repo.url }
     }
   } yield result
 
-  private def getCommitsSinceCommitDate(host: String, project: String, repository: String, since: String, isValid: Option[Boolean]) = for {
-    repo <- repos.filter { repo => repo.host === host && repo.project === project && repo.repository === repository }
-    targetCommit <- commits.filter { c => c.id === since && c.repoURL === repo.url }
+  private def getCommitsSince(info: RepoParameters, targetCommit: Rep[String] => Query[CommitTable, Commit, Seq], isValid: Option[Boolean]) = for {
+    repo <- filterRepos(info)
+    lastCommit <- targetCommit(repo.url)
     result <- isValid match {
-      case Some(valid) => commits.filter { c => c.date >= targetCommit.date && ((c.nrOfTickets > 0) === valid) && c.repoURL === repo.url }
-      case None        => commits.filter { c => c.date >= targetCommit.date && c.repoURL === repo.url }
+      case Some(valid) => commits.filter { c => c.date >= lastCommit.date && ((c.nrOfTickets > 0) === valid) && c.repoURL === repo.url }
+      case None        => commits.filter { c => c.date >= lastCommit.date && c.repoURL === repo.url }
     }
   } yield result
 
-  def get(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Option[Int], perPage: Option[Int], valid: Option[Boolean]): Future[PagedResult[Commit]] = {
-    logger.info(s"Get  from $host/$project/$repository since $since until $until, page number $pageNumber limit $perPage and valid $valid")
-    pageQuery(createQuery(host, project, repository, since, until, valid).sortBy(_.date.desc), pageNumber, perPage)
+  def get(repo: RepoParameters, filter: FilterParameters, pagination: PageParameters): Future[PagedResult[Commit]] = {
+    logger.info(s"Get commits - $repo - $filter - $pagination")
+    pageQuery(createQuery(repo, filter).sortBy(_.date.desc), pagination)
   }
 
-  def createQuery(host: String, project: String, repository: String, since: Option[String], until: Option[String], valid: Option[Boolean]) = {
-    logger.info(s"Get  from $host/$project/$repository since $since until $until and valid($valid)")
-    (since, until) match {
-      case (Some(sinceCommit), Some(untilCommit)) =>
-        getCommitsByRange(host, project, repository, sinceCommit, untilCommit, valid)
-      case (Some(sinceCommit), None) =>
-        getCommitsSinceCommitDate(host, project, repository, sinceCommit, valid)
-      case (None, Some(untilCommit)) =>
-        getCommitsUntilCommitDate(host, project, repository, untilCommit, valid)
-      case _ =>
-        getByRepositoryQuery(host, project, repository, valid)
-    }
+  def createQuery(repo: RepoParameters, filter: FilterParameters) = filter match {
+    case FilterParameters(Some(sinceCommit), Some(untilCommit), _, _, _) =>
+      logger.info(s"Query = CommitsByRange(id's) [$sinceCommit] and [$untilCommit]")
+      getCommitsByRange(repo, filterCommitById(sinceCommit), filterCommitById(untilCommit), filter.valid)
+    case FilterParameters(Some(sinceCommit), None, _, _, _) =>
+      logger.info(s"Query = CommitsSince(id) [$sinceCommit]")
+      getCommitsSince(repo, filterCommitById(sinceCommit), filter.valid)
+    case FilterParameters(_, Some(untilCommit), _, _, _) =>
+      logger.info(s"Query = CommitsUntil(id) [$untilCommit]")
+      getCommitsUntil(repo, filterCommitById(untilCommit), filter.valid)
+    case FilterParameters(_, _, _, Some(sinceCommit), Some(untilCommit)) =>
+      logger.info(s"Query = CommitsByRange(dates) [$sinceCommit] and [$untilCommit]")
+      getCommitsByRange(repo, filterCommitByDate(sinceCommit), filterCommitByDate(untilCommit), filter.valid)
+    case FilterParameters(_, _, _, Some(sinceCommit), _) =>
+      logger.info(s"Query = CommitsSince(date) [$sinceCommit]")
+      getCommitsSince(repo, filterCommitByDate(sinceCommit), filter.valid)
+    case FilterParameters(_, _, _, _, Some(untilCommit)) =>
+      logger.info(s"Query = CommitsUntil(date) [$untilCommit]")
+      getCommitsUntil(repo, filterCommitByDate(untilCommit), filter.valid)
+    case _ =>
+      logger.info("Query = ByRepository")
+      getByRepositoryQuery(repo, filter.valid)
   }
 
-  def pageQuery[E, T](query: Query[T, E, Seq], pageNumber: Option[Int], perPage: Option[Int]): Future[PagedResult[E]] = executeQuery {
-    logger.info(s"Query pagination -page $pageNumber, perPage $perPage")
-    val pagedQuery = (pageNumber, perPage) match {
-      case (Some(page), Some(perPage)) if page >= 1 && perPage <= defaultMaxPerPage =>
+  def pageQuery[E, T](query: Query[T, E, Seq], pagination: PageParameters): Future[PagedResult[E]] = executeQuery {
+    val pagedQuery = pagination match {
+      case PageParameters(Some(page), Some(perPage)) if page >= 1 && perPage <= defaultMaxPerPage =>
         logger.info("0 - Both")
         query.drop((page - 1) * perPage).take(perPage)
-      case (Some(page), None) if page >= 1 =>
+      case PageParameters(Some(page), None) if page >= 1 =>
         logger.info("1 - PageNumber only")
         query.drop((page - 1) * defaultPerPage).take(defaultPerPage)
-      case (None, Some(perPage)) if perPage <= defaultMaxPerPage =>
+      case PageParameters(None, Some(perPage)) if perPage <= defaultMaxPerPage =>
         logger.info("2 - PerPage only")
         query.drop((defaultPageNumber - 1) * perPage).take(perPage)
-      case (_, _) =>
+      case PageParameters(None, None) =>
         logger.info("3 - None")
         query.take(defaultPerPage)
     }
@@ -144,7 +153,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
   private def executeQuery[R](action: DBIOAction[R, NoStream, Nothing]): Future[R] = handleError(db.run(action))
 
   def youngest(repoUrl: String): Future[Option[Commit]] = {
-    logger.debug(s"Getting youngest commit for $repoUrl")
+    logger.info(s"Getting youngest commit for $repoUrl")
     handleError(db.run(commits.filter { x => x.repoURL === repoUrl }.sortBy(_.date.desc).result.headOption))
   }
 
@@ -153,10 +162,10 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     handleError(db.run(commits.filter { x => x.repoURL === repoUrl }.sortBy(_.date.asc).result.headOption))
   }
 
-  def tickets(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNumber: Option[Int], perPage: Option[Int]): Future[PagedResult[Ticket]] = {
-    logger.info(s"Get tickets  from $host/$project/$repository since $since until $until, page number $pageNumber limit $perPage")
-    val commitQuery = createQuery(host, project, repository, since, until, Some(true)).sortBy(_.date.desc)
-    val future = pageQuery(commitQuery, pageNumber, perPage)
+  def tickets(repo: RepoParameters, filter: FilterParameters, pagination: PageParameters): Future[PagedResult[Ticket]] = {
+    logger.info(s"Get tickets - $repo - $filter - $pagination")
+    val commitQuery = createQuery(repo, filter).sortBy(_.date.desc)
+    val future = pageQuery(commitQuery, pagination)
     future.map { result =>
       result match {
         case PagedResult(Nil, totalCount) => PagedResult(Nil, totalCount)

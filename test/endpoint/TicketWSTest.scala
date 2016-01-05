@@ -9,6 +9,23 @@ import org.scalatestplus.play.PlaySpec
 import client.RequestDispatcher
 import client.oauth.OAuth
 import configuration.OAuthConfiguration
+import dao.{ CommitRepository, FilterParameters, PageParameters, PagedResult, RepoParameters }
+import model.KontrollettiToJsonParser.ticketWriter
+import model.Ticket
+import play.api.inject.bind
+import play.api.inject.guice.GuiceableModule.fromPlayBinding
+import play.api.test.FakeRequest
+import play.api.test.Helpers.{ GET, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, contentAsString, contentType, defaultAwaitTimeout, header, route, status, writeableOf_AnyContentAsEmpty }
+import play.api.libs.json.Json
+import scala.{ Left, Right }
+import scala.concurrent.Future
+import org.mockito.Mockito.{ reset, times, verify, when }
+import org.scalatest.BeforeAndAfter
+import org.scalatest.mock.MockitoSugar
+import org.scalatestplus.play.PlaySpec
+import client.RequestDispatcher
+import client.oauth.OAuth
+import configuration.OAuthConfiguration
 import model.KontrollettiToJsonParser.ticketWriter
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule.fromPlayBinding
@@ -16,18 +33,22 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{ GET, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, contentAsString, contentType, defaultAwaitTimeout, route, status, writeableOf_AnyContentAsEmpty }
 import service.Search
-import test.util.{ KontrollettiOneAppPerTestWithOverrides, MockitoUtils, OAuthTestBuilder }
 import dao.CommitRepository
 import dao.PagedResult
 import model.Ticket
+import test.util.{OAuthTestBuilder,KontrollettiOneAppPerTestWithOverrides,MockitoUtils}
 
 class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with KontrollettiOneAppPerTestWithOverrides with OAuthTestBuilder with BeforeAndAfter {
   val reposRoute = "/api/repos/"
   val host = "github.com"
   val project = "zalando"
-  val repo = "kontrolletti"
+  val repositoryName = "kontrolletti"
   val sinceId = Some("sinceId")
   val untilId = Some("untilId")
+  val repo = new RepoParameters(host, project, repositoryName)
+  val filter = new FilterParameters(sinceId, untilId, None)
+  val page = new PageParameters(None, None)
+
   val commitRepository = mock[CommitRepository]
 
   before {
@@ -39,7 +60,7 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with Kon
     verifyOAuthPassAuthenticationBehaviour
   }
 
-  def ticketRoute(host: String = host, project: String = project, repository: String = repo, sinceId: Option[String], untilId: Option[String]) = {
+  def ticketRoute(host: String = host, project: String = project, repository: String = repositoryName, sinceId: Option[String], untilId: Option[String]) = {
     val since = sinceId.getOrElse("default")
     val until = untilId.getOrElse("default")
     s"/api/hosts/$host/projects/$project/repos/$repository/tickets?since=$since&until=$until"
@@ -54,26 +75,27 @@ class TicketWSTest extends PlaySpec with MockitoSugar with MockitoUtils with Kon
       val commitResult = Future.successful(commits)
       val ticketResult = Future.successful(new PagedResult(tickets.toSeq, 1))
 
-      when(commitRepository.tickets(host, project, repo, sinceId, untilId, None, None)).thenReturn(ticketResult)
+      when(commitRepository.tickets(repo, filter, page)).thenReturn(ticketResult)
 
       val Some(result) = route(FakeRequest(GET, url).withHeaders(authorizationHeader))
       status(result) mustEqual OK
       contentType(result) mustEqual Some("application/x.zalando.ticket+json")
+      header(X_TOTAL_COUNT, result) mustBe Some("1")
       contentAsString(result) mustEqual Json.stringify(Json.toJson(List(ticket)))
 
-      verify(commitRepository, times(2)).tickets(host, project, repo, sinceId, untilId, None, None)
+      verify(commitRepository, times(1)).tickets(repo, filter, page)
     }
 
     "Return 404 when the result is empty" in {
       val url = ticketRoute(sinceId = sinceId, untilId = untilId)
       val ticketResult = Future.successful(Right(None))
 
-      when(commitRepository.tickets(host, project, repo, sinceId, untilId, None, None)).thenReturn(Future.successful(new PagedResult[Ticket](Nil, 0)))
+      when(commitRepository.tickets(repo, filter, page)).thenReturn(Future.successful(new PagedResult[Ticket](Nil, 0)))
 
       val Some(result) = route(FakeRequest(GET, url).withHeaders(authorizationHeader))
       status(result) mustEqual NOT_FOUND
-
-      verify(commitRepository, times(2)).tickets(host, project, repo, sinceId, untilId, None, None)
+      header(X_TOTAL_COUNT, result) mustBe None
+      verify(commitRepository, times(1)).tickets(repo, filter, page)
     }
 
   }
