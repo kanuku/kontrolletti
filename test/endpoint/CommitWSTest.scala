@@ -23,6 +23,9 @@ import service.Search
 import test.util.{ KontrollettiOneAppPerTestWithOverrides, MockitoUtils, OAuthTestBuilder }
 import dao.PagedResult
 import model.Commit
+import dao.RepoParameters
+import dao.FilterParameters
+import dao.PageParameters
 
 class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides with MockitoSugar with MockitoUtils with BeforeAndAfter with OAuthTestBuilder {
   val host = "github.com"
@@ -30,6 +33,8 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
   val repository = "kontrolletti"
   val sinceId = Some("sinceId")
   val untilId = Some("untilId")
+  val repo = new RepoParameters(host, project, repository)
+  val filter = new FilterParameters(sinceId, untilId, None)
   val search = mock[Search]
   val commitRepository = mock[CommitRepository]
 
@@ -124,7 +129,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       val response = new CommitsResult(List(), commits)
       val commitResult = Future.successful(new PagedResult(commits, 1))
       val url = commitsRoute(sinceId = sinceId, untilId = untilId)
-      when(commitRepository.get(host, project, repository, since = sinceId, until = untilId, valid = None, pageNumber = None, perPage = None)).thenReturn(commitResult)
+      when(commitRepository.get(repo, filter, PageParameters())).thenReturn(commitResult)
       val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual OK
       header(X_TOTAL_COUNT, result) mustBe Some(1.toString())
@@ -135,7 +140,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
     "Return 404 when objects are not found" in {
       val commitResult = Future.successful(new PagedResult[Commit](Seq(), 0))
       val url = commitsRoute(sinceId = sinceId, untilId = untilId)
-      when(commitRepository.get(host, project, repository, since = sinceId, until = untilId, valid = None, pageNumber = None, perPage = None)).thenReturn(commitResult)
+      when(commitRepository.get(repo, filter, PageParameters())).thenReturn(commitResult)
       val Some(result) = route(FakeRequest(GET, url).withHeaders(authorizationHeader))
       header(X_TOTAL_COUNT, result) mustBe None
       status(result) mustEqual NOT_FOUND
@@ -149,7 +154,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       val commitResult = Future.successful(Some(commit))
       val url = singleCommitRoute(commitId = commitId)
       val response = new CommitResult(List(), commit)
-      when(commitRepository.byId(host, project, repository, commitId)).thenReturn(commitResult)
+      when(commitRepository.byId(repo, commitId)).thenReturn(commitResult)
       val result = route(FakeRequest(GET, url).withHeaders(authorizationHeader)).get
       status(result) mustEqual OK
       header(X_TOTAL_COUNT, result) mustBe None
@@ -163,7 +168,7 @@ class CommitWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides 
       val commitResult = Future.successful(None)
       val url = singleCommitRoute(commitId = commitId)
       val response = new CommitResult(List(), commit)
-      when(commitRepository.byId(host, project, repository, commitId)).thenReturn(commitResult)
+      when(commitRepository.byId(repo, commitId)).thenReturn(commitResult)
       val Some(result) = route(FakeRequest(GET, url).withHeaders(authorizationHeader))
       header(X_TOTAL_COUNT, result) mustBe None
       status(result) mustEqual NOT_FOUND

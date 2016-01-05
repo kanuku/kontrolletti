@@ -180,6 +180,22 @@
                         "required": false,
                         "type": "integer",
                         "description": "Maximal number of `Commits` to return per page. Default = `50` and maximum = `500`."
+                    },
+                    {
+                        "name": "from_date",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only commits made after this timestamp (ISO-8601) will be returned",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    {
+                        "name": "to_date",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only commits made before this timestamp (ISO-8601) will be returned",
+                        "type": "string",
+                        "format": "date-time"
                     }
                 ],
                 "responses": {
@@ -335,6 +351,22 @@
                         "required": false,
                         "type": "integer",
                         "description": "Maximal number of `Tickets` to return per page. Default = `50` and maximum = `500`."
+                    },
+                    {
+                        "name": "from_date",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only commits made after this timestamp (ISO-8601) will be returned",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    {
+                        "name": "to_date",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only commits made before this timestamp (ISO-8601) will be returned",
+                        "type": "string",
+                        "format": "date-time"
                     }
                 ],
                 "responses": {

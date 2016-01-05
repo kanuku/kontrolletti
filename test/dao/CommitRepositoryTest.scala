@@ -24,6 +24,8 @@ class CommitRepositoryTest extends FlatSpec with Matchers with MockitoUtils with
   val dateBeforeYesterday = dateToday.minusDays(2)
   val dateOneWeekAgo = dateToday.minusWeeks(1)
   val dateOneMonthAgo = dateToday.minusMonths((1))
+  // Parameters
+  val repo = RepoParameters(repo1.host, repo1.project, repo1.repository)
 
   val author1 = createAuthor("Author1name", "email", None)
   val ticket1 = createTicket(name = "ticket1")
@@ -55,51 +57,79 @@ class CommitRepositoryTest extends FlatSpec with Matchers with MockitoUtils with
     assert(result.contains(commitOneMonthAgo), "commitOneMonthAgo should be saved")
   }
   "CommitRepository#byId" must "get commit by Id" in {
-    val result = Await.result(commitRepository.byId(repo1.host, repo1.project, repo1.repository, commitToday.id), 15.seconds)
+    val result = Await.result(commitRepository.byId(repo, commitToday.id), 15.seconds)
     assert(result.size === 1, "Should return single commit!!")
     assert(result.contains(commitToday))
   }
-  "CommitRepository#get" must "get commits since 1-week-ago until yesterday" in {
-    val PagedResult(result, total) = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitOneWeekAgo.id), Option(commitYesterday.id)), 15.seconds)
+  "CommitRepository#get" must "get commits since 1-week-ago until yesterday with id's" in {
+    val PagedResult(result, total) = Await.result(commitRepository.get(repo, FilterParameters(since=Option(commitOneWeekAgo.id), until=Option(commitYesterday.id)), PageParameters()), 15.seconds)
     assert(result.size === 3, "Only 3 Commits should be returned by the range query")
     assert(result.contains(commitYesterday), "commitYesterday should be in the result")
     assert(result.contains(commitBeforeYesterday), "commitBeforeYesterday should be in the result")
     assert(result.contains(commitOneWeekAgo), "commitOneWeekAgo should be in the result")
     total shouldBe 3
   }
-  it must "get commits since yesterday" in {
-    val PagedResult(result, total) = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitYesterday.id), None), 15.seconds)
-    assert(result.size >= 2, "Only 2 Commits should be returned by the range query")
+  it must "get commits since 1-week-ago until yesterday with dates" in {
+	  val PagedResult(result, total) = Await.result(commitRepository.get(repo, FilterParameters(sinceDate=Option(commitOneWeekAgo.date), untilDate=Option(commitYesterday.date)), PageParameters()), 15.seconds)
+			  assert(result.size === 3, "Only 3 Commits should be returned by the range query")
+			  assert(result.contains(commitYesterday), "commitYesterday should be in the result")
+			  assert(result.contains(commitBeforeYesterday), "commitBeforeYesterday should be in the result")
+			  assert(result.contains(commitOneWeekAgo), "commitOneWeekAgo should be in the result")
+			  total shouldBe 3
+  }
+  it must "get commits since yesterday's id" in {
+    val PagedResult(result, total) = Await.result(commitRepository.get(repo, FilterParameters(Option(commitYesterday.id)), PageParameters()), 15.seconds)
+    assert(result.size === 2, "Only 2 Commits should be returned by the range query")
     assert(result.contains(commitToday), "commitToday should be in the result")
     assert(result.contains(commitYesterday), "commitYesterday should be in the result")
     total shouldBe 2
   }
-  it must "get commits untill yesterday" in {
-    val PagedResult(result, total) = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, None, Option(commitYesterday.id)), 15.seconds)
-    assert(result.size >= 4, "Only 4 Commits should be returned by the range query")
-    assert(result.contains(commitYesterday), "commitYesterday should be in the result")
+  it must "get commits since yesterday's date" in {
+	  val PagedResult(result, total) = Await.result(commitRepository.get(repo, FilterParameters(sinceDate=Option(commitYesterday.date)), PageParameters()), 15.seconds)
+			  assert(result.size === 2, "Only 2 Commits should be returned by the range query")
+			  assert(result.contains(commitToday), "commitToday should be in the result")
+			  assert(result.contains(commitYesterday), "commitYesterday should be in the result")
+			  total shouldBe 2
+  }
+  it must "get commits untill yesterday's id" in {
+    val PagedResult(result, total) = Await.result(commitRepository.get(repo, FilterParameters(until = Option(commitBeforeYesterday.id)), PageParameters()), 15.seconds)
+    assert(result.size == 3, "Only 4 Commits should be returned by the range query")
     assert(result.contains(commitBeforeYesterday), "commitBeforeYesterday should be in the result")
     assert(result.contains(commitOneWeekAgo), "commitOneWeekAgo should be in the result")
     assert(result.contains(commitOneMonthAgo), "commitOneMonthAgo should be in the result")
+    total shouldBe 3
+  }
+  it must "get commits untill yesterday's date" in {
+	  val PagedResult(result, total) = Await.result(commitRepository.get(repo, FilterParameters(untilDate = Option(commitBeforeYesterday.date)), PageParameters()), 15.seconds)
+			  assert(result.size == 3, "Only 4 Commits should be returned by the range query")
+			  assert(result.contains(commitBeforeYesterday), "commitBeforeYesterday should be in the result")
+			  assert(result.contains(commitOneWeekAgo), "commitOneWeekAgo should be in the result")
+			  assert(result.contains(commitOneMonthAgo), "commitOneMonthAgo should be in the result")
+			  total shouldBe 3
   }
 
-  it must "get commits since 1-week-ago until yesterday but pageNumber=2 and perPage=1" in {
-    val PagedResult(result, total) = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, Option(commitOneWeekAgo.id), Option(commitYesterday.id), pageNumber = Option(2), perPage = Option(1)), 15.seconds)
+  it must "get commits since 1-week-ago until yesterday but pageNumber=2 and perPage=1 with id's" in {
+    val PagedResult(result, total) = Await.result(commitRepository.get(repo, FilterParameters(Option(commitOneWeekAgo.id), Option(commitYesterday.id)), PageParameters(Option(2), Option(1))), 15.seconds)
     assert(result.size === 1, "Only 1 Commit should be returned by the range query")
     assert(result.contains(commitBeforeYesterday), "commitBeforeYesterday should be in the result")
     total shouldBe 3
   }
-
+  it must "get commits since 1-week-ago until yesterday but pageNumber=2 and perPage=1 with dates" in {
+	  val PagedResult(result, total) = Await.result(commitRepository.get(repo, FilterParameters(sinceDate=Option(commitOneWeekAgo.date), untilDate=Option(commitYesterday.date)), PageParameters(Option(2), Option(1))), 15.seconds)
+			  assert(result.size === 1, "Only 1 Commit should be returned by the range query")
+			  assert(result.contains(commitBeforeYesterday), "commitBeforeYesterday should be in the result")
+			  total shouldBe 3
+  }
   it must "get only invalid commits" in {
     val isValid = Some(false)
-    val PagedResult(result, total) = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, valid = isValid), 15.seconds)
+    val PagedResult(result, total) = Await.result(commitRepository.get(repo, FilterParameters(valid = isValid), PageParameters()), 15.seconds)
     result foreach println
     assert(result.contains(commitOneMonthAgo), "commitOneMonthAgo should be in the result")
     assert(result(0).valid === isValid, "valid should be true")
   }
   it must "get only valid commits" in {
     val isValid = Some(true)
-    val PagedResult(result, total) = Await.result(commitRepository.get(repo1.host, repo1.project, repo1.repository, valid = isValid), 15.seconds)
+    val PagedResult(result, total) = Await.result(commitRepository.get(repo, FilterParameters(valid = isValid), PageParameters()), 15.seconds)
     assert(result.size === 4, "Only 1 Invalid Commit should be returned")
     assert(!result.contains(commitOneMonthAgo), "commitOneMonthAgo should not be in the result")
     assert(result(0).valid === isValid, "valid should be true")
@@ -117,17 +147,17 @@ class CommitRepositoryTest extends FlatSpec with Matchers with MockitoUtils with
     assert(result.contains(commitOneMonthAgo), "commitOneMonthAgo should be in the result")
   }
   "CommitRepository#tickets" must "Return all tickets" in {
-    val PagedResult(result, total) = Await.result(commitRepository.tickets(repo1.host, repo1.project, repo1.repository), 15.seconds)
+    val PagedResult(result, total) = Await.result(commitRepository.tickets(repo, FilterParameters(), PageParameters()), 15.seconds)
     result.size shouldBe 4
     result should contain(ticket1)
     result should contain(ticket2)
     result should contain(ticket3)
     result should contain(ticket4)
   }
-  "CommitRepository#tickets" must "Return all tickets from one month ago untill yesterday, pageNumber=2 and perPage=1" in {
-    val PagedResult(result, total) = Await.result(commitRepository.tickets(repo1.host, repo1.project, repo1.repository, Option(commitOneMonthAgo.id), Option(commitYesterday.id), pageNumber = Option(2), perPage = Option(1)), 15.seconds)
+  it must "Return all tickets from one month ago untill yesterday, pageNumber=2 and perPage=1" in {
+    val PagedResult(result, total) = Await.result(commitRepository.tickets(repo, FilterParameters(Option(commitOneMonthAgo.id), Option(commitYesterday.id)), PageParameters(Option(2), perPage = Option(1))), 15.seconds)
     result.size shouldBe 1
-    total shouldBe 3
+    total shouldBe 4
     result should contain(ticket3)
   }
   def repoRepository = application.injector.instanceOf[RepoRepository]

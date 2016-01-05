@@ -30,12 +30,14 @@ case class TicketResult(links: List[Link], result: List[Ticket])
 case class CommitResult(links: List[Link], result: Commit)
 case class CommitsResult(links: List[Link], result: List[Commit])
 
+//
+
 //TODO: Evaluate Moving the readers in this parser(KontrollettiToJsonParser) into Companion objects
 // And overriding those companion objects in the SCM Parser
 
 object KontrollettiToModelParser {
-
-  val dateReads = Reads.jodaDateReads("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+  val dateTimeISO8601 = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+  val dateReads = Reads.jodaDateReads(dateTimeISO8601)
 
   implicit val errorReader: Reads[Error] = (
     (__ \ "detail").read[String] and
