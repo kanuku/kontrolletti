@@ -5,18 +5,15 @@ import com.google.inject.name.Names
 import client.{ RequestDispatcher, RequestDispatcherImpl }
 import client.kio.{ KioClient, KioClientImpl }
 import client.oauth.{ OAuth, OAuthClientImpl }
-import client.scm.{ GithubResolver, SCMResolver, StashResolver }
-import configuration.{ GeneralConfiguration, GeneralConfigurationImpl, OAuthConfiguration, OAuthConfigurationImpl }
+import client.scm.{ GithubResolver, GithubToJsonParser, SCMParser, SCMResolver, StashResolver, StashToJsonParser }
+import configuration.{ GeneralConfiguration, GeneralConfigurationImpl, OAuthConfiguration, OAuthConfigurationImpl, SCMConfiguration, SCMConfigurationImpl }
 import dao.{ CommitRepository, CommitRepositoryImpl, RepoRepository, RepoRepositoryImpl }
 import play.api.Logger
+import play.api.libs.concurrent.AkkaGuiceSupport
 import service.{ ImportCommit, ImportCommitImpl, ImportRepositoriesImpl, ImportRepository, Search, SearchImpl }
-import configuration.SCMConfigurationImpl
-import configuration.SCMConfiguration
-import client.scm.SCMParser
-import client.scm.GithubToJsonParser
-import client.scm.StashToJsonParser
+import actor.Getter
 
-class Production extends AbstractModule {
+class Production extends AbstractModule with AkkaGuiceSupport  {
 
   private val logger: Logger = Logger(this.getClass())
   def configure() {
@@ -37,5 +34,6 @@ class Production extends AbstractModule {
     bind(classOf[SCMParser]).annotatedWith(Names.named("github")).to(classOf[GithubToJsonParser])
     bind(classOf[SCMParser]).annotatedWith(Names.named("stash")).to(classOf[StashToJsonParser])
     bind(classOf[Bootstrap]).to(classOf[BootstrapImpl]).asEagerSingleton()
+    bindActor[Getter] ("getter-actor")
   }
 }

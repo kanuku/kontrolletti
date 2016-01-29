@@ -26,6 +26,8 @@ ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages:= "<empty>;views.*;Rev
 
 libraryDependencies ++= {
 	val playVersion = "2.4.2"
+	val akkaVersion = "2.4.1"
+
 	Seq(
 		ws,
 		"com.google.inject"  		% "guice" 						% "3.0" 					withSources() withJavadoc(),
@@ -33,7 +35,14 @@ libraryDependencies ++= {
 		"org.scalatest"				% "scalatest_2.11"  			% "2.2.5"  		% "test" 	withSources() withJavadoc(),
 		"org.scalatestplus" 		%% "play" 						% "1.4.0-M3" 	% "test"	withSources() withJavadoc(),
 		"org.mockito" 				% "mockito-core" 				% "1.9.5" 		% "test" 	withSources() withJavadoc()
-	
+		// AKKA
+		,"com.typesafe.akka" 		%% "akka-actor" 				% akkaVersion				withSources() withJavadoc()
+	    ,"com.typesafe.akka" 		%% "akka-contrib"				% akkaVersion				withSources() withJavadoc()
+		,"com.typesafe.akka" 		%% "akka-slf4j"					% akkaVersion				withSources() withJavadoc()
+		,"com.typesafe.akka" 		%% "akka-testkit"				% akkaVersion				withSources() withJavadoc()
+		
+		
+		
 		// Database
 		,"com.h2database" 			% "h2" 							% "1.4.188"		% "test"   	withSources() withJavadoc()
 //		,"com.typesafe.play" 		% "play-jdbc_2.11" 				% playVersion	% "test"   	withSources() withJavadoc()

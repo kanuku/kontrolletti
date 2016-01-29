@@ -6,6 +6,19 @@ import play.api.libs.ws.WSResponse
 import javax.inject._
 import client.RequestDispatcher
 import com.google.inject.ImplementedBy
+import scala.annotation.meta.getter
+import scala.annotation.meta.getter
+import actor.Getter
+import scala.annotation.meta.getter
+import scala.annotation.meta.getter
+import akka.pattern.ask
+import akka.actor.ActorSystem
+import akka.actor.Props
+import actor.Getter
+import akka.util.Timeout
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
 
 @ImplementedBy(classOf[SCMImpl])
 sealed trait SCM {
@@ -81,10 +94,19 @@ sealed trait SCM {
 
 }
 @Singleton
-class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
+class SCMImpl @Inject() (actorSystem: ActorSystem,
+                         dispatcher: RequestDispatcher, //
                          @Named("github") githubResolver: SCMResolver, //
                          @Named("stash") stashResolver: SCMResolver) extends SCM {
   private val logger: Logger = Logger(this.getClass())
+  
+  private val getterActor =  actorSystem.actorOf(Props(new Getter(dispatcher)))
+//  private val githubGetterActor =  actorSystem.actorOf(Props(new Getter(dispatcher)).withDispatcher("github-dispatcher"))
+//  private val stashGetterActor =  actorSystem.actorOf(Props(new Getter(dispatcher)).withDispatcher("stash-dispatcher"))
+//  private val githubDispatcher = actorSystem.dispatchers.lookup("github-dispatcher")
+//  private val executionContext = actorSystem.dispatchers.lookup("stash-dispatcher")
+  import play.api.libs.concurrent.Execution.Implicits.defaultContext
+  implicit val timeout = Timeout(30 seconds)
 
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNr: Int): Future[WSResponse] = {
     logger.info(s"Commits for $host $project $repository")
@@ -120,36 +142,8 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
     res.diffUrl(host, project, repository, source, target)
   }
   def get(host: String, url: String, since: Option[String], pageNr: Int = 1): Future[WSResponse] = {
-    logger.info(s"Issuing a GET on $url starting at page $pageNr")
     val res = resolver(host)
-
-    val call = if (res.isGithubServerType) {
-      logger.info(s"Putting the access-token in url($url)")
-      dispatcher //
-        .requestHolder(url) //
-        .withQueryString(res.maximumPerPageQueryParameter()) //
-        .withQueryString(res.startAtPageNumber(pageNr))
-        .withQueryString(res.accessTokenHeader(host))
-    } else {
-      logger.info(s"Putting the access-token in head($url)")
-      dispatcher //
-        .requestHolder(url) //
-        .withQueryString(res.maximumPerPageQueryParameter()) //
-        .withQueryString(res.startAtPageNumber(pageNr))
-        .withHeaders(res.authUserHeaderParameter(host))
-        .withHeaders(res.accessTokenHeader(host))
-        .withHeaders(res.proxyAuthorizationValue())
-    }
-
-    val token = Option(res.accessTokenValue(host))
-    if (token == Some("") || !token.isDefined || token.isEmpty) {
-      logger.error("No tokens configured for host " + host)
-    }
-    if (since.isDefined) {
-      logger.info("Using since parameter " + since)
-      call.withQueryString(res.sinceCommitQueryParameter(since.get))
-    }
-    call.get()
+    ask(getterActor, Getter.GetCommits(host,url, since, pageNr, res)).mapTo[WSResponse]
   }
 
   def head(host: String, url: String): Future[WSResponse] = {
