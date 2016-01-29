@@ -15,8 +15,10 @@ import configuration.SCMConfiguration
 import client.scm.SCMParser
 import client.scm.GithubToJsonParser
 import client.scm.StashToJsonParser
+import play.api.libs.concurrent.AkkaGuiceSupport
+import actor.JobActor
 
-class Production extends AbstractModule {
+class Production extends AbstractModule with AkkaGuiceSupport {
 
   private val logger: Logger = Logger(this.getClass())
   def configure() {
@@ -37,5 +39,6 @@ class Production extends AbstractModule {
     bind(classOf[SCMParser]).annotatedWith(Names.named("github")).to(classOf[GithubToJsonParser])
     bind(classOf[SCMParser]).annotatedWith(Names.named("stash")).to(classOf[StashToJsonParser])
     bind(classOf[Bootstrap]).to(classOf[BootstrapImpl]).asEagerSingleton()
+     bindActor[JobActor] ("job-actor")
   }
 }
