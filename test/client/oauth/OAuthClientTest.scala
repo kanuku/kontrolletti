@@ -1,14 +1,21 @@
 package client.oauth
 
 import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
+import scala.concurrent.duration.DurationInt
+import scala.reflect.ClassTag
+
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.FlatSpec
 import org.scalatest.mock.MockitoSugar
+
 import client.RequestDispatcher
-import play.api.http.ContentTypeOf
+import configuration.OAuthConfiguration
+import configuration.OAuthConfigurationImpl
+import play.api.cache.CacheApi
 import play.api.http.Writeable
 import play.api.libs.ws.WSAuthScheme
 import play.api.libs.ws.WSRequest
@@ -16,9 +23,6 @@ import play.api.libs.ws.WSResponse
 import test.util.MockitoUtils
 import test.util.TestUtils._
 import utility.Transformer
-import scala.concurrent.ExecutionContext.Implicits.global
-import configuration.OAuthConfigurationImpl
-import configuration.OAuthConfiguration
 /**
  * @author fbenjamin
  */
@@ -34,6 +38,7 @@ class OAuthClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
   private val oAuthAccessToken = """ {"scope":"scope","expires_in":3599,"token_type":"token_type","access_token":"access_token"}"""
   private val mockedWSResponse = createMockedWSResponse(oAuthAccessToken, 200)
   private val mockedResponse = Future.successful(mockedWSResponse)
+  private val mockedCacheApi = mock[CacheApi]
 
   private val config: OAuthConfiguration = new OAuthConfigurationImpl() {
     override def accessTokenRequestEndpoint = "https://auth.server.com/oauth2/access_token"
@@ -46,34 +51,34 @@ class OAuthClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
     override def tokenInfoRequestEndpoint = "tokenInfoRequestEndpoint"
   }
 
-  private val clientImpl: OAuthClientImpl = new OAuthClientImpl(mockedDispatcher, config)
+  private val clientImpl: OAuthClientImpl = new OAuthClientImpl(mockedDispatcher, mockedCacheApi, config)
   private val client: OAuth = clientImpl
 
   "OAuthHelper#parse" should "parse to OAuthClientCredentials" in {
     val input = """{"client_id":"kontrolletti_client_id","client_secret":"client_secret"}"""
     Await.result(Transformer.parse2Future(input).flatMap(Transformer.deserialize2Future(_)(OAuthParser.oAuthClientCredentialReader)), Duration("5 seconds")) match {
       case clientCredentials: OAuthClientCredential => assert(clientCredentials === clientCred)
-      case _                                        => fail("Result should not be null");
+      case _ => fail("Result should not be null");
     }
   }
   it should "parse OAuthAccessToken" in {
     Await.result(Transformer.parse2Future(oAuthAccessToken).flatMap(Transformer.deserialize2Future(_)(OAuthParser.oAuthAccessTokenReader)), Duration("5 seconds")) match {
       case accessTokenCredentials: OAuthAccessToken => assert(accessTokenCredentials === oAuthCred)
-      case _                                        => fail("Result should not be null");
+      case _ => fail("Result should not be null");
     }
   }
 
   "OAuthClient#clientCredentials" should "return client credentials" in {
     Await.result(client.clientCredentials(), Duration("5 seconds")) match {
       case clientCredentials: OAuthClientCredential => assert(clientCredentials === clientCred)
-      case _                                        => fail("Result should not be null");
+      case _ => fail("Result should not be null");
     }
   }
 
   "OAuthClient#userCredentials" should "return user credentials" in {
     Await.result(client.userCredentials(), Duration("5 seconds")) match {
       case userCredentials: OAuthUserCredential => assert(userCredentials === userCred)
-      case _                                    => fail("Result should not be null");
+      case _ => fail("Result should not be null");
     }
   }
 
@@ -88,16 +93,25 @@ class OAuthClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
     when(mockedRequestHolder.withQueryString(("password", userCred.password))).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.withQueryString(("scope", "uid"))).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.withQueryString(("realm", "/services"))).thenReturn(mockedRequestHolder)
+    when(mockedCacheApi.get[Future[OAuthAccessToken]]("token-key")).thenReturn(None)
     implicit val writable = any[Writeable[String]]
     when(mockedRequestHolder.post(anyString)(writable)).thenReturn(mockedResponse)
 
     Await.result(client.accessToken(), Duration("5 seconds")) match {
       case value: OAuthAccessToken => assert(value === oAuthCred)
-      case _                       => fail("Result should not be null");
+      case _ => fail("Result should not be null");
     }
 
     verify(mockedRequestHolder, times(1)).post(same(""))(any[Writeable[String]])
     verify(mockedWSResponse, times(1)).body
+  }
+  "OAuthClient#accessToken" should "return access-token in cache" in {
+    val result = Future.successful(oAuthCred)
+    when(mockedCacheApi.get[Future[OAuthAccessToken]]("token-key")).thenReturn(Some(result))
+    Await.result(client.accessToken(), Duration("5 seconds")) match {
+      case value: OAuthAccessToken => assert(value === oAuthCred)
+      case _ => fail("Result should not be null");
+    }
   }
 
   "OAuthClient#tokenInfo" should "parse successfull response from tokenEndpoint" in {
@@ -113,7 +127,7 @@ class OAuthClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
 
     Await.result(client.tokenInfo(token), Duration("50 seconds")) match {
       case Some(result) => assert(result === tokenInfo, "Result is not equal to expected")
-      case None         => fail("Result should not be None");
+      case None => fail("Result should not be None");
     }
     verify(mockedTokenInfoWSResponse, times(1)).body
   }

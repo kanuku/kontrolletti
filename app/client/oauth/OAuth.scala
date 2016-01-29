@@ -22,6 +22,8 @@ import configuration.OAuthConfiguration
 import play.api.libs.json.Format
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import scala.concurrent.duration.DurationInt
+import play.api.cache.CacheApi
 /**
  * @author fbenjamin
  */
@@ -78,14 +80,28 @@ object OAuthParser {
 
 @Singleton
 class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
+                                 cache: CacheApi,
                                  config: OAuthConfiguration) extends OAuth {
 
   val logger: Logger = Logger { this.getClass }
-
+  private val threshold = 120
   private val transformer = Transformer
-
+  private val key = "token-key"
   def accessToken(client: OAuthClientCredential, serviceUser: OAuthUserCredential): Future[OAuthAccessToken] = {
     logger.info("OAuth endpoint:" + config.accessTokenRequestEndpoint)
+    cache.get[Future[OAuthAccessToken]](key) match { //Put the future result in the cache
+      case Some(token) =>
+        logger.info("Token in cache  is still valid")
+        token
+      case None =>
+        getNewToken(client, serviceUser).map { token =>
+          cache.set(key, Future.successful(token), (token.expiresIn - threshold).seconds)
+          logger.info("Added the new token to the cache! which expires in "+token.expiresIn+" seconds")
+          token
+        }
+    }
+  }
+  private def getNewToken(client: OAuthClientCredential, serviceUser: OAuthUserCredential): Future[OAuthAccessToken] = {
     val result = dispatcher.requestHolder(config.accessTokenRequestEndpoint) //
       .withRequestTimeout(config.requestClientTimeout.toLong)
       .withHeaders(("Content-Type", "application/x-www-form-urlencoded"))
