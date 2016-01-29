@@ -8,14 +8,8 @@ import play.api.Play.current
 import play.api.mvc.Action
 import play.api.mvc.Controller
 import scala.concurrent.ExecutionContext
-import akka.actor.ActorRef
-import javax.inject.Named
-import actor.Job._
-
 @Singleton
-class Main @Inject()(
- @Named("job-actor") configuredActor: ActorRef    
-) extends Controller {
+class Main @Inject() extends Controller {
   private val file = scala.io.Source.fromFile(Play.application.getFile("conf/swagger.json")).mkString
   val logger: Logger = Logger { this.getClass }
 
@@ -28,8 +22,6 @@ class Main @Inject()(
     Ok(views.html.swagger())
   }
   def status = Action {
-    logger.info("status")
-    configuredActor ! IMPORT_REPOSITORIES_KIO
     Ok
   }
   def specs = Action {
