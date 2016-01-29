@@ -34,10 +34,10 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
   val falseFuture = Future.successful(false)
 
   def syncApps(): Future[Unit] = {
-    logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
+    val futureAccessToken = logErrorOnFailure(oAuthclient.accessToken())
     val now = System.nanoTime
     for {
-      accessToken <- logErrorOnFailure(oAuthclient.accessToken())
+      accessToken <- futureAccessToken
       kioRepos <- kioClient.repositories(accessToken)
       savedRepos <- repoRepo.all()
       validRepos <- keepValidRepos(kioRepos)

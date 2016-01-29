@@ -2,7 +2,7 @@ package module
 
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
-
+import java.util.concurrent.TimeUnit
 import akka.actor.ActorSystem
 import dao.{ CommitRepository, RepoRepository }
 import javax.inject.{ Inject, Singleton }
@@ -26,15 +26,21 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
 
   val star = setup()
 
-  def scheduleSyncAppsJob() = actorSystem.scheduler.schedule(12.seconds, 300.seconds) {
+  def scheduleSyncAppsJob() = actorSystem.scheduler.schedule(12.seconds, 600.seconds) {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
-    Await.result(repoImporter.syncApps(), 290.seconds)
+    val now = System.nanoTime
+    Await.result(repoImporter.syncApps(), 590.seconds)
+    val elapsed = TimeUnit.SECONDS.convert((System.nanoTime - now), TimeUnit.NANOSECONDS)
+    logger.info(s"Result, job took $elapsed seconds")
     logger.info("Finished the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
   }
 
-  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(312.seconds, 300.seconds) {
+  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(612.seconds, 600.seconds) {
     logger.info("Started the job for synchronizing Commits from the SCM's")
-    Await.result(commitImporter.synchCommits(), 290.seconds)
+    val now = System.nanoTime
+    Await.result(commitImporter.synchCommits(), 590.seconds)
+    val elapsed = TimeUnit.SECONDS.convert((System.nanoTime - now), TimeUnit.NANOSECONDS)
+    logger.info(s"Result, job took $elapsed seconds")
   }
 
   def scheduleDatabaseBootstrap() = actorSystem.scheduler.scheduleOnce(7.seconds) {
