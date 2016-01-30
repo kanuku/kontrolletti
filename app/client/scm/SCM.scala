@@ -1,25 +1,11 @@
 package client.scm
 
 import scala.concurrent.Future
-import scala.concurrent.duration.DurationInt
-import scala.language.postfixOps
-
-import com.google.inject.ImplementedBy
-
-import actor.Getter
-import akka.actor.ActorSystem
-import akka.actor.Props
-import akka.contrib.throttle.Throttler
-import akka.contrib.throttle.Throttler.RateInt
-import akka.contrib.throttle.TimerBasedThrottler
-import akka.pattern.ask
-import akka.util.Timeout
-import client.RequestDispatcher
-import javax.inject.Inject
-import javax.inject.Named
-import javax.inject.Singleton
 import play.api.Logger
 import play.api.libs.ws.WSResponse
+import javax.inject._
+import client.RequestDispatcher
+import com.google.inject.ImplementedBy
 
 @ImplementedBy(classOf[SCMImpl])
 sealed trait SCM {
@@ -95,18 +81,10 @@ sealed trait SCM {
 
 }
 @Singleton
-class SCMImpl @Inject() (actorSystem: ActorSystem,
-                         dispatcher: RequestDispatcher, //
+class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
                          @Named("github") githubResolver: SCMResolver, //
-                         @Named("stash") stashResolver: SCMResolver //                         ,@Named("getter-actor") getterActor:ActorRef
-                         ) extends SCM {
+                         @Named("stash") stashResolver: SCMResolver) extends SCM {
   private val logger: Logger = Logger(this.getClass())
-
-  implicit val timeout = Timeout(600 seconds)
-  implicit val executionContext = actorSystem.dispatchers.lookup("job-dispatcher")
-  private val getterActor = actorSystem.actorOf(Props(new Getter(dispatcher)).withDispatcher("job-dispatcher"), "stashGetterActor")
-  val throttler = actorSystem.actorOf(Props(new TimerBasedThrottler(4 msgsPer (1.second))).withDispatcher("job-dispatcher"))
-  throttler.tell(new Throttler.SetTarget(getterActor), null);
 
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNr: Int): Future[WSResponse] = {
     logger.info(s"Commits for $host $project $repository")
@@ -142,44 +120,40 @@ class SCMImpl @Inject() (actorSystem: ActorSystem,
     res.diffUrl(host, project, repository, source, target)
   }
   def get(host: String, url: String, since: Option[String], pageNr: Int = 1): Future[WSResponse] = {
+    logger.debug(s"Issuing a GET on $url starting at page $pageNr")
     val res = resolver(host)
-    if (res.isGithubServerType())
-      getDirect(host, url, since, pageNr, res)
-    else {
-      val result = ask(throttler, Getter.GetCommits(host, url, since, pageNr, res)).mapTo[WSResponse]
-      result onFailure {
-        case error =>
-          logger.error(s"############### " + error)
 
-      }
-      result.map {
-        commits =>
-          logger.info(s"###############  received $url")
-          commits
-      }
-    }
-  }
-
-  private def getDirect(host: String, url: String, since: Option[String], pageNr: Int = 1, resolver: SCMResolver): Future[WSResponse] = {
-    logger.info(s"GET - host=$host - url=$url - since=$since - pageNr=$pageNr - url=$url")
-
-    if (resolver.isGithubServerType) {
-      logger.info(s"Putting the access-token in url($url)")
+    val call = if (res.isGithubServerType) {
+      logger.debug(s"Putting the access-token in url($url)")
       dispatcher //
         .requestHolder(url) //
-        .withQueryString(resolver.maximumPerPageQueryParameter()) //
-        .withQueryString(resolver.startAtPageNumber(pageNr))
-        .withQueryString(resolver.accessTokenHeader(host)).get()
+        .withQueryString(res.maximumPerPageQueryParameter()) //
+        .withQueryString(res.startAtPageNumber(pageNr))
+        .withQueryString(res.accessTokenHeader(host))
     } else {
-      logger.info(s"Putting the access-token in head($url)")
+      logger.debug(s"Putting the access-token in head($url)")
       dispatcher //
         .requestHolder(url) //
-        .withQueryString(resolver.maximumPerPageQueryParameter()) //
-        .withQueryString(resolver.startAtPageNumber(pageNr))
-        .withHeaders(resolver.authUserHeaderParameter(host))
-        .withHeaders(resolver.accessTokenHeader(host))
-        .withHeaders(resolver.proxyAuthorizationValue()).get()
+        .withQueryString(res.maximumPerPageQueryParameter()) //
+        .withQueryString(res.startAtPageNumber(pageNr))
+        .withHeaders(res.authUserHeaderParameter(host))
+        .withHeaders(res.accessTokenHeader(host))
+        .withHeaders(res.proxyAuthorizationValue())
     }
+
+    val token = Option(res.accessTokenValue(host))
+    if (token == Some("") || !token.isDefined || token.isEmpty) {
+      logger.error("No tokens configured for host " + host)
+    }
+    if (since.isDefined) {
+      logger.debug("Using since parameter " + since)
+      call.withQueryString(res.sinceCommitQueryParameter(since.get))
+    }
+    logger.info("QUERY STRING "+call.queryString)
+    logger.info("Proxy token: "+res.proxyAuthorizationValue())
+    logger.info("OAuth token: "+token)
+    logger.info("Url: "+call.url)
+    call.get()
   }
 
   def head(host: String, url: String): Future[WSResponse] = {

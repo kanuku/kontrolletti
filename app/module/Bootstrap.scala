@@ -25,8 +25,7 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
   val logger: Logger = Logger { this.getClass }
 
   val star = setup()
-//implicit val executionContext = actorSystem.dispatchers.lookup("job-dispatcher")
-  def scheduleSyncAppsJob() = actorSystem.scheduler.scheduleOnce(12.seconds) {
+  def scheduleSyncAppsJob() = actorSystem.scheduler.scheduleOnce(5.seconds) {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
     val now = System.nanoTime
     Await.result(repoImporter.syncApps(), 590.seconds)

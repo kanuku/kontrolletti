@@ -2,6 +2,7 @@ package module
 
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
+
 import client.{ RequestDispatcher, RequestDispatcherImpl }
 import client.kio.{ KioClient, KioClientImpl }
 import client.oauth.{ OAuth, OAuthClientImpl }
@@ -9,11 +10,9 @@ import client.scm.{ GithubResolver, GithubToJsonParser, SCMParser, SCMResolver, 
 import configuration.{ GeneralConfiguration, GeneralConfigurationImpl, OAuthConfiguration, OAuthConfigurationImpl, SCMConfiguration, SCMConfigurationImpl }
 import dao.{ CommitRepository, CommitRepositoryImpl, RepoRepository, RepoRepositoryImpl }
 import play.api.Logger
-import play.api.libs.concurrent.AkkaGuiceSupport
 import service.{ ImportCommit, ImportCommitImpl, ImportRepositoriesImpl, ImportRepository, Search, SearchImpl }
-import actor.Getter
 
-class Production extends AbstractModule with AkkaGuiceSupport  {
+class Production extends AbstractModule{
 
   private val logger: Logger = Logger(this.getClass())
   def configure() {
@@ -34,6 +33,5 @@ class Production extends AbstractModule with AkkaGuiceSupport  {
     bind(classOf[SCMParser]).annotatedWith(Names.named("github")).to(classOf[GithubToJsonParser])
     bind(classOf[SCMParser]).annotatedWith(Names.named("stash")).to(classOf[StashToJsonParser])
     bind(classOf[Bootstrap]).to(classOf[BootstrapImpl]).asEagerSingleton()
-    bindActor[Getter] ("getter-actor")
   }
 }

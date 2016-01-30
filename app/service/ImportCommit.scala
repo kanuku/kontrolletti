@@ -35,13 +35,16 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
   def synchCommits(): Future[Unit] = Future {
     repoRepo.enabled().map { repos =>
       logger.info("Started the job for synchronizing Commits from " + repos.size + " Repositories")
-      repos.map { repo =>
-        commitRepo.youngest(repo.url).map { lastCommit =>
+      for {
+        repo <- repos
+      } repos.map { repo =>
+        Await.ready(commitRepo.youngest(repo.url).map { lastCommit =>
           logger.info("Last commit:" + lastCommit)
           synchCommit(repo, lastCommit)
-        }
+        }, 10.seconds)
       }
     }
+    logger.info("Finished synchronizing Commits")
   }
 
   private def synchCommit(repo: Repository, since: Option[Commit], pageNumber: Int = 1): Future[Boolean] = {
@@ -106,7 +109,7 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
     for {
       commit <- commits
       result = parse(host, project, repository, commit.message) match {
-        case None         => commit.copy(valid = Option(numberOfTickets(commit.tickets) > 0))
+        case None => commit.copy(valid = Option(numberOfTickets(commit.tickets) > 0))
         case Some(ticket) => commit.copy(tickets = Option(List(ticket)), valid = Option(numberOfTickets(Option(List(ticket))) > 0))
       }
     } yield result

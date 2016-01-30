@@ -91,7 +91,7 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
     logger.info("OAuth endpoint:" + config.accessTokenRequestEndpoint)
     cache.get[Future[OAuthAccessToken]](key) match { //Put the future result in the cache
       case Some(token) =>
-        logger.info("Token in cache  is still valid")
+        logger.debug("Token in cache  is still valid")
         token
       case None =>
         getNewToken(client, serviceUser).map { token =>
@@ -114,7 +114,6 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
       .post("")
     result.flatMap {
       x =>
-        logger.info("Oauth-endpoint returned http-code: " + x.status)
         if (x.status == 200)
           transformer.parse2Future(x.body).flatMap(transformer.deserialize2Future(_)(OAuthParser.oAuthAccessTokenReader))
         else
@@ -162,7 +161,6 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
         x.status match {
           case 200 =>
             val Some(result: OAuthTokenInfo) = transformer.deserialize2Option[OAuthTokenInfo](Json.parse(x.body))(OAuthParser.oAuthOAuthTokenInfoFormatter)
-            logger.info("OAuth-token expires in " + result.expiresIn)
             Option(result)
           case 400 =>
             logger.warn("OAuth-token is not valid:" + x.body)
