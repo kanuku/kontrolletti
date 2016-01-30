@@ -19,9 +19,7 @@ import utility.Transformer
 import scala.concurrent.ExecutionContext.Implicits.global
 import configuration.OAuthConfigurationImpl
 import configuration.OAuthConfiguration
-/**
- * @author fbenjamin
- */
+
 class OAuthClientTest extends FlatSpec with MockitoSugar with MockitoUtils {
 
   //Contains the same values as in src/test/resources/client.json
