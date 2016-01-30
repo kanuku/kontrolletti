@@ -96,7 +96,7 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
       case None =>
         getNewToken(client, serviceUser).map { token =>
           cache.set(key, Future.successful(token), (token.expiresIn - threshold).seconds)
-          logger.info("Added the new token to the cache! which expires in "+token.expiresIn+" seconds")
+          logger.info("Added the new token to the cache! which expires in " + token.expiresIn + " seconds")
           token
         }
     }
@@ -127,7 +127,7 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
   def userCredentials(): Future[OAuthUserCredential] = get(config.userCredentialsFileName)(oAuthUserCredentialReader)
 
   def accessToken(): Future[OAuthAccessToken] = {
-    logger.info(s"Getting access token from OAuth service with config $config")
+    logger.debug(s"Getting access token from OAuth service with config $config")
     for {
       client: OAuthClientCredential <- clientCredentials()
       user: OAuthUserCredential <- userCredentials()
@@ -141,14 +141,11 @@ class OAuthClientImpl @Inject() (dispatcher: RequestDispatcher,
   }
 
   def readFile(file: String): Future[String] = {
-    logger.info(s"Reading file: $file")
     val fileName: String = config.credentialsDirectory.replaceFirst("~", System.getProperty("user.home")) + "/" + file
-
-    logger.info(s"Reading credentials file $fileName")
+    logger.debug(s"Reading credentials file $fileName")
 
     Try(scala.io.Source.fromFile(fileName).mkString) match {
       case Success(result) =>
-        logger.info("File was read successfully! ")
         Future.successful(result)
       case Failure(ex) =>
         logger.error(ex.getMessage)

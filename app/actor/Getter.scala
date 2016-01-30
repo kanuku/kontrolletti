@@ -25,13 +25,16 @@ class Getter @Inject() (client: RequestDispatcher) extends Actor with ActorLoggi
 
   def receive = {
     case GetCommits(host, url, since, pageNr, resolver) =>
-      sender ! get(host, url, since, pageNr, resolver)
+      get(host, url, since, pageNr, resolver).map { x =>
+        log.info(s"url=$url - http-code" + x.status)
+        sender ! x
+      }
     case e: Status.Failure =>
       log.warning("Failed because of: " + e.cause)
   }
 
   def get(host: String, url: String, since: Option[String], pageNr: Int = 1, resolver: SCMResolver): Future[WSResponse] = {
-    log.info(s"GET - host=$host - since=$since - pageNr=$pageNr - url=$url")
+    log.info(s"GET - host=$host - url=$url - since=$since - pageNr=$pageNr - url=$url")
 
     if (resolver.isGithubServerType) {
       log.info(s"Putting the access-token in url($url)")

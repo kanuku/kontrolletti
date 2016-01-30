@@ -78,7 +78,7 @@ trait TicketParser {
       else
         Some(Ticket(message, s"https://$host/$project/$repository/issues/$numberCap", None))
     case _ =>
-      logger.info(s"Failed to parse ->  message:$message")
+      logger.debug(s"Failed to parse ->  message:$message")
       None
   }
   def jiraTicketUrl: String

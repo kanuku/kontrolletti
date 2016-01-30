@@ -30,6 +30,7 @@ libraryDependencies ++= {
 
 	Seq(
 		ws,
+		cache,
 		"com.google.inject"  		% "guice" 						% "3.0" 					withSources() withJavadoc(),
 		"javax.inject" 				% "javax.inject" 				% "1" 						withSources() withJavadoc(),
 		"org.scalatest"				% "scalatest_2.11"  			% "2.2.5"  		% "test" 	withSources() withJavadoc(),

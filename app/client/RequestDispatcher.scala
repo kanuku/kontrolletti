@@ -9,6 +9,7 @@ import play.api.libs.ws.WSRequest
 import com.google.inject.ImplementedBy
 import play.api.Logger
 import configuration.GeneralConfiguration
+import com.ning.http.client.providers.netty.NettyAsyncHttpProviderConfig
 
 /**
  * @author fbenjamin
@@ -29,8 +30,14 @@ class RequestDispatcherImpl @Inject() (client: WSClient, config: GeneralConfigur
   val logger: Logger = Logger(this.getClass())
 
   val client2 = {
+
+    val providerConfig = new NettyAsyncHttpProviderConfig()
+    providerConfig.setHandshakeTimeout(250000L)
+
     val builder = new com.ning.http.client.AsyncHttpClientConfig.Builder()
     builder.setAcceptAnyCertificate(true)
+    builder.setAsyncHttpClientProviderConfig(providerConfig)
+
     new play.api.libs.ws.ning.NingWSClient(builder.build())
   }
 

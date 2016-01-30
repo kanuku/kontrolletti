@@ -1,24 +1,25 @@
 package client.scm
 
 import scala.concurrent.Future
-import play.api.Logger
-import play.api.libs.ws.WSResponse
-import javax.inject._
-import client.RequestDispatcher
-import com.google.inject.ImplementedBy
-import scala.annotation.meta.getter
-import scala.annotation.meta.getter
-import actor.Getter
-import scala.annotation.meta.getter
-import scala.annotation.meta.getter
-import akka.pattern.ask
-import akka.actor.ActorSystem
-import akka.actor.Props
-import actor.Getter
-import akka.util.Timeout
-import scala.concurrent.duration._
+import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
 
+import com.google.inject.ImplementedBy
+
+import actor.Getter
+import akka.actor.ActorSystem
+import akka.actor.Props
+import akka.contrib.throttle.Throttler
+import akka.contrib.throttle.Throttler.RateInt
+import akka.contrib.throttle.TimerBasedThrottler
+import akka.pattern.ask
+import akka.util.Timeout
+import client.RequestDispatcher
+import javax.inject.Inject
+import javax.inject.Named
+import javax.inject.Singleton
+import play.api.Logger
+import play.api.libs.ws.WSResponse
 
 @ImplementedBy(classOf[SCMImpl])
 sealed trait SCM {
@@ -97,16 +98,15 @@ sealed trait SCM {
 class SCMImpl @Inject() (actorSystem: ActorSystem,
                          dispatcher: RequestDispatcher, //
                          @Named("github") githubResolver: SCMResolver, //
-                         @Named("stash") stashResolver: SCMResolver) extends SCM {
+                         @Named("stash") stashResolver: SCMResolver //                         ,@Named("getter-actor") getterActor:ActorRef
+                         ) extends SCM {
   private val logger: Logger = Logger(this.getClass())
-  
-  private val getterActor =  actorSystem.actorOf(Props(new Getter(dispatcher)))
-//  private val githubGetterActor =  actorSystem.actorOf(Props(new Getter(dispatcher)).withDispatcher("github-dispatcher"))
-//  private val stashGetterActor =  actorSystem.actorOf(Props(new Getter(dispatcher)).withDispatcher("stash-dispatcher"))
-//  private val githubDispatcher = actorSystem.dispatchers.lookup("github-dispatcher")
-//  private val executionContext = actorSystem.dispatchers.lookup("stash-dispatcher")
-  import play.api.libs.concurrent.Execution.Implicits.defaultContext
-  implicit val timeout = Timeout(30 seconds)
+
+  implicit val timeout = Timeout(600 seconds)
+  implicit val executionContext = actorSystem.dispatchers.lookup("job-dispatcher")
+  private val getterActor = actorSystem.actorOf(Props(new Getter(dispatcher)).withDispatcher("job-dispatcher"), "stashGetterActor")
+  val throttler = actorSystem.actorOf(Props(new TimerBasedThrottler(4 msgsPer (1.second))).withDispatcher("job-dispatcher"))
+  throttler.tell(new Throttler.SetTarget(getterActor), null);
 
   def commits(host: String, project: String, repository: String, since: Option[String], until: Option[String], pageNr: Int): Future[WSResponse] = {
     logger.info(s"Commits for $host $project $repository")
@@ -143,7 +143,43 @@ class SCMImpl @Inject() (actorSystem: ActorSystem,
   }
   def get(host: String, url: String, since: Option[String], pageNr: Int = 1): Future[WSResponse] = {
     val res = resolver(host)
-    ask(getterActor, Getter.GetCommits(host,url, since, pageNr, res)).mapTo[WSResponse]
+    if (res.isGithubServerType())
+      getDirect(host, url, since, pageNr, res)
+    else {
+      val result = ask(throttler, Getter.GetCommits(host, url, since, pageNr, res)).mapTo[WSResponse]
+      result onFailure {
+        case error =>
+          logger.error(s"############### " + error)
+
+      }
+      result.map {
+        commits =>
+          logger.info(s"###############  received $url")
+          commits
+      }
+    }
+  }
+
+  private def getDirect(host: String, url: String, since: Option[String], pageNr: Int = 1, resolver: SCMResolver): Future[WSResponse] = {
+    logger.info(s"GET - host=$host - url=$url - since=$since - pageNr=$pageNr - url=$url")
+
+    if (resolver.isGithubServerType) {
+      logger.info(s"Putting the access-token in url($url)")
+      dispatcher //
+        .requestHolder(url) //
+        .withQueryString(resolver.maximumPerPageQueryParameter()) //
+        .withQueryString(resolver.startAtPageNumber(pageNr))
+        .withQueryString(resolver.accessTokenHeader(host)).get()
+    } else {
+      logger.info(s"Putting the access-token in head($url)")
+      dispatcher //
+        .requestHolder(url) //
+        .withQueryString(resolver.maximumPerPageQueryParameter()) //
+        .withQueryString(resolver.startAtPageNumber(pageNr))
+        .withHeaders(resolver.authUserHeaderParameter(host))
+        .withHeaders(resolver.accessTokenHeader(host))
+        .withHeaders(resolver.proxyAuthorizationValue()).get()
+    }
   }
 
   def head(host: String, url: String): Future[WSResponse] = {

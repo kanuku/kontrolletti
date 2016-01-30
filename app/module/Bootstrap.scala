@@ -25,8 +25,8 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
   val logger: Logger = Logger { this.getClass }
 
   val star = setup()
-
-  def scheduleSyncAppsJob() = actorSystem.scheduler.schedule(12.seconds, 600.seconds) {
+//implicit val executionContext = actorSystem.dispatchers.lookup("job-dispatcher")
+  def scheduleSyncAppsJob() = actorSystem.scheduler.scheduleOnce(12.seconds) {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
     val now = System.nanoTime
     Await.result(repoImporter.syncApps(), 590.seconds)
@@ -35,7 +35,7 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
     logger.info("Finished the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
   }
 
-  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(612.seconds, 600.seconds) {
+  def scheduleSynchCommitsJobs() = actorSystem.scheduler.scheduleOnce(12.seconds) {
     logger.info("Started the job for synchronizing Commits from the SCM's")
     val now = System.nanoTime
     Await.result(commitImporter.synchCommits(), 590.seconds)
@@ -52,7 +52,7 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
   }
 
   def setup() = {
-    scheduleSyncAppsJob
+//    scheduleSyncAppsJob
     scheduleSynchCommitsJobs
   }
 

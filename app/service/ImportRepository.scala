@@ -34,27 +34,28 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
   val falseFuture = Future.successful(false)
 
   def syncApps(): Future[Unit] = {
-    val futureAccessToken = logErrorOnFailure(oAuthclient.accessToken())
     val now = System.nanoTime
-    for {
-      accessToken <- futureAccessToken
-      kioRepos <- kioClient.repositories(accessToken)
-      savedRepos <- repoRepo.all()
-      validRepos <- keepValidRepos(kioRepos)
-      reposNotInDatabase <- notInRightHandFilter(validRepos, savedRepos.toList)
-      optinalSavedRepos <- Future.traverse(reposNotInDatabase)(saveIfExists)
-      savedInDatabase <- Future { optinalSavedRepos.flatten }
-      if {
-        logger.info("Result, apps from kio: " + kioRepos.size)
-        logger.info("Result, valid apps: " + validRepos.size)
-        logger.info("Result, apps already in database:" + savedRepos.size)
-        logger.info("Result, new apps saved db:" + savedInDatabase.size)
-        val elapsed = TimeUnit.SECONDS.convert((System.nanoTime - now), TimeUnit.NANOSECONDS)
+    logErrorOnFailure(oAuthclient.accessToken()).map { accessToken =>
 
-        logger.info(s"Result, job took $elapsed seconds")
-        true
-      }
-    } yield Future {}
+      for {
+        kioRepos <- kioClient.repositories(accessToken)
+        savedRepos <- repoRepo.all()
+        validRepos <- keepValidRepos(kioRepos)
+        reposNotInDatabase <- notInRightHandFilter(validRepos, savedRepos.toList)
+        optinalSavedRepos <- Future.traverse(reposNotInDatabase)(saveIfExists)
+        savedInDatabase <- Future { optinalSavedRepos.flatten }
+        if {
+          logger.info("Result, apps from kio: " + kioRepos.size)
+          logger.info("Result, valid apps: " + validRepos.size)
+          logger.info("Result, apps already in database:" + savedRepos.size)
+          logger.info("Result, new apps saved db:" + savedInDatabase.size)
+          val elapsed = TimeUnit.SECONDS.convert((System.nanoTime - now), TimeUnit.NANOSECONDS)
+
+          logger.info(s"Result, job took $elapsed seconds")
+          true
+        }
+      } yield Future {}
+    }
   }
 
   /**
@@ -83,7 +84,7 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
   def existsInSCM(repo: Repository): Future[Option[Repository]] = search.isRepo(repo.host, repo.project, repo.repository).map {
     _ match {
       case Right(exists) if exists => Some(repo)
-      case _                       => None
+      case _ => None
 
     }
   }
@@ -104,7 +105,7 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
 
   def removeDuplicates(repos: List[Repository]): List[Repository] = repos match {
     case head :: tail => if (tail.exists { reposAreEqual(_, head) }) removeDuplicates(tail) else head :: removeDuplicates(tail)
-    case Nil          => Nil
+    case Nil => Nil
   }
 
   /**
