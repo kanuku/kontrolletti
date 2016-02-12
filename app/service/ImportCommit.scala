@@ -17,7 +17,7 @@ import scala.concurrent.duration.DurationInt
 import configuration.GeneralConfiguration
 import utility.GeneralHelper
 import utility.TicketParser
-import java.util.concurrent.TimeUnit
+
 
 trait ImportCommit {
   def synchCommits(): Future[Unit]
@@ -34,22 +34,20 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
   val falseFuture = Future.successful(false)
 
   def synchCommits(): Future[Unit] = Future {
-    val now = System.nanoTime
+
     repoRepo.enabled().map { repos =>
       logger.info("Started the job for synchronizing Commits from " + repos.size + " Repositories")
       repos.map { repo =>
         commitRepo.youngest(repo.url).map { lastCommit =>
           logger.info("Last commit:" + lastCommit)
-          synchCommit(repo, lastCommit)
+          Await.result(synchCommit(repo, lastCommit),30.seconds)
         }
       }
     }
-    val elapsed = TimeUnit.SECONDS.convert((System.nanoTime - now), TimeUnit.NANOSECONDS)
-    logger.info(s"Result, job took $elapsed seconds")
   }
 
   private def synchCommit(repo: Repository, since: Option[Commit], pageNumber: Int = 1): Future[Boolean] = {
-    logger.info(s"Getting Commit's page nr:$pageNumber from:" + repo.url)
+    logger.debug(s"Getting Commit's page nr:$pageNumber from:" + repo.url)
     commits(repo, since, pageNumber).flatMap {
       _ match {
         case None =>

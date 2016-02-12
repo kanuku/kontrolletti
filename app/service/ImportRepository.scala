@@ -42,8 +42,8 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
       savedRepos <- repoRepo.all()
       validRepos <- keepValidRepos(kioRepos)
       reposNotInDatabase <- notInRightHandFilter(validRepos, savedRepos.toList)
-      optinalSavedRepos <- Future.traverse(reposNotInDatabase)(saveIfExists)
-      savedInDatabase <- Future { optinalSavedRepos.flatten }
+      savedRepos <- Future.traverse(reposNotInDatabase)(saveIfExists)
+      savedInDatabase <- Future { savedRepos.flatten }
       if {
         logger.info("Result, apps from kio: " + kioRepos.size)
         logger.info("Result, valid apps: " + validRepos.size)
@@ -80,14 +80,17 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
   /**
    *
    */
-  def existsInSCM(repo: Repository): Future[Option[Repository]] = search.isRepo(repo.host, repo.project, repo.repository).map {
-    _ match {
-      case Right(exists) if exists => Some(repo)
-      case _                       => None
+  def existsInSCM(repo: Repository): Future[Option[Repository]] = {
+    //TODO: It is blocking here by purpose! See https://github.com/zalando/kontrolletti/issues/147
+    val result = Await.result(search.isRepo(repo.host, repo.project, repo.repository).map {
+      _ match {
+        case Right(exists) if exists => Some(repo)
+        case _ => None
 
-    }
+      }
+    }, 30.seconds)
+    Future.successful(result)
   }
-
   def saveIfExists(repo: Repository): Future[Option[Repository]] = {
     existsInSCM(repo).map {
       _ match {
@@ -104,7 +107,7 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
 
   def removeDuplicates(repos: List[Repository]): List[Repository] = repos match {
     case head :: tail => if (tail.exists { reposAreEqual(_, head) }) removeDuplicates(tail) else head :: removeDuplicates(tail)
-    case Nil          => Nil
+    case Nil => Nil
   }
 
   /**
