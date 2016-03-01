@@ -1,7 +1,10 @@
 package model
 
+import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
 import org.scalatestplus.play.OneAppPerSuite
 import org.scalatest.mock.MockitoSugar
+import play.api.libs.json.JsString
 import test.util.MockitoUtils
 import org.scalatest.BeforeAndAfter
 import org.scalatest.FlatSpec
@@ -9,6 +12,7 @@ import play.api.libs.json.Json
 import KontrollettiToJsonParser._
 import KontrollettiToModelParser._
 import org.scalatest.FunSuite
+import org.scalatest.prop.Checkers
 import org.joda.time.DateTime
 
 /**
@@ -18,7 +22,7 @@ import org.joda.time.DateTime
  * You're welcome.
  *
  */
-class KontrollettiToJsonParserTest extends FunSuite with MockitoSugar with MockitoUtils with BeforeAndAfter {
+class KontrollettiToJsonParserTest extends FunSuite with MockitoSugar with MockitoUtils with BeforeAndAfter with Checkers {
   val error = new Error("detail", 500, "http://localhost/errorType")
   val link = new Link("href", "method", "rel", "relType")
   val links = List(link, link)
@@ -72,6 +76,19 @@ class KontrollettiToJsonParserTest extends FunSuite with MockitoSugar with Mocki
   test("RepositoryResult should be parsed") {
     val json = Json.toJson(repositoryResult)
     assert(json.validate[RepositoryResult].asOpt == Some(repositoryResult))
+  }
+
+
+  implicit val arbDateTime =
+    Arbitrary(Gen.choose(Long.MinValue, Long.MaxValue).map(l => new DateTime(l)))
+
+  // property based test
+  test("Date writes should produce valid JsString in RFC3339 format") {
+    check { d: DateTime =>
+      val JsString(str) = Json.toJson(d)
+      val offset = str.dropWhile(_ != '+')
+      offset.filter(_ == ':').length == 1 // issue #150
+    }
   }
 
 }

@@ -106,7 +106,7 @@ object KontrollettiToModelParser {
 }
 object KontrollettiToJsonParser {
 
-  implicit val dateWrites = Writes.jodaDateWrites("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+  implicit val dateWrites = Writes.jodaDateWrites("yyyy-MM-dd'T'HH:mm:ss.SSSZZ")
 
   implicit val errorWriter: Writes[Error] = (
     (__ \ "detail").write[String] and
