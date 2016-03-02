@@ -36,7 +36,7 @@ case class CommitsResult(links: List[Link], result: List[Commit])
 // And overriding those companion objects in the SCM Parser
 
 object KontrollettiToModelParser {
-  val dateTimeISO8601 = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+  val dateTimeISO8601 = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ"
   val dateReads = Reads.jodaDateReads(dateTimeISO8601)
 
   implicit val errorReader: Reads[Error] = (

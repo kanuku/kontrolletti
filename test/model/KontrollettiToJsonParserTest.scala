@@ -80,12 +80,12 @@ class KontrollettiToJsonParserTest extends FunSuite with MockitoSugar with Mocki
 
 
   implicit val arbDateTime =
-    Arbitrary(Gen.choose(Long.MinValue, Long.MaxValue).map(l => new DateTime(l)))
+    Arbitrary(Gen.choose(0L, Long.MaxValue).map(l => new DateTime(l)))
 
   // property based test
   test("Date writes should produce valid JsString in RFC3339 format") {
     check { d: DateTime =>
-      val JsString(str) = Json.toJson(d)
+      val JsString(str) = Json.toJson(d)(dateWrites)
       val offset = str.dropWhile(_ != '+')
       offset.filter(_ == ':').length == 1 // issue #150
     }
