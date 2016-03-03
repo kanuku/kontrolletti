@@ -16,6 +16,10 @@ project/plugins/project/
 .scala_dependencies
 .worksheet
 
+# ensime specific
+.ensime
+.ensime_cache
+
 logs
 project/project
 project/target
