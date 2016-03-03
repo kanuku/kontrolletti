@@ -39,15 +39,11 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
 
   def runJobs(): Unit = {
     val j = for {
-    _ <- syncRepoJob
-    _ <- syncCommitsJob
+      _ <- syncRepoJob recover { case e: Throwable => logger.error("Sync repository job failed.", e) }
+      _ <- syncCommitsJob recover { case e: Throwable => logger.error("Sync commit job failed.", e) }
     } yield ()
 
-    j onComplete { res =>
-      res match {
-        case Success(_) => ()
-        case Failure(e) => logger.error("Sync repo / commit job failed.", e)
-      }
+    j onComplete { _ =>
       actorSystem.scheduler.scheduleOnce(288.seconds)(setup)
     }
   }
