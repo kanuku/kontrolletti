@@ -1,14 +1,15 @@
 package module
 
-import scala.concurrent.Await
-import scala.concurrent.duration.DurationInt
-
 import akka.actor.ActorSystem
-import dao.{ CommitRepository, RepoRepository }
-import javax.inject.{ Inject, Singleton }
+import dao.{CommitRepository, RepoRepository}
+import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import service.{ ImportCommit, ImportRepository }
+import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
+import scala.util.{Failure, Success}
+import service.{ImportCommit, ImportRepository}
+
 /**
  * @author fbenjamin
  */
@@ -24,30 +25,34 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
                                commitRepo: CommitRepository) extends Bootstrap {
   val logger: Logger = Logger { this.getClass }
 
-  val star = setup()
+  def syncRepoJob = for {
+    _ <- Future.successful(logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO"))
+    _ <- repoImporter.syncApps
+    _ <- Future.successful(logger.info("Finished the synch job for synchronizing AppInfos(SCM-URL's) from KIO"))
+  } yield ()
 
-  def scheduleSyncAppsJob() = actorSystem.scheduler.schedule(12.seconds, 300.seconds) {
-    logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
-    Await.result(repoImporter.syncApps(), 290.seconds)
-    logger.info("Finished the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
+  def syncCommitsJob = for {
+    _ <- Future.successful(logger.info("Started the job for synchronizing Commits from the SCM's"))
+    _ <- commitImporter.synchCommits
+    _ <- Future.successful(logger.info("Finished the job for synchronizing Commits from the SCM's"))
+  } yield ()
+
+  def runJobs(): Unit = {
+    val j = for {
+    _ <- syncRepoJob
+    _ <- syncCommitsJob
+    } yield ()
+
+    j onComplete { res =>
+      res match {
+        case Success(_) => ()
+        case Failure(e) => logger.error("Sync repo / commit job failed.", e)
+      }
+      actorSystem.scheduler.scheduleOnce(288.seconds)(setup)
+    }
   }
 
-  def scheduleSynchCommitsJobs() = actorSystem.scheduler.schedule(312.seconds, 300.seconds) {
-    logger.info("Started the job for synchronizing Commits from the SCM's")
-    Await.result(commitImporter.synchCommits(), 290.seconds)
-  }
+  def setup() = actorSystem.scheduler.scheduleOnce(12.seconds)(runJobs)
 
-  def scheduleDatabaseBootstrap() = actorSystem.scheduler.scheduleOnce(7.seconds) {
-    logger.info("Started bootstrapping initial database")
-    for {
-      repoResult <- repoRepo.initializeDatabase
-      commitsResult <- commitRepo.initializeDatabase
-    } yield (commitsResult)
-  }
-
-  def setup() = {
-    scheduleSyncAppsJob
-    scheduleSynchCommitsJobs
-  }
-
+  setup
 }
