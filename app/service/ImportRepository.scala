@@ -31,30 +31,25 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
 
   val logger: Logger = Logger { this.getClass }
 
-  val falseFuture = Future.successful(false)
-
   def syncApps(): Future[Unit] = {
     logger.info("Started the synch job for synchronizing AppInfos(SCM-URL's) from KIO")
     val now = System.nanoTime
     for {
-      accessToken <- logErrorOnFailure(oAuthclient.accessToken())
-      kioRepos <- kioClient.repositories(accessToken)
-      savedRepos <- repoRepo.all()
-      validRepos <- keepValidRepos(kioRepos)
+      accessToken        <- logErrorOnFailure(oAuthclient.accessToken())
+      kioRepos           <- kioClient.repositories(accessToken)
+      savedRepos         <- repoRepo.all()
+      validRepos         <- keepValidRepos(kioRepos)
       reposNotInDatabase <- notInRightHandFilter(validRepos, savedRepos.toList)
-      optinalSavedRepos <- Future.traverse(reposNotInDatabase)(saveIfExists)
-      savedInDatabase <- Future { optinalSavedRepos.flatten }
-      if {
+      savedInDatabase    <- Future.traverse(reposNotInDatabase)(saveIfExists).map(_.flatten)
+      _                  <- Future.successful {
         logger.info("Result, apps from kio: " + kioRepos.size)
         logger.info("Result, valid apps: " + validRepos.size)
         logger.info("Result, apps already in database:" + savedRepos.size)
         logger.info("Result, new apps saved db:" + savedInDatabase.size)
         val elapsed = TimeUnit.SECONDS.convert((System.nanoTime - now), TimeUnit.NANOSECONDS)
-
         logger.info(s"Result, job took $elapsed seconds")
-        true
       }
-    } yield Future {}
+    } yield ()
   }
 
   /**
@@ -81,24 +76,19 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
    *
    */
   def existsInSCM(repo: Repository): Future[Option[Repository]] = search.isRepo(repo.host, repo.project, repo.repository).map {
-    _ match {
       case Right(exists) if exists => Some(repo)
       case _                       => None
-
-    }
   }
 
   def saveIfExists(repo: Repository): Future[Option[Repository]] = {
     existsInSCM(repo).map {
-      _ match {
-        case Some(existent) =>
-          logger.info("Existing repo will be saved:" + repo.url)
-          repoRepo.save(existent)
-          Some(existent)
-        case None =>
-          logger.info("Repo may not exist:" + repo.url)
-          None
-      }
+      case Some(existent) =>
+        logger.info("Existing repo will be saved:" + repo.url)
+        repoRepo.save(existent)
+        Some(existent)
+      case None =>
+        logger.info("Repo may not exist:" + repo.url)
+        None
     }
   }
 
@@ -114,7 +104,7 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
    * @param right The Valid repos that need to be compared to.
    * @return A Future containing List of Repos from left that do not exist in the right hand-side.
    */
-  def notInRightHandFilter(left: List[Repository], right: List[Repository]): Future[List[Repository]] = Future {
+  def notInRightHandFilter(left: List[Repository], right: List[Repository]): Future[List[Repository]] = Future.successful {
     left.filter {
       n => !right.toList.exists { reposAreEqual(_, n) }
     }
