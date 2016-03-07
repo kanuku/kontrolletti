@@ -23,6 +23,7 @@ object FutureUtil {
     f
   }
 
+  // TODO: remove tryFuture and its usage
   /**
    * Handles a future in a Try and returns the future if it doesn't fail. Otherwise it will log the error and return the default value.
    */
@@ -44,7 +45,7 @@ object FutureUtil {
       None
   }
 
-  def handleError[T](f: Future[T])(implicit ec: ExecutionContext): Future[T] = {
+  def handleError[T](f: Future[T])(implicit ec: ExecutionContext): Future[T] =
     f recoverWith {
 
       case ex: SQLException =>
@@ -52,7 +53,5 @@ object FutureUtil {
         logger.error(ex.getMessage)
         Future.failed(new Exception("Database operation failed!"))
     }
-    f
-  }
 
 }
