@@ -47,7 +47,7 @@ class ImportRepositoriesImpl @Inject() (oAuthclient: OAuth, kioClient: KioClient
         logger.info("Result, apps already in database:" + savedRepos.size)
         logger.info("Result, new apps saved db:" + savedInDatabase.size)
         val elapsed = TimeUnit.SECONDS.convert((System.nanoTime - now), TimeUnit.NANOSECONDS)
-        logger.info(s"Result, job took $elapsed seconds")
+        logger.info(s"Result, sync repository job took $elapsed seconds")
       }
     } yield ()
   }

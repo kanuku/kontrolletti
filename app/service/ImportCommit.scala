@@ -1,5 +1,7 @@
 package service
 
+import model.Repository
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import client.kio.KioClient
 import client.oauth.OAuth
@@ -33,37 +35,45 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
 
   val falseFuture = Future.successful(false)
 
-  def synchCommits(): Future[Unit] = Future {
-    val now = System.nanoTime
-    repoRepo.enabled().map { repos =>
-      logger.info("Started the job for synchronizing Commits from " + repos.size + " Repositories")
-      repos.map { repo =>
-        commitRepo.youngest(repo.url).map { lastCommit =>
+  def synchCommits(): Future[Unit] = {
+
+    def doSyncCommit(repos: Seq[Repository]): Future[Unit] = {
+      val futures = repos.map { repo =>
+        commitRepo.youngest(repo.url) flatMap { lastCommit =>
           logger.info("Last commit:" + lastCommit)
           synchCommit(repo, lastCommit)
         }
       }
+      Future.sequence(futures).map(_ => ())
     }
-    val elapsed = TimeUnit.SECONDS.convert((System.nanoTime - now), TimeUnit.NANOSECONDS)
-    logger.info(s"Result, job took $elapsed seconds")
+
+    val now = System.nanoTime
+
+    for {
+      repos <- repoRepo.enabled()
+      _     <- Future.successful(logger.info("Started the job for synchronizing Commits from " + repos.size + " Repositories"))
+      _     <- doSyncCommit(repos)
+      _     <- Future.successful {
+        val elapsed = TimeUnit.SECONDS.convert((System.nanoTime - now), TimeUnit.NANOSECONDS)
+        logger.info(s"Result, sync commits job took $elapsed seconds")
+      }
+    } yield ()
   }
 
   private def synchCommit(repo: Repository, since: Option[Commit], pageNumber: Int = 1): Future[Boolean] = {
     logger.info(s"Getting Commit's page nr:$pageNumber from:" + repo.url)
     commits(repo, since, pageNumber).flatMap {
-      _ match {
-        case None =>
-          logger.info("No result")
-          falseFuture
-        case Some(result) =>
-          val commitsWithoutDuplicates = removeIfExists(result, since)
-          logger.info("From the " + result.size + " commits, only " + commitsWithoutDuplicates.size + " are not already saved in the database.")
-          val updatedCommits = updateCommits(repo, commitsWithoutDuplicates)
-          commitRepo.save(updatedCommits).flatMap { _ =>
-            logger.info(s"Saved " + result.size + "commits from " + repo.url)
-            synchCommit(repo, since, pageNumber + 1)
-          }
-      }
+      case None =>
+        logger.info("No result")
+        falseFuture
+      case Some(result) =>
+        val commitsWithoutDuplicates = removeIfExists(result, since)
+        logger.info("From the " + result.size + " commits, only " + commitsWithoutDuplicates.size + " are not already saved in the database.")
+        val updatedCommits = updateCommits(repo, commitsWithoutDuplicates)
+        commitRepo.save(updatedCommits).flatMap { _ =>
+          logger.info(s"Saved " + result.size + "commits from " + repo.url)
+          synchCommit(repo, since, pageNumber + 1)
+        }
     }
   }
 
@@ -81,20 +91,18 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
 
   private def commits(repository: Repository, since: Option[Commit], pageNumber: Int): Future[Option[List[Commit]]] =
     search.commits(repository.host, repository.project, repository.repository, since, None, pageNumber).map {
-      _ match {
-        case Right(Some(Nil)) =>
-          logger.info(s"Received empty result from $repository")
-          None
-        case Right(Some(result)) =>
-          logger.info("About to import " + result.size + " commits from " + repository.url)
-          Some(result)
-        case Right(None) =>
-          logger.info(s"Received no result from $repository")
-          None
-        case Left(msg) =>
-          logger.warn(s"Received msg: $msg")
-          None
-      }
+      case Right(Some(Nil)) =>
+        logger.info(s"Received empty result from $repository")
+        None
+      case Right(Some(result)) =>
+        logger.info("About to import " + result.size + " commits from " + repository.url)
+        Some(result)
+      case Right(None) =>
+        logger.info(s"Received no result from $repository")
+        None
+      case Left(msg) =>
+        logger.warn(s"Received msg: $msg")
+        None
     }
 
   /**
