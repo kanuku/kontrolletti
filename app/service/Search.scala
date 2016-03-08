@@ -1,25 +1,18 @@
 package service
 
-import scala.{ Left, Right }
-import scala.concurrent.Future
-import scala.util.{ Failure, Success, Try }
+import client.scm.{GithubToJsonParser, SCM, SCMImpl, SCMParser, SCMResolver, StashToJsonParser}
+import configuration.SCMConfiguration
+import javax.inject.{Inject, Named, Singleton}
+import model.{Commit, Link, Repository}
 import org.joda.time.format.DateTimeFormat
-import com.google.inject.ImplementedBy
-import client.scm.{ GithubToJsonParser, SCM, SCMImpl, SCMParser, StashToJsonParser }
-import javax.inject.{ Inject, Singleton }
-import model.{ Commit, Link, Repository, Ticket }
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSResponse
-import utility.UrlParser
-import configuration.SCMConfiguration
-import client.scm.GithubToJsonParser
-import client.scm.StashToJsonParser
-import client.scm.SCMResolver
-import javax.inject.Named
-import client.scm.GithubToJsonParser
-import client.scm.StashToJsonParser
+import scala.{Left, Right}
+import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
+import utility.{Transformer, UrlParser}
 import utility.FutureUtil._
 
 trait Search {
@@ -219,14 +212,16 @@ class SearchImpl @Inject() (client: SCM, @Named("stash") stashParser: SCMParser,
             logger.info("Http code 404 (Does not exist)")
             Right(None)
           case status if (acceptableCodes.contains(status)) =>
-            logger.info("Http code succefful")
-            parser(response.json) match {
-              case Right(value) =>
-                Right(Some(value))
-              case Left(error) =>
-                Logger.error(error)
-                Left(error)
-            }
+            logger.info("Http code successful")
+            Transformer.parse2Option(response.body).map({ json =>
+              parser(json) match {
+                case Right(value) =>
+                  Right(Some(value))
+                case Left(error) =>
+                  Logger.error(error)
+                  Left(error)
+              }
+            }).getOrElse(Left(s"Can not parse input, not valid json: ${response.body}"))
           case status =>
             logger.warn(s"Status $status was not handled! ->" + response.body)
             Left("Unexpected SCM response: " + response.status)
@@ -237,7 +232,7 @@ class SearchImpl @Inject() (client: SCM, @Named("stash") stashParser: SCMParser,
   def logOnComplete(futureResponse: Future[WSResponse]) {
     futureResponse onComplete {
       case Success(response) => logger.info("Call succeed with http-status:" + response.status)
-      case Failure(t)        => logger.error("Error while calling SCM " + t.getMessage)
+      case Failure(t)        => logger.error("Error while calling SCM " + t.getMessage, t)
     }
   }
 
@@ -252,7 +247,7 @@ class SearchImpl @Inject() (client: SCM, @Named("stash") stashParser: SCMParser,
         logOnComplete(result)
         result.map { Right(_) }
       case Failure(ex) =>
-        logger.error(ex.getMessage)
+        logger.error(ex.getMessage, ex)
         Future.successful(defaultError)
     }
   }

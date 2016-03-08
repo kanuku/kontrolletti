@@ -1,23 +1,18 @@
 package service
 
-import scala.concurrent.Future
-import scala.concurrent.duration.DurationInt
 import client.kio.KioClient
 import client.oauth.OAuth
 import configuration.GeneralConfiguration
-import dao.{ CommitRepository, RepoRepository }
-import javax.inject.{ Inject, Singleton }
+import dao.{CommitRepository, RepoRepository}
+import java.util.concurrent.TimeUnit
+import javax.inject.{Inject, Singleton}
 import model.Repository
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
 import utility.FutureUtil._
 import utility.UrlParser
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-import scala.util.Try
-import scala.util.Failure
-import scala.util.Success
-import java.util.concurrent.TimeUnit
 
 trait ImportRepository {
   def syncApps(): Future[Unit]
