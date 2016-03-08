@@ -54,7 +54,7 @@ class ImportCommitTest extends FlatSpec with MockitoSugar with MockitoUtils with
   val commit1Repo1 = createCommit(s"commitRepo1-id1", "message", None, author1, None, None, None, dateToday, validRepo1.url)
   val commit2Repo1 = createCommit(s"commitRepo1-id2", "message", None, author1, None, None, None, dateToday, validRepo1.url)
 
-  private val commitImporter = new ImportCommitImpl(oAuthClient, commitRepo, search, repoRepository, config)
+  private val commitImporter = new ImportCommitImpl(actorSystem, oAuthClient, commitRepo, search, repoRepository, config)
 
   before {
     reset(kioClient, oAuthClient, commitRepo, search, scheduler, repoRepository, config)
