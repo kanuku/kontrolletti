@@ -1,32 +1,29 @@
 package service
 
-import model.Repository
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import client.kio.KioClient
+import java.util.concurrent.TimeUnit
+import javax.inject.{Inject, Singleton}
+
+import akka.actor.ActorSystem
 import client.oauth.OAuth
-import dao.RepoRepository
-import dao.CommitRepository
-import javax.inject.{ Inject, Singleton }
-import model.Repository
-import model.Commit
+import configuration.GeneralConfiguration
+import dao.{CommitRepository, RepoRepository}
+import model.{Commit, Repository}
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import utility.FutureUtil._
-import utility.UrlParser
-import scala.concurrent.Await
+import utility.{GeneralHelper, TicketParser}
+
+import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
-import configuration.GeneralConfiguration
-import utility.GeneralHelper
-import utility.TicketParser
-import java.util.concurrent.TimeUnit
+import scala.util.control.NonFatal
 
 trait ImportCommit {
   def synchCommits(): Future[Unit]
 }
 
 @Singleton
-class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitRepository, //
+class ImportCommitImpl @Inject() (actorSystem: ActorSystem,
+                                  oAuthclient: OAuth, commitRepo: CommitRepository, //
                                   search: Search, //
                                   repoRepo: RepoRepository,
                                   config: GeneralConfiguration) extends ImportCommit with TicketParser with GeneralHelper {
@@ -36,16 +33,6 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
   val falseFuture = Future.successful(false)
 
   def synchCommits(): Future[Unit] = {
-
-    def doSyncCommit(repos: Seq[Repository]): Future[Unit] = {
-      val futures = repos.map { repo =>
-        commitRepo.youngest(repo.url) flatMap { lastCommit =>
-          logger.info("Last commit:" + lastCommit)
-          synchCommit(repo, lastCommit)
-        }
-      }
-      Future.sequence(futures).map(_ => ())
-    }
 
     val now = System.nanoTime
 
@@ -62,7 +49,7 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
 
   private def synchCommit(repo: Repository, since: Option[Commit], pageNumber: Int = 1): Future[Boolean] = {
     logger.info(s"Getting Commit's page nr:$pageNumber from:" + repo.url)
-    commits(repo, since, pageNumber).flatMap {
+    def runSyncCommit = commits(repo, since, pageNumber).flatMap {
       case None =>
         logger.info("No result")
         falseFuture
@@ -74,6 +61,28 @@ class ImportCommitImpl @Inject() (oAuthclient: OAuth, commitRepo: CommitReposito
           logger.info(s"Saved " + result.size + "commits from " + repo.url)
           synchCommit(repo, since, pageNumber + 1)
         }
+    }
+
+    for {
+      _ <- timeoutFuture(actorSystem, 1.seconds) // interval between getting two pages of commit
+      b <- runSyncCommit recover {
+        case NonFatal(e) =>
+          logger.error(s"Failed to import commits for repo: $repo - since: $since - page: $pageNumber", e)
+          false
+      }
+    } yield b
+  }
+
+  private def doSyncCommit(repos: Seq[Repository]): Future[Unit] = {
+    // run future one after another
+    repos.foldLeft(Future.successful(())) { case (acc, repo) =>
+      for {
+        _ <- acc
+        lastCommit <- commitRepo.youngest(repo.url)
+        _ <- timeoutFuture(actorSystem, 1.seconds) // interval between import commits for two repo
+        _ <- Future.successful(logger.info("Last commit: " + lastCommit))
+        _ <- synchCommit(repo, lastCommit)
+      } yield ()
     }
   }
 

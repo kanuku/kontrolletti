@@ -36,7 +36,7 @@ object Transformer {
     Try(Json.parse(input)) match {
       case Success(result) => Future.successful(result)
       case Failure(ex) =>
-        logger.error("Error while parsing:" + ex.getMessage)
+        logger.error("Error while parsing:" + ex.getMessage, ex)
         Future.failed(new JsonParseException("Failed to parse the json input"))
     }
   }
@@ -51,7 +51,7 @@ object Transformer {
     case Success(result) =>
       Option(result)
     case Failure(ex) =>
-      logger.error("Error while parsing:" + ex.getMessage)
+      logger.error("Error while parsing:" + ex.getMessage, ex)
       None
   }
 
@@ -86,7 +86,7 @@ object Transformer {
     }
   }
   /**
-   * Deserializes an optional JsValue into an optional concrete object of type T. 
+   * Deserializes an optional JsValue into an optional concrete object of type T.
    * instance of  [T] type wrapped in an option.
    * @param input is an optional JsValue
    * @return Option[T] - Contains the an optional deserialized Object
@@ -95,12 +95,12 @@ object Transformer {
     input.flatMap { jasonBourne => deserialize2Option(jasonBourne)
     }
   }
-  
-  
+
+
   /**
    * Deserializes a JsValue into an instance of type T.
    * @param input is an optional JsValue
-   * @return T - An instance of type T 
+   * @return T - An instance of type T
    */
   def deserialize[T](input:JsValue)(implicit rds: Reads[T]): T = {
     deserialize2Option(input) match {

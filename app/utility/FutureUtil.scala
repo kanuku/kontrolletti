@@ -1,13 +1,11 @@
 package utility
 
-import scala.annotation.implicitNotFound
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import play.api.Logger
+import akka.actor.ActorSystem
 import java.sql.SQLException
-import scala.util.Try
-import scala.util.Failure
-import scala.util.Success
+import play.api.Logger
+import scala.annotation.implicitNotFound
+import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.duration.FiniteDuration
 
 /**
  * @author fbenjamin
@@ -53,5 +51,13 @@ object FutureUtil {
         logger.error(ex.getMessage)
         Future.failed(new Exception("Database operation failed!"))
     }
+
+  def timeoutFuture(actorSys: ActorSystem, du: FiniteDuration)(implicit ec: ExecutionContext): Future[Unit] = {
+    val p = Promise[Unit]
+    actorSys.scheduler.scheduleOnce(du) {
+      p.trySuccess(())
+    }
+    p.future
+  }
 
 }
