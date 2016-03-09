@@ -77,11 +77,11 @@ class ImportCommitImpl @Inject() (actorSystem: ActorSystem,
     // run future one after another
     repos.foldLeft(Future.successful(())) { case (acc, repo) =>
       for {
-        _ <- acc
+        _          <- acc
         lastCommit <- commitRepo.youngest(repo.url)
-        _ <- timeoutFuture(actorSystem, 1.seconds) // interval between import commits for two repo
-        _ <- Future.successful(logger.info("Last commit: " + lastCommit))
-        _ <- synchCommit(repo, lastCommit)
+        _          <- timeoutFuture(actorSystem, 1.seconds) // interval between import commits for two repo
+        _          <- Future.successful(logger.info("Last commit: " + lastCommit))
+        _          <- synchCommit(repo, lastCommit)
       } yield ()
     }
   }
