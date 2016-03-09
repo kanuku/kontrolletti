@@ -6,6 +6,7 @@ import play.api.libs.ws.WSResponse
 import javax.inject._
 import client.RequestDispatcher
 import com.google.inject.ImplementedBy
+import SCMModel._
 
 @ImplementedBy(classOf[SCMImpl])
 sealed trait SCM {
@@ -79,7 +80,14 @@ sealed trait SCM {
 
   def isGithubServerType(host: String): Boolean
 
+  def toSCMResponse[R <: SCMResource](wsResp: WSResponse): SCMResponse[R] =
+    SCMResponse[R](
+      httpStatus = wsResp.status,
+      headers = wsResp.allHeaders,
+      body = wsResp.body
+    )
 }
+
 @Singleton
 class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
                          @Named("github") githubResolver: SCMResolver, //
@@ -119,56 +127,30 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
     val res: SCMResolver = resolver(host)
     res.diffUrl(host, project, repository, source, target)
   }
+
   def get(host: String, url: String, since: Option[String], pageNr: Int = 1): Future[WSResponse] = {
+
     logger.info(s"Issuing a GET on $url starting at page $pageNr")
     val res = resolver(host)
-
-    val call = if (res.isGithubServerType) {
-      logger.info(s"Putting the access-token in url($url)")
-      dispatcher //
-        .requestHolder(url) //
-        .withQueryString(res.maximumPerPageQueryParameter()) //
-        .withQueryString(res.startAtPageNumber(pageNr))
-        .withQueryString(res.accessTokenHeader(host))
-    } else {
-      logger.info(s"Putting the access-token in head($url)")
-      dispatcher //
-        .requestHolder(url) //
-        .withQueryString(res.maximumPerPageQueryParameter()) //
-        .withQueryString(res.startAtPageNumber(pageNr))
-        .withHeaders(res.authUserHeaderParameter(host))
-        .withHeaders(res.accessTokenHeader(host))
-        .withHeaders(res.proxyAuthorizationValue())
-    }
 
     val token = Option(res.accessTokenValue(host))
     if (token == Some("") || !token.isDefined || token.isEmpty) {
       logger.error("No tokens configured for host " + host)
     }
-    if (since.isDefined) {
-      logger.info("Using since parameter " + since)
-      call.withQueryString(res.sinceCommitQueryParameter(since.get))
-    }
-    call.get()
+
+    val req = dispatcher.requestHolder(url)
+    res.attachPaginationParams(
+      res.attachAuthParams(req, host),
+      since,
+      pageNr
+    ).get()
   }
 
   def head(host: String, url: String): Future[WSResponse] = {
     logger.info(s"Issuing a HEAD on $url")
-    resolver(host) match {
-      case resolver if resolver.hostType == "github" =>
-        logger.info(s"Calling(github) HEAD on $url")
-        dispatcher.requestHolder(url) //
-          .withHeaders(resolver.accessTokenHeader(host))
-          .head()
-      case resolver if resolver.hostType == "stash" =>
-        logger.info(s"Calling(stash) GET on $url")
-        dispatcher //
-          .requestHolder(url) //
-          .withHeaders(resolver.authUserHeaderParameter(host))
-          .withHeaders(resolver.accessTokenHeader(host))
-          .withHeaders(resolver.proxyAuthorizationValue())
-          .get()
-    }
+    val res = resolver(host)
+    val req = res.attachAuthParams(dispatcher.requestHolder(url), host)
+    res.checkResource(req)
   }
 
   def isGithubServerType(host: String): Boolean = resolver(host).isGithubServerType

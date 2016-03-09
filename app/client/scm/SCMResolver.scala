@@ -4,6 +4,9 @@ import client.oauth.OAuth
 import configuration.SCMConfiguration
 import javax.inject.{ Inject, Singleton }
 import play.api.Logger
+import play.api.libs.ws.WSRequest
+import play.api.libs.ws.WSResponse
+import scala.concurrent.Future
 import utility.Transformer
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
@@ -185,6 +188,21 @@ sealed trait SCMResolver {
    */
   def proxyAuthorizationValue(): (String, String)
 
+
+  /** attach auth parameters to the WSRequest */
+  def attachAuthParams(request: WSRequest, host: String): WSRequest
+
+  /** attach pagination parameters to WSRequest */
+  def attachPaginationParams(request: WSRequest, since: Option[String], pageNr: Int): WSRequest = {
+    val req = request
+      .withQueryString(maximumPerPageQueryParameter())
+      .withQueryString(startAtPageNumber(pageNr))
+    since match {
+      case Some(s) => req.withQueryString(sinceCommitQueryParameter(s))
+      case None    => req
+    }
+  }
+
   /**
    * Decides upon configured values, which host should be the final host.
    * @return final host
@@ -197,6 +215,9 @@ sealed trait SCMResolver {
         host
     }
   }
+
+  /** Check if a resource on SCM exists by send the constructed request */
+  def checkResource(request: WSRequest): Future[WSResponse]
 }
 
 @Singleton
@@ -226,7 +247,7 @@ class GithubResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
   }
   def repoUrl(host: String, project: String, repository: String) = s"https://$host/$project/$repository"
 
-  def checkRepoUrl(host: String, project: String, repository: String) = repoUrl(host, project, repository)
+  def checkRepoUrl(host: String, project: String, repository: String) = repo(host, project, repository)
 
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
     val antecedent = antecedents(host)
@@ -245,6 +266,12 @@ class GithubResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
   //This is should be coming from configuration
   def isBehindOAuthProxy(): Boolean = false
   def proxyAuthorizationValue(): (String, String) = ("" -> "")
+
+  def attachAuthParams(request: WSRequest, host: String) =
+    request.withQueryString(accessTokenHeader(host))
+
+  def checkResource(request: WSRequest) =
+    request.head()
 }
 
 @Singleton
@@ -299,6 +326,15 @@ class StashResolver @Inject() (config: SCMConfiguration, oauth: OAuth) extends S
   //This is should be coming from configuration
   def isBehindOAuthProxy(): Boolean = true
   def proxyAuthorizationValue(): (String, String) = ("Authorization" -> ("Bearer " + getToken()))
+
+  def attachAuthParams(request: WSRequest, host: String) =
+    request
+      .withHeaders(authUserHeaderParameter(host))
+      .withHeaders(accessTokenHeader(host))
+      .withHeaders(proxyAuthorizationValue())
+
+  def checkResource(request: WSRequest) =
+    request.get()
 
   private def getToken(): String = Await.result(oauth.accessToken(), 30.seconds).accessToken
 }
