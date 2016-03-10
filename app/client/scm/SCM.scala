@@ -139,6 +139,7 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
     }
 
     val req = dispatcher.requestHolder(url)
+    // FIXME: pagination will change original url
     res.attachPaginationParams(
       res.attachAuthParams(req, host),
       since,

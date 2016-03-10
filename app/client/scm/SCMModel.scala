@@ -13,12 +13,13 @@ object SCMModel {
     body: String
   )
 
-  sealed trait SCMPagenation[Resource <: SCMResource]
+  sealed trait SCMPagination[Resource <: SCMResource]
+  case class NoPagination[Resource <: SCMResource]() extends SCMPagination[Resource]
   case class FirstPage[Resource <: SCMResource](
     resId: Option[Resource#ResourceId] // start of page. concrete meaning depends on different SCM
-  ) extends SCMPagenation[Resource]
+  ) extends SCMPagination[Resource]
   case class NextPage[Resource <: SCMResource, Next](
     resId: Option[Resource#ResourceId], // start of page. concrete meaning depends on different SCM
     nextParam: Next
-  )
+  ) extends SCMPagination[Resource]
 }
