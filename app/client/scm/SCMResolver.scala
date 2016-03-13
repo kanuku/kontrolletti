@@ -173,6 +173,9 @@ sealed trait SCMResolver {
    */
   def startAtPageNumber(pageNr: Int): (String, String)
 
+  /** determine the pagination based on current page/position and number of items on last page */
+  def nextPosition(currPos: Int, lastBatchSize: Int): Int
+
   def isGithubServerType(): Boolean
   /**
    * The access-token value to use for accessing the SCM Rest api.
@@ -241,6 +244,7 @@ class GithubResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
   def isGithubServerType(): Boolean = true
   def sinceCommitQueryParameter(since: String) = ("date" -> since)
   def startAtPageNumber(pageNr: Int) = ("page" -> pageNr.toString())
+  def nextPosition(currPos: Int, lastBatchSize: Int): Int = currPos + 1
 
   //This is should be coming from configuration
   def isBehindOAuthProxy(): Boolean = false
@@ -295,6 +299,7 @@ class StashResolver @Inject() (config: SCMConfiguration, oauth: OAuth) extends S
   def isGithubServerType: Boolean = false
   def sinceCommitQueryParameter(since: String) = ("since" -> since)
   def startAtPageNumber(pageNr: Int) = ("start" -> (pageNr - 1).toString())
+  def nextPosition(currPos: Int, lastBatchSize: Int): Int = currPos + lastBatchSize
 
   //This is should be coming from configuration
   def isBehindOAuthProxy(): Boolean = true
