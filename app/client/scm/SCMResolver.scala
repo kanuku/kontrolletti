@@ -229,7 +229,7 @@ class GithubResolver @Inject() (config: SCMConfiguration) extends SCMResolver {
   }
   def repoUrl(host: String, project: String, repository: String) = s"https://$host/$project/$repository"
 
-  def checkRepoUrl(host: String, project: String, repository: String) = repoUrl(host, project, repository)
+  def checkRepoUrl(host: String, project: String, repository: String) = repo(host, project, repository)
 
   def diffUrl(host: String, project: String, repository: String, source: String, target: String): String = {
     val antecedent = antecedents(host)
