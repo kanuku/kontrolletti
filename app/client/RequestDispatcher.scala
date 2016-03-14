@@ -36,7 +36,9 @@ class RequestDispatcherImpl @Inject() (client: WSClient, config: GeneralConfigur
 
   def requestHolder(url: String): WSRequest = {
     logger.info(s"Creating an dispatcher for $url")
-    client2.url(url).withRequestTimeout(config.defaultClientTimeout.toLong)
+    client2.url(url)
+      .withRequestTimeout(config.defaultClientTimeout.toLong)
+      .withFollowRedirects(true)
   }
 
 }
