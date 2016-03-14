@@ -30,7 +30,6 @@ class RequestDispatcherImpl @Inject() (client: WSClient, config: GeneralConfigur
 
   val client2 = {
     val builder = new com.ning.http.client.AsyncHttpClientConfig.Builder()
-    builder.setAcceptAnyCertificate(true)
     new play.api.libs.ws.ning.NingWSClient(builder.build())
   }
 
