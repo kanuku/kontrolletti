@@ -30,13 +30,14 @@ class RequestDispatcherImpl @Inject() (client: WSClient, config: GeneralConfigur
 
   val client2 = {
     val builder = new com.ning.http.client.AsyncHttpClientConfig.Builder()
-    builder.setAcceptAnyCertificate(true)
     new play.api.libs.ws.ning.NingWSClient(builder.build())
   }
 
   def requestHolder(url: String): WSRequest = {
     logger.info(s"Creating an dispatcher for $url")
-    client2.url(url).withRequestTimeout(config.defaultClientTimeout.toLong)
+    client2.url(url)
+      .withRequestTimeout(config.defaultClientTimeout.toLong)
+      .withFollowRedirects(true)
   }
 
 }
