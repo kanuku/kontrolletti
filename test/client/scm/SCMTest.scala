@@ -109,7 +109,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
     assert(result == url)
   }
   "SCM#checkRepoUrl" should "return a repository-url for github API" in {
-    val url = s"https://$github/$project/$repository"
+    val url = s"https://api.$github/repos/$project/$repository"
     val result = client.checkRepoUrl(github, project, repository)
     assert(result == url)
   }
@@ -134,6 +134,7 @@ class SCMTest extends FlatSpec with MockitoSugar with MockitoUtils with OneAppPe
     val url = s"Test"
     when(mockedDispatcher.requestHolder(url)).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.withHeaders(any[Tuple2[String, String]]())).thenReturn(mockedRequestHolder)
+    when(mockedRequestHolder.withQueryString(any[Tuple2[String, String]]())).thenReturn(mockedRequestHolder)
     when(mockedRequestHolder.head()).thenReturn(mockedResponse)
     val result = client.head(github, url)
     assert(result == mockedResponse)

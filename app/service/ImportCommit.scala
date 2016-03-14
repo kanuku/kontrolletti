@@ -48,7 +48,7 @@ class ImportCommitImpl @Inject() (actorSystem: ActorSystem,
   }
 
   private def synchCommit(repo: Repository, since: Option[Commit], pageNumber: Int = 1): Future[Boolean] = {
-    logger.info(s"Getting Commit's page nr:$pageNumber from:" + repo.url)
+    logger.info(s"Getting Commit's page/position :$pageNumber from:" + repo.url)
     def runSyncCommit = commits(repo, since, pageNumber).flatMap {
       case None =>
         logger.info("No result")
@@ -59,7 +59,13 @@ class ImportCommitImpl @Inject() (actorSystem: ActorSystem,
         val updatedCommits = updateCommits(repo, commitsWithoutDuplicates)
         commitRepo.save(updatedCommits).flatMap { _ =>
           logger.info(s"Saved " + result.size + "commits from " + repo.url)
-          synchCommit(repo, since, pageNumber + 1)
+          search.nextPosition(repo.host, pageNumber, result.size) match {
+            case Right(pos) =>
+              synchCommit(repo, since, pos)
+            case Left(msg)  =>
+              logger.error(s"Sync commit for repo [$repo] finished with error: " + msg)
+              Future.successful(false)
+          }
         }
     }
 

@@ -91,6 +91,7 @@ trait Search {
    */
   def diff(host: String, project: String, repository: String, source: String, target: String): Future[Either[String, Option[Link]]]
 
+  def nextPosition(host: String, currPos: Int, lastBatchSize: Int): Either[String, Int]
 }
 
 /**
@@ -180,6 +181,13 @@ class SearchImpl @Inject() (client: SCM, @Named("stash") stashParser: SCMParser,
       }
     }
   }
+
+  def nextPosition(host: String, currPost: Int, lastBatchSize: Int): Either[String, Int] =
+    Try(client.resolver(host)) match {
+      case Failure(_) => Left(s"Can not find resolver implementation for host: $host")
+      case Success(res) =>
+        Right(res.nextPosition(currPost, lastBatchSize))
+    }
 
   def isUrlValid(host: String, url: String): Future[Either[String, Boolean]] = {
     logger.info(s"isUrlValid: $host - $url")

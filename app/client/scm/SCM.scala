@@ -158,7 +158,7 @@ class SCMImpl @Inject() (dispatcher: RequestDispatcher, //
       case resolver if resolver.hostType == "github" =>
         logger.info(s"Calling(github) HEAD on $url")
         dispatcher.requestHolder(url) //
-          .withHeaders(resolver.accessTokenHeader(host))
+          .withQueryString(resolver.accessTokenHeader(host))
           .head()
       case resolver if resolver.hostType == "stash" =>
         logger.info(s"Calling(stash) GET on $url")
