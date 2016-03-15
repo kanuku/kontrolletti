@@ -15,8 +15,13 @@ scalacOptions in Compile ++= Seq(
   "-Ywarn-adapted-args", // Warn if an argument list is modified to match the receiver.
   "-Ywarn-dead-code", // Warn when dead code is identified.
   "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures.
-  "-Ywarn-nullary-override" // Warn when non-nullary overrides nullary, e.g. def foo() over def foo.
+  "-Ywarn-nullary-override", // Warn when non-nullary overrides nullary, e.g. def foo() over def foo.
+  "-Ywarn-numeric-widen",
+  "-Ywarn-value-discard",
+  "-language:higherKinds"
 )
+
+scalacOptions in Test ~= (_ filterNot (Set("-Ywarn-numeric-widen", "-Ywarn-value-discard")))
 
 ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 15
 

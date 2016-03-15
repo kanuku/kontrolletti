@@ -56,6 +56,7 @@ object FutureUtil {
     val p = Promise[Unit]
     actorSys.scheduler.scheduleOnce(du) {
       p.trySuccess(())
+      ()
     }
     p.future
   }

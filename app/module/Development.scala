@@ -38,6 +38,6 @@ class Development extends AbstractModule {
     bind(classOf[SCMResolver]).annotatedWith(Names.named("stash")).to(classOf[StashResolver])
     bind(classOf[SCMParser]).annotatedWith(Names.named("github")).to(classOf[GithubToJsonParser])
     bind(classOf[SCMParser]).annotatedWith(Names.named("stash")).to(classOf[StashToJsonParser])
-
+    ()
   }
 }
