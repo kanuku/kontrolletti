@@ -14,7 +14,7 @@ import service.{ImportCommit, ImportRepository}
  * @author fbenjamin
  */
 trait Bootstrap {
-  def setup()
+  def setup(): Unit
 }
 
 @Singleton
@@ -48,7 +48,10 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
     }
   }
 
-  def setup() = actorSystem.scheduler.scheduleOnce(12.seconds)(runJobs)
+  def setup(): Unit = {
+    actorSystem.scheduler.scheduleOnce(12.seconds)(runJobs)
+    ()
+  }
 
   setup
 }
