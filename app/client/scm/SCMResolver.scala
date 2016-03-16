@@ -295,7 +295,7 @@ class StashResolver @Inject() (config: SCMConfiguration, oauth: OAuth) extends S
   def accessTokenHeader(host: String) = ("X-Auth-Token" -> accessTokenValue(host))
   def authUserHeaderParameter(host: String): (String, String) = ("X-Auth-User" -> authUser(host))
 
-  def maximumPerPageQueryParameter() = ("limit" -> "10000")
+  def maximumPerPageQueryParameter() = ("limit" -> "5000")
   def isGithubServerType: Boolean = false
   def sinceCommitQueryParameter(since: String) = ("since" -> since)
   def startAtPageNumber(pageNr: Int) = ("start" -> (pageNr - 1).toString())
