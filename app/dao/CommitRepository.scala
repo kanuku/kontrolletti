@@ -9,7 +9,7 @@ import model.Repository
 import model.Ticket
 import play.api.Logger
 import play.api.db.slick.{ DatabaseConfigProvider, HasDatabaseConfig, HasDatabaseConfigProvider }
-import utility.FutureUtil
+import utility.FutureUtil._
 import model.Repository
 import dao.Tables.CommitTable
 import dao.Tables.RepositoryTable
@@ -32,8 +32,7 @@ trait CommitRepository {
 
 @Singleton
 class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext) extends CommitRepository with HasDatabaseConfigProvider[KontrollettiPostgresDriver] {
-  import dao.KontrollettiPostgresDriver.api._
-  import utility.FutureUtil._
+
   private val logger: Logger = Logger(this.getClass)
   private val commits = Tables.commits
   private val repos = Tables.repositories

@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import java.sql.SQLException
 import play.api.Logger
 import scala.annotation.implicitNotFound
+import scala.util.Try
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.concurrent.duration.FiniteDuration
 
@@ -50,6 +51,7 @@ object FutureUtil {
         //logger.error(ex.getNextException.getMessage)
         //logger.error(ex.getMessage)
         logger.error("db exception", ex)
+        Try(logger.error("reason: ", ex.getNextException))
         Future.failed(ex)
     }
 
