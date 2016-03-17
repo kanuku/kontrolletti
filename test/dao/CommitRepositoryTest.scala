@@ -1,15 +1,12 @@
 package dao
 
 import org.joda.time.DateTime
-import org.scalatest.BeforeAndAfter
-import org.scalatest.BeforeAndAfterAll
+import org.scalatest.{BeforeAndAfter, _}
 import org.scalatest.mock.MockitoSugar
-import org.scalatestplus.play.PlaySpec
+import test.util.{ApplicationWithDB, MockitoUtils}
+
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
-import test.util.ApplicationWithDB
-import test.util.MockitoUtils
-import org.scalatest._
 
 /**
  * @author fbenjamin
@@ -23,7 +20,7 @@ class CommitRepositoryTest extends FlatSpec with Matchers with MockitoUtils with
   val dateYesterday = dateToday.minusDays(1)
   val dateBeforeYesterday = dateToday.minusDays(2)
   val dateOneWeekAgo = dateToday.minusWeeks(1)
-  val dateOneMonthAgo = dateToday.minusMonths((1))
+  val dateOneMonthAgo = dateToday.minusMonths(1)
   // Parameters
   val repo = RepoParameters(repo1.host, repo1.project, repo1.repository)
 

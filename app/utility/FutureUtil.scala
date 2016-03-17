@@ -47,9 +47,10 @@ object FutureUtil {
     f recoverWith {
 
       case ex: SQLException =>
-        logger.error(ex.getNextException.getMessage)
-        logger.error(ex.getMessage)
-        Future.failed(new Exception("Database operation failed!"))
+        //logger.error(ex.getNextException.getMessage)
+        //logger.error(ex.getMessage)
+        logger.error("db exception", ex)
+        Future.failed(ex)
     }
 
   def timeoutFuture(actorSys: ActorSystem, du: FiniteDuration)(implicit ec: ExecutionContext): Future[Unit] = {
