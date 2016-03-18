@@ -1,29 +1,24 @@
 package dao
 
-import model.Commit
-import model.Repository
-import model.Ticket
+import model.{Commit, Repository, Ticket}
 import org.joda.time.DateTime
 import org.scalacheck.Arbitrary
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.prop.Checkers
-import org.scalatest.{BeforeAndAfter, _}
+import org.scalatest._
 import org.scalatest.mock.MockitoSugar
-import play.api.db.slick.DatabaseConfigProvider
-import slick.driver.JdbcProfile
-import test.util.{generator, ApplicationWithDB, MockitoUtils}
+import org.scalatest.prop.Checkers
 import play.api.db.DBApi
-
-import scala.util.Random
-import scala.concurrent.Await
+import play.api.db.slick.DatabaseConfigProvider
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.ExecutionContext
+import scala.util.Random
+import slick.driver.JdbcProfile
+import test.util.{ApplicationWithDB, MockitoUtils, generator}
 
 /**
  * @author fbenjamin
  */
 //@Ignore
-class CommitRepositoryTest extends FunSuite with Matchers with MockitoUtils with MockitoSugar with ApplicationWithDB with BeforeAndAfter with ScalaFutures with Checkers {
+class CommitRepositoryTest extends FunSuite with Matchers with MockitoUtils with MockitoSugar with ApplicationWithDB with BeforeAndAfter with Checkers {
 
   def repoRepository = application.injector.instanceOf[RepoRepository]
   def commitRepository = application.injector.instanceOf[CommitRepository]
@@ -191,9 +186,6 @@ class CommitRepositoryTest extends FunSuite with Matchers with MockitoUtils with
     }
   }
 
-
-  // TODO: valid & invalid commits
-
   test("CommitRepository#tickets should get all tickets") {
     check {
       rcs: (Repository, List[Commit]) =>
@@ -206,7 +198,7 @@ class CommitRepositoryTest extends FunSuite with Matchers with MockitoUtils with
       val saving = savingAll(repo, commits)
 
       Await.ready(saving, 10.seconds)
-      val PagedResult(results, _) = Await.result(commitRepository.tickets(repoParam, FilterParameters(), PageParameters(perPage = Some(tickets.size))), 10.seconds)
+      val PagedResult(results, _) = Await.result(commitRepository.tickets(repoParam, FilterParameters(), PageParameters(perPage = Some(commits.size))), 10.seconds)
       Await.ready(dbConfig.db.run(cleanupContent), 10.seconds)
       results.size == tickets.size
     }

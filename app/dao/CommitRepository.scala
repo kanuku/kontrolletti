@@ -1,18 +1,14 @@
 package dao
 
-import scala.concurrent.{ ExecutionContext, Future }
-import org.joda.time.DateTime
 import dao.KontrollettiPostgresDriver.api._
-import javax.inject.{ Inject, Singleton }
-import model.Commit
-import model.Repository
-import model.Ticket
+import dao.Tables.{CommitTable, RepositoryTable}
+import javax.inject.{Inject, Singleton}
+import model.{Commit, Repository, Ticket}
+import org.joda.time.DateTime
 import play.api.Logger
-import play.api.db.slick.{ DatabaseConfigProvider, HasDatabaseConfig, HasDatabaseConfigProvider }
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfig, HasDatabaseConfigProvider}
+import scala.concurrent.{ExecutionContext, Future}
 import utility.FutureUtil._
-import model.Repository
-import dao.Tables.CommitTable
-import dao.Tables.RepositoryTable
 
 /**
  * @author fbenjamin
@@ -159,6 +155,10 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     handleError(db.run(commits.filter { x => x.repoURL === repoUrl }.sortBy(_.date.asc).result.headOption))
   }
 
+  /** FIXME: the pagination of all tickets is broken, it's
+    * pagination based on commits, code has been shortened but
+    * issue is not fixed
+    */
   def tickets(repo: RepoParameters, filter: FilterParameters, pagination: PageParameters): Future[PagedResult[Ticket]] = {
     logger.info(s"Get tickets - $repo - $filter - $pagination")
     val dateFilterParamsFuture = toDateFilterParameter(repo, filter)
@@ -167,10 +167,12 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
       pageQuery(commitQuery, pagination)
     }
     future.map {
-      case PagedResult(Nil, totalCount) => PagedResult(Nil, totalCount)
       case PagedResult(items, totalCount) =>
-        val r: Seq[List[Ticket]] = items.flatMap { x => x.tickets }
-        PagedResult(r.flatten, totalCount)
+        val r = for {
+          c <- items.toList
+          t <- c.tickets.toList.flatten
+        } yield t
+        PagedResult(r, totalCount)
     }
   }
 }
