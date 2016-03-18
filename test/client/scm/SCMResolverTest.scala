@@ -180,7 +180,7 @@ class SCMResolverTest extends PlaySpec //
       github.maximumPerPageQueryParameter shouldBe ("per_page" -> "100")
     }
     "return Stash's maximumPerPageQueryParameter" in {
-      stash.maximumPerPageQueryParameter shouldBe ("limit" -> "10000")
+      stash.maximumPerPageQueryParameter shouldBe ("limit" -> "5000")
     }
   }
 
