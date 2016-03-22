@@ -58,7 +58,8 @@ libraryDependencies ++= {
     "org.joda"               %  "joda-convert"          % "1.7"              withSources() withJavadoc(),
     "org.scalaz"             %% "scalaz-core"           % scalazVersion,
     "org.scalaz"             %% "scalaz-effect"         % scalazVersion,
-    "org.scalaz"             %% "scalaz-concurrent"     % scalazVersion
+    "org.scalaz"             %% "scalaz-concurrent"     % scalazVersion,
+    "com.lihaoyi"            %% "fastparse"             % "0.3.7"
 
   )
 }
