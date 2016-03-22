@@ -10,7 +10,7 @@ import org.scalatest.Matchers._
 import org.scalatestplus.play.OneAppPerSuite
 import com.google.inject.ImplementedBy
 import client.RequestDispatcherImpl
-import client.scm.{ GithubResolver, SCM, SCMImpl, SCMResolver, StashResolver }
+import client.scmdeprecate.{ GithubResolver, SCM, SCMImpl, SCMResolver, StashResolver }
 import configuration.GeneralConfiguration
 import javax.inject.{ Inject, Singleton }
 import model.Link
@@ -19,9 +19,9 @@ import test.util.{ ConfigurableFakeApp, MockitoUtils }
 import test.util.TestUtils.{ assertEitherIsLeft, assertEitherIsNotNull, assertEitherIsRight }
 import configuration.SCMConfigurationImpl
 import test.util.ConfigurationDefaults.SCMConfigurationDefaults._
-import client.scm.SCMParser
+import client.scmdeprecate.SCMParser
 import client.oauth.OAuth
-import client.scm.GithubToJsonParser
+import client.scmdeprecate.GithubToJsonParser
 
 /**
  * This class tests the interaction between the Service and the Client(mock).

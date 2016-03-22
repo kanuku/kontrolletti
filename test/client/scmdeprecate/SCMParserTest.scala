@@ -1,4 +1,4 @@
-package client.scm
+package client.scmdeprecate
 
 import org.joda.time.DateTime
 import org.scalatest.{ FunSuite, Matchers }

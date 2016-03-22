@@ -1,6 +1,6 @@
 package service
 
-import client.scm.{GithubToJsonParser, SCM, SCMImpl, SCMParser, SCMResolver, StashToJsonParser}
+import client.scmdeprecate.{GithubToJsonParser, SCM, SCMImpl, SCMParser, SCMResolver, StashToJsonParser}
 import configuration.SCMConfiguration
 import javax.inject.{Inject, Named, Singleton}
 import model.{Commit, Link, Repository}

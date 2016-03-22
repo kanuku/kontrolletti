@@ -1,4 +1,4 @@
-package client.scm
+package client.scmdeprecate
 
 import client.oauth.OAuth
 import configuration.SCMConfiguration

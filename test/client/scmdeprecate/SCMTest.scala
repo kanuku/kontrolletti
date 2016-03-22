@@ -1,4 +1,4 @@
-package client.scm
+package client.scmdeprecate
 
 import scala.concurrent.Future
 import org.mockito.ArgumentCaptor

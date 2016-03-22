@@ -29,6 +29,8 @@ ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := true
 
 ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages:= "<empty>;views.*;ReverseAssets.*;ReverseApplication.*;ReverseApiHelpController.*;Routes*;.*routes;Logger.*"
 
+lazy val scalazVersion = "7.2.1"
+
 libraryDependencies ++= {
   val playVersion = "2.4.2"
   Seq(
@@ -53,7 +55,10 @@ libraryDependencies ++= {
     "com.vividsolutions"     %  "jts"                   % "1.13"             withSources() withJavadoc(),
     // Joda
     "joda-time"              %  "joda-time"             % "2.7"              withSources() withJavadoc(),
-    "org.joda"               %  "joda-convert"          % "1.7"              withSources() withJavadoc()
+    "org.joda"               %  "joda-convert"          % "1.7"              withSources() withJavadoc(),
+    "org.scalaz"             %% "scalaz-core"           % scalazVersion,
+    "org.scalaz"             %% "scalaz-effect"         % scalazVersion,
+    "org.scalaz"             %% "scalaz-concurrent"     % scalazVersion
 
   )
 }

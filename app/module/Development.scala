@@ -9,14 +9,14 @@ import dao.{ CommitRepository, CommitRepositoryImpl, RepoRepository, RepoReposit
 import play.api.Logger
 import service.{ ImportCommit, ImportCommitImpl, ImportRepositoriesImpl, ImportRepository, Search, SearchImpl }
 import configuration.SCMConfigurationImpl
-import client.scm.StashResolver
-import client.scm.SCMResolver
-import client.scm.GithubResolver
+import client.scmdeprecate.StashResolver
+import client.scmdeprecate.SCMResolver
+import client.scmdeprecate.GithubResolver
 import configuration.SCMConfiguration
 import com.google.inject.name.Names
-import client.scm.GithubToJsonParser
-import client.scm.SCMParser
-import client.scm.StashToJsonParser
+import client.scmdeprecate.GithubToJsonParser
+import client.scmdeprecate.SCMParser
+import client.scmdeprecate.StashToJsonParser
 
 class Development extends AbstractModule {
 

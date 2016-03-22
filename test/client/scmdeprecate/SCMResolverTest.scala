@@ -1,4 +1,4 @@
-package client.scm
+package client.scmdeprecate
 
 import org.scalatest.Matchers._
 import org.mockito.Mockito._

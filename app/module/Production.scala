@@ -5,16 +5,16 @@ import com.google.inject.name.Names
 import client.{ RequestDispatcher, RequestDispatcherImpl }
 import client.kio.{ KioClient, KioClientImpl }
 import client.oauth.{ OAuth, OAuthClientImpl }
-import client.scm.{ GithubResolver, SCMResolver, StashResolver }
+import client.scmdeprecate.{ GithubResolver, SCMResolver, StashResolver }
 import configuration.{ GeneralConfiguration, GeneralConfigurationImpl, OAuthConfiguration, OAuthConfigurationImpl }
 import dao.{ CommitRepository, CommitRepositoryImpl, RepoRepository, RepoRepositoryImpl }
 import play.api.Logger
 import service.{ ImportCommit, ImportCommitImpl, ImportRepositoriesImpl, ImportRepository, Search, SearchImpl }
 import configuration.SCMConfigurationImpl
 import configuration.SCMConfiguration
-import client.scm.SCMParser
-import client.scm.GithubToJsonParser
-import client.scm.StashToJsonParser
+import client.scmdeprecate.SCMParser
+import client.scmdeprecate.GithubToJsonParser
+import client.scmdeprecate.StashToJsonParser
 
 class Production extends AbstractModule {
 
