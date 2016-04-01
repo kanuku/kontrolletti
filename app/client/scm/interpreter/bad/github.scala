@@ -6,6 +6,7 @@ import scala.concurrent.Future
 
 object github {
 
-  // val uriParser = ???
-  // val githubPlayInterpreter: ScmOpsIO ~> Future = ???
+  val githubPlayInterpreter: ScmOpsIO ~> Future = ??? // new (ScmOpsIO ~> Future) {
+
+  // }
 }
