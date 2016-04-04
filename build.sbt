@@ -66,6 +66,11 @@ libraryDependencies ++= {
 
 fork in Test := false
 
+// -------------Compiler plugin(s)---------------
+resolvers += Resolver.sonatypeRepo("releases")
+
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.7.1")
+
 // -------------Docker configuration-------------
 maintainer in Docker := "fernando.benjamin@zalando.de"
 
