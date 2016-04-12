@@ -29,7 +29,15 @@ ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := true
 
 ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages:= "<empty>;views.*;ReverseAssets.*;ReverseApplication.*;ReverseApiHelpController.*;Routes*;.*routes;Logger.*"
 
-lazy val scalazVersion = "7.2.1"
+lazy val scalazVersion = "7.2.2"
+
+lazy val http4sVersion = "0.13.0a"
+
+lazy val argonautVersion = "6.2-M1" // compatible with http4s 0.13.0a
+
+resolvers += Resolver.sonatypeRepo("releases")
+
+resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= {
   val playVersion = "2.4.2"
@@ -59,6 +67,9 @@ libraryDependencies ++= {
     "org.scalaz"             %% "scalaz-core"           % scalazVersion,
     "org.scalaz"             %% "scalaz-effect"         % scalazVersion,
     "org.scalaz"             %% "scalaz-concurrent"     % scalazVersion,
+    "io.argonaut"            %% "argonaut-monocle"      % argonautVersion,
+    "org.http4s"             %% "http4s-argonaut"       % http4sVersion,
+    "org.http4s"             %% "http4s-blaze-client"   % http4sVersion,
     "com.lihaoyi"            %% "fastparse"             % "0.3.7"
 
   )
@@ -67,7 +78,6 @@ libraryDependencies ++= {
 fork in Test := false
 
 // -------------Compiler plugin(s)---------------
-resolvers += Resolver.sonatypeRepo("releases")
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.7.1")
 

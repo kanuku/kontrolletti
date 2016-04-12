@@ -1,52 +1,85 @@
 package client.scm
 
-import java.net.URI
-
 import client.scm.scmmodel._
 
 import scalaz.{Free, \/, EitherT}
+import scalaz.syntax.all._
 
 trait Scm[A] {
-  import Scm.ConfError
+  import Scm.{ConfError, Token}
 
   type PaginationRepr
-  def apiBase(conf: A): ConfError \/ URI
-  def webUiBase(conf: A): ConfError \/ URI
-  def accessToken(conf: A): ConfError \/ String
+  def apiBase(conf: A): ConfError \/ Uri
+  def webUiBase(conf: A): ConfError \/ Uri
+  def accessToken(conf: A): ConfError \/ Token
   def user(conf: A): ConfError \/ String
-  def resourceUri(conf: A, resource: ResourceMeta[A]): ConfError \/ URI
-  def nextUri(conf: A, resource: ResourceMeta[A], next: Pagination[ResourceMeta[A], PaginationRepr]): EitherT[Option, ConfError, URI]
+  def resourceUri(conf: A, resource: ResourceMeta): ConfError \/ Uri
+  def paginationUri(conf: A, resource: ResourceMeta, page: Pagination[PaginationRepr]): ConfError \/ Option[Uri]
 }
+
 object Scm {
   import ScmOps._
+  import client.scm.scmmodel._
 
-  type ScmOpsIO[A] = Free[ScmOps, A]
+  type ScmOpsIO[A] = EitherT[Free[ScmOps, ?], String, A]
+
+  object ScmOpsIO {
+    def pure[A](a: A): ScmOpsIO[A] = liftF(a.point[Free[ScmOps, ?]])
+    def fromDisjunction[A](va: String \/ A): ScmOpsIO[A] =
+      EitherT.fromDisjunction[Free[ScmOps, ?]].apply(va)
+    def liftF[A](fa: Free[ScmOps, A]): ScmOpsIO[A] =
+      fa.liftM[EitherT[?[_], String, ?]]
+  }
   type ConfError = String
 
-  def checkExist[A: Scm](conf: A, res: ResourceMeta[A]): ScmOpsIO[Boolean] =
-    Free.liftF[ScmOps, Boolean](CheckExist(conf, res))
+  final case class Token(token: String) extends AnyVal
+  final case class ReqParams(uri: Uri, token: Token)
 
-  def get[A: Scm, Repr](conf: A, id: String): ScmOpsIO[Resource[A, Repr]] =
-    Free.liftF[ScmOps, Resource[A, Repr]](Get(conf, id))
+  def checkExist[A](conf: A, res: ResourceMeta)(implicit scm: Scm[A]): ScmOpsIO[Boolean] = {
+    for {
+      uri    <- scm.resourceUri(conf, res)         |> ScmOpsIO.fromDisjunction
+      token  <- scm.accessToken(conf)              |> ScmOpsIO.fromDisjunction
+      exists <- Free.liftF(CheckExist(uri, token)) |> ScmOpsIO.liftF
+    } yield exists
+  }
 
-  def getMulti[A: Scm, C, Repr](conf: A, from: ResourceMeta[A], start: Pagination[ResourceMeta[A], C]): ScmOpsIO[PagedResource[A, C, Repr]] =
-    Free.liftF(GetMulti(conf, from, start))
+  def getRepo[A](conf: A, res: ResourceMeta)(implicit scm: Scm[A]): ScmOpsIO[model.Repository] =
+    for {
+      uri   <- scm.resourceUri(conf, res)      |> ScmOpsIO.fromDisjunction
+      token <- scm.accessToken(conf)           |> ScmOpsIO.fromDisjunction
+      repo  <- Free.liftF(GetRepo(uri, token)) |> ScmOpsIO.liftF
+    } yield repo
 
-  def getAll[A: Scm, C, Repr](conf: A, from: ResourceMeta[A]): ScmOpsIO[PagedResource[A, C, Repr]] = {
-    def go(paged: PagedResource[A, C, Repr]): ScmOpsIO[PagedResource[A, C, Repr]] =
-      paged match {
-        case PagedResource(res, LastPage) => Free.point(paged)
-        case PagedResource(res, next) => getMulti[A, C, Repr](conf, from, next) flatMap { case PagedResource(res1, next1) =>
-          go(PagedResource(res ++ res1, next1))
-        }
+  def getCommit[A: Scm](conf: A, res: ResourceMeta)(implicit scm: Scm[A]): ScmOpsIO[model.Commit] =
+    for {
+      uri    <- scm.resourceUri(conf, res)        |> ScmOpsIO.fromDisjunction
+      token  <- scm.accessToken(conf)             |> ScmOpsIO.fromDisjunction
+      commit <- Free.liftF(GetCommit(uri, token)) |> ScmOpsIO.liftF
+    } yield commit
+
+  def getAllCommits[A](conf: A, res: ResourceMeta, start: Option[Uri])(implicit scm: Scm[A]): ScmOpsIO[Vector[model.Commit]] = {
+    val paged = for {
+      token        <- scm.accessToken(conf)                   |> ScmOpsIO.fromDisjunction
+      initial      <- scm.resourceUri(conf, res)              |> ScmOpsIO.fromDisjunction
+      uri          <- start.getOrElse(initial)                |> ScmOpsIO.pure
+      pagedCommits <- Free.liftF(GetCommitsPaged(uri, token)) |> ScmOpsIO.liftF
+    } yield pagedCommits
+
+    paged flatMap { pr: PagedResource[model.Commit] =>
+      pr.next match {
+        case Some(next) => getAllCommits(conf, res, Some(next)).map(pr.resources ++ _)
+        case None       => ScmOpsIO.pure(pr.resources)
       }
-    getMulti(conf, from, FirstPage) flatMap go
+    }
   }
 }
 
 sealed trait ScmOps[A]
 object ScmOps {
-  final case class CheckExist[A : Scm](conf: A, res: ResourceMeta[A]) extends ScmOps[Boolean] { val scm = implicitly[Scm[A]] }
-  final case class Get[A : Scm, Repr](conf: A, id: String) extends ScmOps[Resource[A, Repr]]  { val scm = implicitly[Scm[A]] }
-  final case class GetMulti[A : Scm, Repr, C](conf: A, from: ResourceMeta[A], start: Pagination[ResourceMeta[A], C]) extends ScmOps[PagedResource[A, C, Repr]]  { val scm = implicitly[Scm[A]] }
+  import Scm.Token
+  // TODO: GetCommit GetRepo ...
+  final case class CheckExist(uri: Uri, token: Token) extends ScmOps[Boolean]
+  final case class GetCommit(uri: Uri, token: Token) extends ScmOps[model.Commit]
+  final case class GetRepo(uri:Uri, token: Token) extends ScmOps[model.Repository]
+  final case class GetCommitsPaged(uri: Uri, token: Token) extends ScmOps[PagedResource[model.Commit]]
 }
