@@ -9,7 +9,7 @@ import org.joda.time.format.DateTimeFormat
 import argonaut._
 import Argonaut._
 
-import scalaz.{\/, EitherT}
+import scalaz.{\/, \/-, EitherT}
 import scalaz.std.option._
 import scalaz.syntax.either._
 import scalaz.syntax.monad._
@@ -17,8 +17,26 @@ import scalaz.syntax.std.option._
 
 object githubmodel {
 
-  final case class GithubPagination(uri: Uri, rel: String)
   final case class GithubConf(apiBase: Uri, webUiBase: Uri, accessToken: Token)
+  final case class GithubPagination(uri: Uri, rel: String)
+  object GithubPagination {
+    import fastparse.all._
+    private val whiteSpacesParser: Parser[Unit] = P(CharIn(" \t\n") | StringIn("\r\n"))
+    private val genericUriParser: Parser[Uri] =
+      P("<" ~ CharPred(_ != '>').rep.! ~ ">").flatMap { str =>
+        Uri.fromString(str) match {
+          case \/-(uri) => Pass.map(_ => uri)
+          case _ => Fail
+        }
+      }
+    private val relParser: Parser[String] = P("rel=\"" ~ CharPred(_ != '"').rep.! ~ "\"")
+    private val genericLinkRelParser: Parser[(Uri, String)] =
+      P(whiteSpacesParser.rep ~ genericUriParser ~ whiteSpacesParser.rep ~ ";" ~ whiteSpacesParser ~ relParser ~ ",".? ~ whiteSpacesParser.rep)
+    val nextUriParser: Parser[Option[Uri]] =
+      genericLinkRelParser.rep.map(_.filter({ case (_, rel) =>
+        rel == "next"
+      }).headOption.map(_._1))
+  }
 
   object GithubConf {
 

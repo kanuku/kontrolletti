@@ -4,9 +4,8 @@ package github
 import argonaut.DecodeJson
 import client.RequestDispatcher
 import client.scm.scmmodel.PagedResult
-import client.scm.github.githubmodel._
+import client.scm.github.githubmodel._, GithubPagination.nextUriParser
 import client.scm.{Scm, ScmOps}
-import client.scm.parser.github.GithubHeaderLink.nextUriParser
 import org.http4s.{Request, Response, Service, Method, Status}
 import org.http4s.util.CaseInsensitiveString
 import org.http4s.argonaut._
