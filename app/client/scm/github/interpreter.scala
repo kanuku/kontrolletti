@@ -14,42 +14,40 @@ import org.http4s.argonaut._
 import scalaz.{~>, \/, EitherT, Kleisli}
 import scalaz.concurrent.Task
 import scalaz.syntax.all._
-import scalaz.syntax.std.option._
 
 object interpreter {
-  import ScmOps._, Scm.ReqParams
+  import ScmOps._, Scm.{ReqParams, PagedResult}
 
   def githubInterpreter(client: Service[Request, Response]) = new (ScmOps ~> ScmResult) {
 
     def apply[A](fa: ScmOps[A]) = fa match {
-      case CheckExist(uri, token) =>
-        val action = toRequestK(Method.HEAD) >=> client >=> checkOkK
-        ReqParams(uri, token) |> action |> ScmResult.fromTask
-      case GetCommit(uri, token) =>
-        val getCommit = toRequestK(Method.GET) >=> client >=> readK[GithubCommit]
-        ReqParams(uri, token) |> getCommit |> ScmResult.apply |> (_.map(_.run))
-      case GetRepo(uri, token) =>
-        val getRepo = toRequestK(Method.GET) >=> client >=> readK[GithubRepo]
-        ReqParams(uri, token) |> getRepo |> ScmResult.apply |> (_.map(_.run))
-      case GetCommitsPaged(uri, token) =>
+      case BuildRequest(conf, scm, meta) =>
+        val req = for {
+          uri <- scm.resourceUri(conf, meta)
+          token <- scm.accessToken(conf)
+        } yield Request(uri = uri.copy(
+          query = uri.query.withQueryParam("access_token", token.token)))
+        ScmResult.fromDisjunction(req)
+      case CheckExist(request) =>
+        val action = client >=> checkOkK
+        request.copy(method = Method.HEAD) |> action |> ScmResult.fromTask
+      case GetCommit(request) =>
+        val getCommit = client >=> readK[GithubCommit]
+        request.copy(method = Method.GET) |> getCommit |> ScmResult.apply |> (_.map(_.run))
+      case GetRepo(request) =>
+        val getRepo = client >=> readK[GithubRepo]
+        request.copy(method = Method.GET) |> getRepo |> ScmResult.apply |> (_.map(_.run))
+      case GetCommitsPaged(request) =>
         val toPagedCommitsK = (readK[Vector[GithubCommit]] |@| readNextUriK){ (eCs, eUriOpt) =>
           for {
             commits <- eCs
             uriOpt  <- eUriOpt
-          } yield PagedResource(commits.map(_.run), uriOpt)
+          } yield PagedResult(commits.map(_.run), uriOpt)
         }
-        val getCommits = toRequestK(Method.GET) >=> client >=> toPagedCommitsK
-        ReqParams(uri, token) |> getCommits |> ScmResult.apply
+        val getCommits = client >=> toPagedCommitsK
+        request.copy(method = Method.GET) |> getCommits |> ScmResult.apply
     }
   }
-
-  def toRequest(method: Method, reqParams: ReqParams): Request =
-    Request(method = method,
-      uri = reqParams.uri.copy(
-        query = reqParams.uri.query :+ ("access_token" -> reqParams.token.token.some)))
-
-  def toRequestK(method: Method): Kleisli[Task, ReqParams, Request] =
-    Kleisli(reqParams => toRequest(method, reqParams).pure[Task])
 
   val checkOkK: Kleisli[Task, Response, Boolean] =
     Kleisli((r: Response) => (r.status == Status.Ok).point[Task])

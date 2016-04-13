@@ -14,6 +14,4 @@ object scmmodel {
   case object LastPage extends Pagination[Nothing]
   final case class NormalPage[PaginationRepr](page: PaginationRepr)
     extends Pagination[PaginationRepr]
-
-  final case class PagedResource[Res](resources: Vector[Res], next: Option[Uri])
 }

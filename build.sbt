@@ -67,7 +67,7 @@ libraryDependencies ++= {
     "org.scalaz"             %% "scalaz-core"           % scalazVersion,
     "org.scalaz"             %% "scalaz-effect"         % scalazVersion,
     "org.scalaz"             %% "scalaz-concurrent"     % scalazVersion,
-    "io.argonaut"            %% "argonaut-monocle"      % argonautVersion,
+    // "io.argonaut"            %% "argonaut-monocle"      % argonautVersion,
     "org.http4s"             %% "http4s-argonaut"       % http4sVersion,
     "org.http4s"             %% "http4s-blaze-client"   % http4sVersion,
     "com.lihaoyi"            %% "fastparse"             % "0.3.7"

@@ -3,7 +3,7 @@ package client.scm.stash
 import org.http4s.Uri
 
 import client.scm.Scm
-import Scm.Token
+import Scm.{ScmUser, Token}
 import client.scm.scmmodel._
 
 import scalaz.syntax.either._
@@ -20,7 +20,7 @@ object stashmodel {
       def apiBase(conf: StashConf) = conf.apiBase.right
       def webUiBase(conf: StashConf) = conf.webUiBase.right
       def accessToken(conf: StashConf) = conf.accessToken.right
-      def user(conf: StashConf) = conf.user.right
+      def user(conf: StashConf) = ScmUser(conf.user).right
       def resourceUri(conf: StashConf, resource: ResourceMeta) = resource match {
         case OrgMeta(id) =>  apiBase(conf).map(_ / "projects" / s"$id")
         case RepoMeta(id, org) => resourceUri(conf, org).map(_ / "repos" / s"$id")
