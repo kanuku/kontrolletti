@@ -19,6 +19,7 @@ import scala.util.control.NonFatal
 
 trait ImportCommit {
   def synchCommits(): Future[Unit]
+  def enrichWithTickets(host: String, project: String, repository: String, commits: List[Commit]): List[Commit]
 }
 
 @Singleton

@@ -24,6 +24,7 @@ trait CommitRepository {
   def all(): Future[Seq[Commit]]
   def save(commits: List[Commit]): Future[Unit]
   def byId(info: RepoParameters, id: String): Future[Option[Commit]]
+  def byRepoUrl(repoUrl: String): Future[Seq[Commit]]
   def get(repo: RepoParameters, filter: FilterParameters, pagination: PageParameters): Future[PagedResult[Commit]]
   def youngest(repoUrl: String): Future[Option[Commit]]
   def oldest(repoUrl: String): Future[Option[Commit]]
@@ -53,12 +54,19 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
 
   def save(input: List[Commit]): Future[Unit] = {
     logger.info("saving " + input.size + " commits")
-    handleError(db.run(commits ++= input).map(_ => ()))
+    val action = DBIO.sequence(for {
+      i <- input
+    } yield commits.insertOrUpdate(i)).transactionally
+    handleError(db.run(action).map(_ => ()))
   }
 
   def byId(info: RepoParameters, id: String): Future[Option[Commit]] = db.run {
     getByRepositoryQuery(info, None).filter(_.id === id).result.headOption
   }
+
+  def byRepoUrl(repoUrl: String): Future[Seq[Commit]] = db.run(
+    commits.filter(_.repoURL === repoUrl).result
+  )
 
   private def getByRepositoryQuery(info: RepoParameters, isValid: Option[Boolean]): Query[Tables.CommitTable, Commit, Seq] = for {
     repo <- filterRepos(info)
