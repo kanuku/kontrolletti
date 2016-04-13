@@ -13,5 +13,6 @@ object scmmodel {
   case object FirstPage extends Pagination[Nothing]
   case object LastPage extends Pagination[Nothing]
   final case class NormalPage[PaginationRepr](page: PaginationRepr)
-    extends Pagination[PaginationRepr]
+      extends Pagination[PaginationRepr]
+  final case class PagedResult[A](results: Vector[A], next: Option[Uri])
 }

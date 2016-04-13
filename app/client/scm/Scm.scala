@@ -48,36 +48,29 @@ object Scm {
     }
   }
   final case class ReqParams(uri: Uri, token: Token)
-  final case class PagedResult[A](results: Vector[A], next: Option[Request])
 
-  def buildRequest[A](conf: A, res: ResourceMeta)(implicit scm: Scm[A]): ScmOpsIO[Request] =
-    BuildRequest(conf, scm, res) |> Free.liftF[ScmOps, Request] |> ScmOpsIO.liftF
+  def buildRequest[A](conf: A, res: ResourceMeta, init: Option[Uri])(implicit scm: Scm[A]): ScmOpsIO[Request] =
+    BuildRequest(conf, scm, res, init) |> Free.liftF[ScmOps, Request] |> ScmOpsIO.liftF
 
   def checkExist[A](conf: A, res: ResourceMeta)(implicit scm: Scm[A]): ScmOpsIO[Boolean] =
-    buildRequest(conf, res) flatMap { req =>
+    buildRequest(conf, res, None) flatMap { req =>
       CheckExist(req) |> Free.liftF |> ScmOpsIO.liftF
     }
 
   def getRepo[A](conf: A, res: RepoMeta)(implicit scm: Scm[A]): ScmOpsIO[model.Repository] =
-    buildRequest(conf, res) flatMap { req =>
+    buildRequest(conf, res, None) flatMap { req =>
       GetRepo(req) |> Free.liftF |> ScmOpsIO.liftF
     }
 
-  def getCommit[A](conf: A, res: CommitMeta)(implicit scm: Scm[A]): ScmOpsIO[model.Commit] = buildRequest(conf, res) flatMap { req =>
+  def getCommit[A](conf: A, res: CommitMeta)(implicit scm: Scm[A]): ScmOpsIO[model.Commit] = buildRequest(conf, res, None) flatMap { req =>
       GetCommit(req) |> Free.liftF |> ScmOpsIO.liftF
     }
 
-  def getAllCommits[A](conf: A, res: AllCommitsMeta, start: Option[Request])(implicit scm: Scm[A]): ScmOpsIO[Vector[model.Commit]] = {
+  def getAllCommits[A](conf: A, res: AllCommitsMeta, start: Option[Uri])(implicit scm: Scm[A]): ScmOpsIO[Vector[model.Commit]] = {
     val paged: ScmOpsIO[PagedResult[model.Commit]] =
-      buildRequest(conf, res) flatMap { initial =>
-        ???
+      buildRequest(conf, res, start) flatMap { req =>
+        GetCommitsPaged(req) |> Free.liftF |> ScmOpsIO.liftF
       }
-    // for {
-    //   token        <- scm.accessToken(conf)                   |> ScmOpsIO.fromDisjunction
-    //   initial      <- scm.resourceUri(conf, res)              |> ScmOpsIO.fromDisjunction
-    //   uri          <- start.getOrElse(initial)                |> ScmOpsIO.pure
-    //   pagedCommits <- Free.liftF(GetCommitsPaged(uri, token)) |> ScmOpsIO.liftF
-    // } yield pagedCommits
 
     paged flatMap { pr: PagedResult[model.Commit] =>
       pr.next match {
@@ -90,8 +83,7 @@ object Scm {
 
 sealed trait ScmOps[A]
 object ScmOps {
-  import Scm.PagedResult
-  final case class BuildRequest[A](conf: A, scm: Scm[A], res: ResourceMeta) extends ScmOps[Request]
+  final case class BuildRequest[A](conf: A, scm: Scm[A], res: ResourceMeta, init: Option[Uri]) extends ScmOps[Request]
   final case class CheckExist(request: Request)                             extends ScmOps[Boolean]
   final case class GetCommit(request: Request)                              extends ScmOps[model.Commit]
   final case class GetRepo(request: Request)                                extends ScmOps[model.Repository]

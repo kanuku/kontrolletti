@@ -3,9 +3,9 @@ package github
 
 import argonaut.DecodeJson
 import client.RequestDispatcher
+import client.scm.scmmodel.PagedResult
 import client.scm.github.githubmodel._
 import client.scm.{Scm, ScmOps}
-import client.scm.scmmodel.PagedResource
 import client.scm.parser.github.GithubHeaderLink.nextUriParser
 import org.http4s.{Request, Response, Service, Method, Status}
 import org.http4s.util.CaseInsensitiveString
@@ -16,14 +16,15 @@ import scalaz.concurrent.Task
 import scalaz.syntax.all._
 
 object interpreter {
-  import ScmOps._, Scm.{ReqParams, PagedResult}
+  import ScmOps._
 
   def githubInterpreter(client: Service[Request, Response]) = new (ScmOps ~> ScmResult) {
 
     def apply[A](fa: ScmOps[A]) = fa match {
-      case BuildRequest(conf, scm, meta) =>
+      case BuildRequest(conf, scm, meta, initOpt) =>
         val req = for {
-          uri <- scm.resourceUri(conf, meta)
+          defaultUri <- scm.resourceUri(conf, meta)
+          uri <- initOpt.getOrElse(defaultUri).right
           token <- scm.accessToken(conf)
         } yield Request(uri = uri.copy(
           query = uri.query.withQueryParam("access_token", token.token)))
