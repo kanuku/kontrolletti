@@ -55,8 +55,8 @@ class TicketParserTest extends FlatSpec with Matchers {
       "offline:BMO/2ndfloor/team_A__space/blue-bookshelf/spec-Whatever",
       "CHECK-111"
     )
-    val messages = tickets map { t => s"_$t $text"}
-    messages.map(m => ticketParser.parse(github, project, repository, m)).forall(_.isEmpty) shouldBe true
+    val messages = tickets map { t => s"_$t $text" }
+    messages.map(m => ticketParser.parse(github, project, repository, m)) shouldBe List.fill(messages.length)(None)
   }
 
   /**
