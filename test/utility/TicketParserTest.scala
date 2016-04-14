@@ -47,6 +47,17 @@ class TicketParserTest extends FlatSpec with Matchers {
     val result = Ticket(message, jira + "CHECK-111", None)
     ticketParser.parse(github, project, repository, message) shouldBe Some(result)
   }
+  it must "not parse commit message with protocol in the middle" in {
+    val tickets = List(
+      "techjira:PF-1111",
+      "https://github.com/zalando/kontrolletti/issues/55",
+      "http://github.com/zalando/kontrolletti/issues/55",
+      "offline:BMO/2ndfloor/team_A__space/blue-bookshelf/spec-Whatever",
+      "CHECK-111"
+    )
+    val messages = tickets map { t => s"_$t $text"}
+    messages.map(m => ticketParser.parse(github, project, repository, m)).forall(_.isEmpty) shouldBe true
+  }
 
   /**
    * Tests for issue #Number
