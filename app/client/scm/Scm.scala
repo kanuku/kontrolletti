@@ -15,7 +15,6 @@ trait Scm[A] {
   def accessToken(conf: A): ConfError \/ Token
   def user(conf: A): ConfError \/ ScmUser
   def resourceUri(conf: A, resource: ResourceMeta): ConfError \/ Uri
-  def paginationUri(conf: A, resource: ResourceMeta, page: Pagination[PaginationRepr]): ConfError \/ Option[Uri]
 }
 
 object Scm {

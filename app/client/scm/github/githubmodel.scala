@@ -53,11 +53,6 @@ object githubmodel {
         case AllCommitsMeta(repo) => resourceUri(conf, repo).map(_ / "commits")
         case AllReposMeta(org) => resourceUri(conf, org).map(_ / "repos")
       }
-      def paginationUri(conf: GithubConf, resource: ResourceMeta, page: Pagination[GithubPagination]) = page match {
-        case NormalPage(p) =>
-          p.uri.some.right
-        case _ => None.right
-      }
     }
   }
 
@@ -74,10 +69,10 @@ object githubmodel {
 
     val commitDecodeJson: DecodeJson[model.Commit] =
       DecodeJson(c => for {
-        id <- (c --\ "sha").as[String]
-        message <- (c --\ "commit" --\ "message").as[String]
-        author <- (c --\ "commit" --\ "committer").as[GithubAuthor]
-        parents <- (c --\ "parents").as[List[Parent]]
+        id       <- (c --\ "sha").as[String]
+        message  <- (c --\ "commit" --\ "message").as[String]
+        author   <- (c --\ "commit" --\ "committer").as[GithubAuthor]
+        parents  <- (c --\ "parents").as[List[Parent]]
         datetime <- (c --\ "commit" --\ "author" --\ "date").as[GithubDateTime]
       } yield model.Commit(
         id        = id,
