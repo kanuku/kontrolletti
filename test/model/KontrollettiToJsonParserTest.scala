@@ -14,6 +14,7 @@ import KontrollettiToModelParser._
 import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
 import org.joda.time.DateTime
+import test.util.generator
 
 /**
  * @author fbenjamin
@@ -79,8 +80,7 @@ class KontrollettiToJsonParserTest extends FunSuite with MockitoSugar with Mocki
   }
 
 
-  implicit val arbDateTime =
-    Arbitrary(Gen.choose(0L, Long.MaxValue).map(l => new DateTime(l)))
+  implicit val arbDateTime = Arbitrary(generator.genDateTime)
 
   // property based test
   test("Date writes should produce valid JsString in RFC3339 format") {
