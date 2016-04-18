@@ -82,7 +82,7 @@ trait TicketParser {
       val link = jiraTicketUrl + specCap
       Some(Ticket(message, link, None))
     case _ =>
-      logger.info(s"Failed to parse ->  message:$message")
+      //logger.info(s"Failed to parse ->  message:$message")
       None
   }
   def jiraTicketUrl: String

@@ -135,7 +135,7 @@ class ImportCommitImpl @Inject() (actorSystem: ActorSystem,
       commit <- commits
       result = parse(host, project, repository, commit.message) match {
         case None         => commit.copy(valid = Option(numberOfTickets(commit.tickets) > 0))
-        case Some(ticket) => commit.copy(tickets = Option(List(ticket)), valid = Option(numberOfTickets(Option(List(ticket))) > 0))
+        case Some(ticket) => commit.copy(tickets = Option(List(ticket)), valid = Option(numberOfTickets(Option(List(ticket))) > 0 || commit.parentIds.toList.nonEmpty))
       }
     } yield result
   }

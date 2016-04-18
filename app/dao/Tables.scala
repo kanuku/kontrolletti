@@ -53,7 +53,7 @@ object Tables extends GeneralHelper { self: HasDatabaseConfigProvider[Kontrollet
   class CommitTable(tag: Tag) extends Table[Commit](tag, schema, "commits") {
     def id = column[String]("id", O.PrimaryKey)
     def date = column[DateTime]("date")
-    def repoURL = column[String]("repository_url")
+    def repoURL = column[String]("repository_url", O.PrimaryKey)
     def nrOfTickets = column[Int]("nr_tickets")
     def jsonValue = column[JsValue]("json_value")
 
