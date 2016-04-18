@@ -11,7 +11,7 @@ Kontrolletti archives the goal by
 
 Currently it supports git repositories hosted on github.com, self-hosted Github Enterprise and also self-hosted Stash.
 
-Producing false negative results is very annoying for other developers within the organization. We are striving to apply best practices in purely functional programming to keep the correctness as high as possible. For this we definitely need your help. If you are also interested in purely functional programming in scala, please have a look at ```[TODO](#todo)``` and ```[Contributing](#contributing)``` sections.
+Producing false negative results is very annoying for other developers within the organization. We are striving to apply best practices in purely functional programming to keep the correctness as high as possible. For this we definitely need your help. If you are also interested in purely functional programming in scala, please have a look at [TODO](#todo) and [Contributing](#contributing) sections.
 
 ![codecov.io](http://codecov.io/github/zalando/kontrolletti/branch.svg?branch=develop)
 
