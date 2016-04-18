@@ -15,7 +15,7 @@ How Kontroletti works:
 
 Kontroletti supports Git repositories hosted on Github.com, GitHub Enterprise (self-hosted) and self-hosted Stash.
 
-If you are also interested in pure functional programming in Scala, please look at our [TODO](#todo) and [Contributing](#contributing) sections.
+If you are also interested in pure functional programming in Scala, please look at our [TODO List](#todo-list) and [Contributor Guidelines](#contributor-guidelines).
 
 ![codecov.io](http://codecov.io/github/zalando/kontrolletti/branch.svg?branch=develop)
 
@@ -68,17 +68,16 @@ docker run -d -p 8080:9000 --name kontrolletti \
     pierone.stups.zalan.do/cd/kontrolletti:1.0-SNAPSHOT
 ```
 
-### Contributor Guidelines
+###Contributor Guidelines
 - We take code quality seriously, and don't wish to deviate from our quality or functional programming goals. Please do not use exceptions as control flow. 
 - Please make side-effects explicit using proper types.
 - Test your code thoroughly  with _meaningful tests_. We prefer property-based testing.
 - Please include a relevant GitHub issue with every commit message.
 
-##### Thanks to Our Current/Past Contributors
+#####Thanks to Our Current/Past Contributors
 [Fernando Benjamin](https://github.com/kanuku), [João Santos](https://github.com/jmcs), [Lothar Schulz](https://github.com/lotharschulz), [Tao Yang](https://github.com/taojang)
 
-
-### TODO List
+###TODO List
 - Replace manually-written test samples with property-based tests
 - Be explicit about side effects and remove exception throwing
 - Allow user-defined rules for validating commits
@@ -86,7 +85,6 @@ docker run -d -p 8080:9000 --name kontrolletti \
     - moving away from Play! framework
     - moving away from Slick
     - moving away from Akka
-
 
 #### License
 
