@@ -2,25 +2,30 @@
 [![Build Status](https://travis-ci.org/zalando/kontrolletti.svg?branch=develop)](https://travis-ci.org/zalando/kontrolletti) [![Coverage Status](https://coveralls.io/repos/zalando/kontrolletti/badge.svg?branch=develop)](https://coveralls.io/r/zalando/kontrolletti?branch=develop) [![codecov.io](http://codecov.io/github/zalando/kontrolletti/coverage.svg?branch=develop)](http://codecov.io/github/zalando/kontrolletti?branch=develop) [![Codacy Badge](https://www.codacy.com/project/badge/c56048c9306d4fda9881577ae38b3beb)](https://www.codacy.com/app/benibadboy/kontrolletti)
 
 ===
-A service that aggregates and stores information from different Source Control Management for historical and auditing purposes and serves this information through a REST API in a unified model.
+**Kontroletti** is a service that aggregates and stores information from multiple source control management systems for historical and auditing purposes. It then serves this information through a REST API in a unified model to make auditing easier. Used with [Kio](https://github.com/zalando-stups/kio), Zalando's application registry, it is out-of-the-box. 
 
-The goal of Kontrolletti is to solve a auditing compliance problem: validating each commit in every deployed application owns by an organization.
-Kontrolletti archives the goal by
-* fetching application information, especially repository information from [Kio](https://github.com/zalando-stups/kio)
-* scanning all repositories obtained above and reading all commits
-* validating commits with predefined rules, persisting into database
-* expose the information via [HTTP API](http://editor.swagger.io/#/?import=https://raw.githubusercontent.com/zalando/kontrolletti/develop/kontrolletti.yaml)
+###Why Kontroletti
+Kontrolletti aims to solve a significant auditing compliance problem: validating each commit in every deployed application owned by an organization. Validation of commits can often produce false-negative results — an annoying problem to developers and compliance teams alike. Kontroletti strives for accuracy — taking advantage of Scala's functional programming aspects (enabling composibility and eliminating a whole category of bugs) to do so.
 
-Currently it supports git repositories hosted on github.com, self-hosted Github Enterprise and also self-hosted Stash.
+How Kontroletti works:
+- fetches application information, especially repository information from Kio
+- scans all repositories obtained from fetching the application information, and reading all commits
+- validates commits with predefined rules and persisting them into the database
+- exposes the information via an [HTTP API](http://editor.swagger.io/#/?import=https://raw.githubusercontent.com/zalando/kontrolletti/develop/kontrolletti.yaml)
 
-Producing false negative results is very annoying for other developers within the organization. We are striving to apply best practices in purely functional programming to keep the correctness as high as possible. For this we definitely need your help. If you are also interested in purely functional programming in scala, please have a look at [TODO](#todo) and [Contributing](#contributing) sections.
+Kontroletti supports Git repositories hosted on Github.com, GitHub Enterprise (self-hosted) and self-hosted Stash.
+
+If you are also interested in pure functional programming in Scala, please look at our [TODO](#todo) and [Contributing](#contributing) sections.
 
 ![codecov.io](http://codecov.io/github/zalando/kontrolletti/branch.svg?branch=develop)
 
+### Development
+To build or develop with Kontroletti, first install:
+- Scala(2.11) 
+- sbt(0.13.7) 
+- Kio (see below)
 
-===
-#### Development
-You need scala(2.11) and sbt(0.13.7) installed to build or develop.
+
 ```sh
 ## Export the access-token of stash and github REST API's:
 export AUTH_TOKEN_GITHUB="19j1923u4Jh866ahsWLS==aw$"
@@ -35,8 +40,13 @@ sbt run
 ## Navigate to  http://localhost:9000/swagger
 ```
 
-===
-#### Running unit tests
+###Installing Kio
+Kio releases are pushed as Docker images in the [public registry](https://hub.docker.com/r/stups/kio/). You can run Kio by starting it with Docker:
+
+    $ docker run -it stups/kio
+
+
+#### Running Unit Tests
 ```sh
 ## To run unit tests
 sbt clean test
@@ -45,12 +55,12 @@ sbt clean test
 sbt clean coverage test && sbt coverageReport
 ```
 ===
-#### Creating a docker image
+#### Creating a Docker Image
 ```sh
 sbt clean docker:publishLocal
 ```
 ===
-#### Running the docker-image
+#### Running the Docker Image
 ```sh
 docker run -d -p 8080:9000 --name kontrolletti \
     -e AUTH_TOKEN_GITHUB="f12gals1/22am87h9j32" \
@@ -58,47 +68,32 @@ docker run -d -p 8080:9000 --name kontrolletti \
     pierone.stups.zalan.do/cd/kontrolletti:1.0-SNAPSHOT
 ```
 
+### Contributor Guidelines
+- We take code quality seriously, and don't wish to deviate from our quality or functional programming goals. Please do not use exceptions as control flow. 
+- Please make side-effects explicit using proper types.
+- Test your code thoroughly  with _meaningful tests_. We prefer property-based testing.
+- Please include a relevant GitHub issue with every commit message.
 
-===
-#### Contributing
-
-##### Contributor Guidelines
-* Purity is a goal. We need to be honest about what we code. Please do not use exceptions as control flow. Please make side-effects explicit using proper types.
-* Code should be well tested with _meaningful tests_. We prefer property-based testing.
-* Every commit message must contain relevant github issue.
-
-##### Contributors
-* [Fernando Benjamin](https://github.com/kanuku)
-* [João Santos](https://github.com/jmcs)
-* [Lothar Schulz](https://github.com/lotharschulz)
-* [Tao Yang](https://github.com/taojang)
+##### Thanks to Our Current/Past Contributors
+[Fernando Benjamin](https://github.com/kanuku), [João Santos](https://github.com/jmcs), [Lothar Schulz](https://github.com/lotharschulz), [Tao Yang](https://github.com/taojang)
 
 
-===
-#### TODO
-* Replace manually written test samples with property-based tests
-* Be explicit about side-effects, remove exception throwing
-* Allow user-defined rules for validating commits
-* Replace usage of ```scala.concurrent.Future```, which means
-  * moving away from Play! framework
-  * moving away from Slick
-  * moving away from Akka
+### TODO List
+- Replace manually-written test samples with property-based tests
+- Be explicit about side effects and remove exception throwing
+- Allow user-defined rules for validating commits
+- Replace usage of ```scala.concurrent.Future```, which means
+    - moving away from Play! framework
+    - moving away from Slick
+    - moving away from Akka
 
 
-===
 #### License
-
 
 Copyright © 2015-2016 Zalando SE
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
 http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
