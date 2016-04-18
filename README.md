@@ -2,25 +2,25 @@
 [![Build Status](https://travis-ci.org/zalando/kontrolletti.svg?branch=develop)](https://travis-ci.org/zalando/kontrolletti) [![Coverage Status](https://coveralls.io/repos/zalando/kontrolletti/badge.svg?branch=develop)](https://coveralls.io/r/zalando/kontrolletti?branch=develop) [![codecov.io](http://codecov.io/github/zalando/kontrolletti/coverage.svg?branch=develop)](http://codecov.io/github/zalando/kontrolletti?branch=develop) [![Codacy Badge](https://www.codacy.com/project/badge/c56048c9306d4fda9881577ae38b3beb)](https://www.codacy.com/app/benibadboy/kontrolletti)
 
 ===
-**Kontroletti** is a service that aggregates and stores information from multiple source control management systems for historical and auditing purposes. It then serves this information through a REST API in a unified model to make auditing easier. Used with [Kio](https://github.com/zalando-stups/kio), Zalando's application registry, it is out-of-the-box. 
+**Kontrolletti** is a service that aggregates and stores information from multiple source control management systems for historical and auditing purposes. It then serves this information through a REST API in a unified model to make auditing easier. Used with [Kio](https://github.com/zalando-stups/kio), Zalando's application registry, it is out-of-the-box. 
 
-###Why Kontroletti
-Kontrolletti aims to solve a significant auditing compliance problem: validating each commit in every deployed application owned by an organization. Validation of commits can often produce false-negative results — an annoying problem to developers and compliance teams alike. Kontroletti strives for accuracy — taking advantage of Scala's functional programming aspects (enabling composibility and eliminating a whole category of bugs) to do so.
+###Why Kontrolletti
+Kontrolletti aims to solve a significant auditing compliance problem: validating each commit in every deployed application owned by an organization. Validation of commits can often produce false-negative results — an annoying problem to developers and compliance teams alike. Kontrolletti strives for accuracy — taking advantage of Scala's functional programming aspects (enabling composibility and eliminating a whole category of bugs) to do so.
 
-How Kontroletti works:
+How Kontrolletti Works:
 - fetches application information, especially repository information from Kio
 - scans all repositories obtained from fetching the application information, and reading all commits
 - validates commits with predefined rules and persisting them into the database
 - exposes the information via an [HTTP API](http://editor.swagger.io/#/?import=https://raw.githubusercontent.com/zalando/kontrolletti/develop/kontrolletti.yaml)
 
-Kontroletti supports Git repositories hosted on Github.com, GitHub Enterprise (self-hosted) and self-hosted Stash.
+Kontrolletti supports Git repositories hosted on Github.com, GitHub Enterprise (self-hosted) and self-hosted Stash.
 
 If you are also interested in pure functional programming in Scala, please look at our [TODO List](#todo-list) and [Contributor Guidelines](#contributor-guidelines).
 
 ![codecov.io](http://codecov.io/github/zalando/kontrolletti/branch.svg?branch=develop)
 
 ### Development
-To build or develop with Kontroletti, first install:
+To build or develop with Kontrolletti, first install:
 - Scala(2.11) 
 - sbt(0.13.7) 
 - Kio (see below)
