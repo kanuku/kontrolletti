@@ -59,7 +59,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
   private def getByRepositoryQuery(info: RepoParameters, isValid: Option[Boolean]): Query[Tables.CommitTable, Commit, Seq] = for {
     repo <- filterRepos(info)
     commit <- isValid match {
-      case Some(valid) => commits.filter { c => c.repoURL === repo.url && ((c.nrOfTickets > 0) === valid) }
+      case Some(valid) => commits.filter { c => c.repoURL === repo.url && (c.isValid === valid) }
       case None        => commits.filter { _.repoURL === repo.url }
     }
   } yield commit
@@ -68,7 +68,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
   private def getCommitsByRange(info: RepoParameters, sinceDate: DateTime, untilDate: DateTime, isValid: Option[Boolean]) = for {
     repo <- filterRepos(info)
     result <- isValid match {
-      case Some(valid) => commits.filter { c => c.date >= sinceDate && c.date <= untilDate && ((c.nrOfTickets > 0) === valid) && c.repoURL === repo.url }
+      case Some(valid) => commits.filter { c => c.date >= sinceDate && c.date <= untilDate && (c.isValid === valid) && c.repoURL === repo.url }
       case None        => commits.filter { c => c.date >= sinceDate && c.date <= untilDate && c.repoURL === repo.url }
     }
   } yield result
@@ -76,7 +76,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
   private def getCommitsUntil(info: RepoParameters, untilDate: DateTime, isValid: Option[Boolean]) = for {
     repo <- filterRepos(info)
     result <- isValid match {
-      case Some(valid) => commits.filter { c => c.date <= untilDate && ((c.nrOfTickets > 0) === valid) && c.repoURL === repo.url }
+      case Some(valid) => commits.filter { c => c.date <= untilDate && (c.isValid === valid) && c.repoURL === repo.url }
       case None        => commits.filter { c => c.date <= untilDate && c.repoURL === repo.url }
     }
   } yield result
@@ -84,7 +84,7 @@ class CommitRepositoryImpl @Inject() (protected val dbConfigProvider: DatabaseCo
   private def getCommitsSince(info: RepoParameters, sinceDate: DateTime, isValid: Option[Boolean]) = for {
     repo <- filterRepos(info)
     result <- isValid match {
-      case Some(valid) => commits.filter { c => c.date >= sinceDate && ((c.nrOfTickets > 0) === valid) && c.repoURL === repo.url }
+      case Some(valid) => commits.filter { c => c.date >= sinceDate && (c.isValid === valid) && c.repoURL === repo.url }
       case None        => commits.filter { c => c.date >= sinceDate && c.repoURL === repo.url }
     }
   } yield result
