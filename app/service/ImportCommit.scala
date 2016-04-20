@@ -27,7 +27,7 @@ class ImportCommitImpl @Inject() (actorSystem: ActorSystem,
                                   oAuthclient: OAuth, commitRepo: CommitRepository, //
                                   search: Search, //
                                   repoRepo: RepoRepository,
-                                  config: GeneralConfiguration) extends ImportCommit with TicketParser with GeneralHelper {
+                                  config: GeneralConfiguration) extends ImportCommit with TicketParser {
 
   val logger: Logger = Logger { this.getClass }
 
@@ -134,8 +134,9 @@ class ImportCommitImpl @Inject() (actorSystem: ActorSystem,
     for {
       commit <- commits
       result = parse(host, project, repository, commit.message) match {
-        case None         => commit.copy(valid = Option(numberOfTickets(commit.tickets) > 0))
-        case Some(ticket) => commit.copy(tickets = Option(List(ticket)), valid = Option(numberOfTickets(Option(List(ticket))) > 0 || commit.parentIds.toList.nonEmpty))
+        case None         => commit.copy(valid = Some(Commit.isValid(commit)))
+        case Some(ticket) => val c = commit.copy(tickets = Some(List(ticket)))
+                             c.copy(valid = Some(Commit.isValid(c)))
       }
     } yield result
   }
