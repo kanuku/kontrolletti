@@ -36,13 +36,50 @@ object stashmodel {
   // port from SCMParser
   final case class StashCommit(run: model.Commit) extends AnyVal
 
+  object StashCommit {
+
+    val commitDecodeJson: DecodeJson[model.Commit] = ???
+  }
+
   final case class StashRepo(run: model.Repository) extends AnyVal
+
   object StashRepo {
-    val repoDecodeJson: DecodeJson[model.Repository] = ???
+
+    case class Href(href: String)
+    object Href {
+      implicit val decodeHref: DecodeJson[Href] =
+        jdecode1L(Href.apply)("href")
+    }
+
+    import scalaz.NonEmptyList
+    implicit def nelDecodeJson[A](implicit e: DecodeJson[A]): DecodeJson[NonEmptyList[A]] =
+      DecodeJson(c => c.as[List[A]] flatMap {
+        case x :: xs => DecodeResult.ok(NonEmptyList(x, xs: _*))
+        case _       => DecodeResult.fail("empty list", c.history)
+      })
+
+    val repoDecodeJson: DecodeJson[model.Repository] =
+      DecodeJson(c => for {
+        hrefs <- (c --\ "links" --\ "self").as[NonEmptyList[Href]]
+      } yield model.Repository(
+        url = hrefs.head.href,
+        host = "",
+        project = "",
+        repository = "",
+        true,
+        None,
+        None,
+        None
+      ))
+
+    implicit val stashRepoDecodeJson: DecodeJson[StashRepo] =
+      repoDecodeJson.map(StashRepo.apply)
   }
 
   final case class StashAuthor(run: model.Author) extends AnyVal
+
   object StashAuthor {
+
     val authorDecodeJson: DecodeJson[model.Author] =
       DecodeJson(c => for {
         name  <- (c --\ "name").as[String]
@@ -57,7 +94,9 @@ object stashmodel {
   }
 
   final case class StashDateTime(run: DateTime) extends AnyVal
+
   object StashDateTime {
+
     implicit val stashDateTimeDecdeJson: DecodeJson[StashDateTime] =
       DecodeJson.optionDecoder(
         x => for {
