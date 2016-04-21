@@ -11,7 +11,7 @@ import model.{Commit, Repository}
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import utility.FutureUtil._
-import utility.{GeneralHelper, TicketParser}
+import utility.TicketParser
 
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt

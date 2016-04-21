@@ -13,14 +13,13 @@ import play.api.db.slick.HasDatabaseConfigProvider
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsValue
 import utility.Transformer
-import utility.GeneralHelper
 import Transformer._
 import dao.KontrollettiPostgresDriver.api._
 
 import KontrollettiToJsonParser.linkWriter
 import KontrollettiToModelParser.linkReader
 
-object Tables extends GeneralHelper { self: HasDatabaseConfigProvider[KontrollettiPostgresDriver] =>
+object Tables { self: HasDatabaseConfigProvider[KontrollettiPostgresDriver] =>
 
   private val schema = Some("kont_data")
 
