@@ -75,19 +75,25 @@ class ImportCommitTest extends FlatSpec with MockitoSugar with MockitoUtils with
     val commit1 = createCommit(id = "id1", message = msg1)
     val commit2 = createCommit(id = "id2", message = msg2)
     val commit3 = createCommit(id = "id3", message = msg3)
-    val result = commitImporter.enrichWithTickets(host, project, repository, List(commit1, commit2, commit3))
-    result.size shouldBe 3
+    val commit4 = createCommit(id = "id4", message = msg3, parentIds = Some(List()))
+    val commit5 = createCommit(id = "id5", message = msg3, parentIds = Some(List("id1", "id2")))
+    val result = commitImporter.enrichWithTickets(host, project, repository, List(commit1, commit2, commit3, commit4, commit5))
+    result.size shouldBe 5
     val Some(commitRes1) = result.find { _.id == "id1" }
     val Some(commitRes2) = result.find { _.id == "id2" }
     val Some(commitRes3) = result.find { _.id == "id3" }
+    val Some(commitRes4) = result.find { _.id == "id4" }
+    val Some(commitRes5) = result.find { _.id == "id5" }
     //Check it tickets field/member
     commitRes1.tickets.isDefined shouldBe true
     commitRes2.tickets.isDefined shouldBe true
     commitRes3.tickets shouldBe None
     //Check validation
-    commitRes1.valid shouldBe Option(true)
-    commitRes2.valid shouldBe Option(true)
-    commitRes3.valid shouldBe Option(false)
+    commitRes1.valid shouldBe Some(true)
+    commitRes2.valid shouldBe Some(true)
+    commitRes3.valid shouldBe Some(false)
+    commitRes4.valid shouldBe Some(false)
+    commitRes5.valid shouldBe Some(true)
 
     val Some(ticketsCommit1) = commitRes1.tickets
     val Some(ticketsCommit2) = commitRes2.tickets

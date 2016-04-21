@@ -8,7 +8,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success}
-import service.{ImportCommit, ImportRepository}
+import service.{ImportCommit, ImportRepository, UpdateCommit}
 
 /**
  * @author fbenjamin
@@ -22,7 +22,8 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
                                repoImporter: ImportRepository,
                                commitImporter: ImportCommit,
                                repoRepo: RepoRepository, //
-                               commitRepo: CommitRepository) extends Bootstrap {
+                               commitRepo: CommitRepository,
+                               updateCommit: UpdateCommit) extends Bootstrap {
   val logger: Logger = Logger { this.getClass }
 
   def syncRepoJob = for {
@@ -53,5 +54,9 @@ class BootstrapImpl @Inject() (actorSystem: ActorSystem,
     ()
   }
 
-  setup
+  updateCommit.updateCommitsTicket() onComplete { _ =>
+    logger.info("Re-checked and updated all commtis in database.")
+    setup
+  }
+
 }

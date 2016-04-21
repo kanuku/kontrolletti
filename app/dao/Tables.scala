@@ -13,14 +13,13 @@ import play.api.db.slick.HasDatabaseConfigProvider
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsValue
 import utility.Transformer
-import utility.GeneralHelper
 import Transformer._
 import dao.KontrollettiPostgresDriver.api._
 
 import KontrollettiToJsonParser.linkWriter
 import KontrollettiToModelParser.linkReader
 
-object Tables extends GeneralHelper { self: HasDatabaseConfigProvider[KontrollettiPostgresDriver] =>
+object Tables { self: HasDatabaseConfigProvider[KontrollettiPostgresDriver] =>
 
   private val schema = Some("kont_data")
 
@@ -53,16 +52,18 @@ object Tables extends GeneralHelper { self: HasDatabaseConfigProvider[Kontrollet
   class CommitTable(tag: Tag) extends Table[Commit](tag, schema, "commits") {
     def id = column[String]("id", O.PrimaryKey)
     def date = column[DateTime]("date")
-    def repoURL = column[String]("repository_url")
+    def repoURL = column[String]("repository_url", O.PrimaryKey)
     def nrOfTickets = column[Int]("nr_tickets")
+    def nrOfParents = column[Int]("nr_parents")
+    def isValid = column[Boolean]("is_valid")
     def jsonValue = column[JsValue]("json_value")
 
-    def * = (id, repoURL, date, nrOfTickets, jsonValue) <> ((apply _).tupled, unapply)
+    def * = (id, repoURL, date, nrOfTickets, nrOfParents, isValid, jsonValue) <> ((apply _).tupled, unapply)
     def repoFK = foreignKey("repository_url", repoURL, repositories)(_.url)
     def pk = primaryKey("commits_pkey", (id, repoURL))
 
-    def apply(id: String, repoId: String, date: DateTime, nrOfTickets: Int, jsonValue: JsValue): Commit = deserialize(jsonValue)(KontrollettiToModelParser.commitReader)
-    def unapply(commit: Commit): Option[(String, String, DateTime, Int, JsValue)] = Some((commit.id, commit.repoUrl, commit.date, numberOfTickets(commit.tickets), serialize(commit)(KontrollettiToJsonParser.commitWriter)))
+    def apply(id: String, repoId: String, date: DateTime, nrOfTickets: Int, nrOfParents: Int, isValid: Boolean,  jsonValue: JsValue): Commit = deserialize(jsonValue)(KontrollettiToModelParser.commitReader)
+    def unapply(commit: Commit): Option[(String, String, DateTime, Int, Int, Boolean, JsValue)] = Some((commit.id, commit.repoUrl, commit.date, Commit.numberOfTickets(commit), Commit.numberOfParents(commit), Commit.isValid(commit), serialize(commit)(KontrollettiToJsonParser.commitWriter)))
 
   }
 

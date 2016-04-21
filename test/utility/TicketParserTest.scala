@@ -27,7 +27,7 @@ class TicketParserTest extends FlatSpec with Matchers {
     ticketParser.parse(github, project, repository, message) shouldBe Some(new Ticket(message, spec, None))
   }
   it must "parse custom [techjira:] protocol" in {
-    val message = "techjira:PF-1234"
+    val message = "techjira:PF-1234 adds documentation"
     val result = jira + "PF-1234"
     ticketParser.parse(github, project, repository, message) shouldBe Some(new Ticket(message, result, None))
   }
@@ -41,6 +41,22 @@ class TicketParserTest extends FlatSpec with Matchers {
     val spec = "http://github.com/zalando/kontrolletti/issues/55"
     val message = s"$spec $text"
     ticketParser.parse(github, project, repository, message) shouldBe Some(new Ticket(message, spec, None))
+  }
+  it must "fallback to techjira for message without protocol" in {
+    val message = s"CHECK-111 $text"
+    val result = Ticket(message, jira + "CHECK-111", None)
+    ticketParser.parse(github, project, repository, message) shouldBe Some(result)
+  }
+  it must "not parse commit message with protocol in the middle" in {
+    val tickets = List(
+      "techjira:PF-1111",
+      "https://github.com/zalando/kontrolletti/issues/55",
+      "http://github.com/zalando/kontrolletti/issues/55",
+      "offline:BMO/2ndfloor/team_A__space/blue-bookshelf/spec-Whatever",
+      "CHECK-111"
+    )
+    val messages = tickets map { t => s"_$t $text" }
+    messages.map(m => ticketParser.parse(github, project, repository, m)) shouldBe List.fill(messages.length)(None)
   }
 
   /**
