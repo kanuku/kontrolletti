@@ -16,11 +16,11 @@ trait TicketParser {
    *
    */
   private val message = """(.*?)?"""
-  private val offline = """(.*?offline:[\w*\.*/*\-*]+){1}"""
-  private val techJira = """(.*?techjira:|jira:){1}"""
-  private val jiraSpec = """(.*?[\w*\-*\\d*]+){1}"""
-  private val https = """(.*?https://[\w*\.*/*\-*]+){1}"""
-  private val http = """(.*?http://[\w*\.*/*\-*]+){1}"""
+  private val offline = """(offline:[\w*\.*/*\-*]+){1}"""
+  private val techJira = """(techjira:|jira:){1}\s*"""
+  private val jiraSpec = """([a-zA-Z]+-\d+){1}"""
+  private val https = """(https://[\w*\.*/*\-*]+){1}"""
+  private val http = """(http://[\w*\.*/*\-*]+){1}"""
   private val number = """(\d+){1}"""
   private val issueHashtag = """(.*?#){1}"""
   private val referenceGithub = """(\s*?\(gh\)\s*?){1}"""
@@ -31,10 +31,11 @@ trait TicketParser {
   /**
    * Here we compose the use-cases we want to extract.
    */
-  private val offlineRegex = s"$offline$message".r
-  private val jiraRegex = s"$techJira$jiraSpec$message".r
-  private val httpsRegex = s"$https$message".r
-  private val httpRegex = s"$http$message".r
+  private val offlineRegex = s"^$offline$message".r
+  private val jiraRegex = s"^$techJira$jiraSpec$message".r
+  private val jiraFallbackRegex = s"^$jiraSpec$message".r
+  private val httpsRegex = s"^$https$message".r
+  private val httpRegex = s"^$http$message".r
   //Reference like #33 will refer to the current host/project/repository i.o.w. to itself(github/github-enterprise)
   private val issueOnItselfRegex = s"$issueHashtag$number$message".r
   //Reference like #33 (gh) will refer to the github host configured: [github.com]/project/repository/issues/number
@@ -77,8 +78,11 @@ trait TicketParser {
         Some(Ticket(message, s"$host/$project/$repository/issues/$numberCap", None))
       else
         Some(Ticket(message, s"https://$host/$project/$repository/issues/$numberCap", None))
+    case jiraFallbackRegex(specCap, _) =>
+      val link = jiraTicketUrl + specCap
+      Some(Ticket(message, link, None))
     case _ =>
-      logger.info(s"Failed to parse ->  message:$message")
+      //logger.info(s"Failed to parse ->  message:$message")
       None
   }
   def jiraTicketUrl: String

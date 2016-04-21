@@ -19,6 +19,12 @@ case class Author(name: String, email: String, links: Option[List[Link]])
 
 //TODO: Add [specs] and [valid] properties
 case class Commit(id: String, message: String, parentIds: Option[List[String]], author: Author, tickets: Option[List[Ticket]], valid: Option[Boolean], links: Option[List[Link]], date: DateTime, repoUrl: String)
+object Commit {
+  def sizeOfOptionList[A](ola: Option[List[A]]): Int = ola.toList.flatten.size
+  def numberOfTickets(c: Commit): Int = sizeOfOptionList(c.tickets)
+  def numberOfParents(c: Commit): Int = sizeOfOptionList(c.parentIds)
+  def isValid(c: Commit): Boolean = numberOfTickets(c) > 0 || numberOfParents(c) > 1
+}
 case class Repository(url: String, host: String, project: String, repository: String, enabled: Boolean, lastSync: Option[DateTime], lastFailed: Option[DateTime], links: Option[List[Link]])
 case class Ticket(name: String, href: String, links: Option[List[Link]])
 

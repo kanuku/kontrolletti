@@ -9,7 +9,7 @@ import client.scmdeprecate.{ GithubResolver, SCMResolver, StashResolver }
 import configuration.{ GeneralConfiguration, GeneralConfigurationImpl, OAuthConfiguration, OAuthConfigurationImpl }
 import dao.{ CommitRepository, CommitRepositoryImpl, RepoRepository, RepoRepositoryImpl }
 import play.api.Logger
-import service.{ ImportCommit, ImportCommitImpl, ImportRepositoriesImpl, ImportRepository, Search, SearchImpl }
+import service.{ ImportCommit, ImportCommitImpl, ImportRepositoriesImpl, ImportRepository, Search, SearchImpl, UpdateCommit, UpdateCommitImpl }
 import configuration.SCMConfigurationImpl
 import configuration.SCMConfiguration
 import client.scmdeprecate.SCMParser
@@ -30,6 +30,7 @@ class Production extends AbstractModule {
     bind(classOf[Search]).to(classOf[SearchImpl])
     bind(classOf[ImportRepository]).to(classOf[ImportRepositoriesImpl])
     bind(classOf[ImportCommit]).to(classOf[ImportCommitImpl])
+    bind(classOf[UpdateCommit]).to(classOf[UpdateCommitImpl])
     bind(classOf[CommitRepository]).to(classOf[CommitRepositoryImpl])
     bind(classOf[RepoRepository]).to(classOf[RepoRepositoryImpl])
     bind(classOf[SCMResolver]).annotatedWith(Names.named("github")).to(classOf[GithubResolver])
