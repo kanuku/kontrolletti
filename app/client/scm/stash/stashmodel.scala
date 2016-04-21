@@ -38,25 +38,42 @@ object stashmodel {
 
   object StashCommit {
 
-    val commitDecodeJson: DecodeJson[model.Commit] = ???
+    final case class Parent(id: String, displayId: String)
+    object Parent {
+      implicit val parentDecodeJson: DecodeJson[Parent] =
+        jdecode2L(Parent.apply)("id", "displayId")
+    }
+    val commitDecodeJson: DecodeJson[model.Commit] =
+      DecodeJson(c => for {
+        id      <- (c --\ "id").as[String]
+        message <- (c --\ "message").as[String]
+        author  <- (c --\ "author").as[StashAuthor]
+        date    <- (c --\ "authorTimestamp").as[StashDateTime]
+        parents <- (c --\ "parents").as[List[Parent]]
+      } yield model.Commit(
+        id        = id,
+        message   = message,
+        parentIds = Some(parents.map(_.id)),
+        author    = author.run,
+        date      = date.run,
+        tickets   = None,
+        valid     = None,
+        links     = None,
+        repoUrl   = ""
+      ))
   }
 
   final case class StashRepo(run: model.Repository) extends AnyVal
 
   object StashRepo {
+    import scalaz.NonEmptyList
+    import utility.json.scalazinstances._
 
-    case class Href(href: String)
+    final case class Href(href: String)
     object Href {
       implicit val decodeHref: DecodeJson[Href] =
         jdecode1L(Href.apply)("href")
     }
-
-    import scalaz.NonEmptyList
-    implicit def nelDecodeJson[A](implicit e: DecodeJson[A]): DecodeJson[NonEmptyList[A]] =
-      DecodeJson(c => c.as[List[A]] flatMap {
-        case x :: xs => DecodeResult.ok(NonEmptyList(x, xs: _*))
-        case _       => DecodeResult.fail("empty list", c.history)
-      })
 
     val repoDecodeJson: DecodeJson[model.Repository] =
       DecodeJson(c => for {
