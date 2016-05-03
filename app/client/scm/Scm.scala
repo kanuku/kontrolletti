@@ -1,20 +1,25 @@
 package client.scm
 
 import client.scm.scmmodel._
-import org.http4s.Request
+import client.oauth.OAuthAccessToken
+import org.http4s.{Request, Response, Service}
 
-import scalaz.{Free, \/, EitherT, Show}
+import scalaz.{\/, ~>, Free, EitherT, Show}
 import scalaz.syntax.all._
 
 trait Scm[A] {
   import Scm.{ConfError, Token, ScmUser}
 
   type PaginationRepr
+
   def apiBase(conf: A): ConfError \/ Uri
   def webUiBase(conf: A): ConfError \/ Uri
   def accessToken(conf: A): ConfError \/ Token
   def user(conf: A): ConfError \/ ScmUser
   def resourceUri(conf: A, resource: ResourceMeta): ConfError \/ Uri
+  def interpreter(client: Service[Request, Response],
+    oauthClient: Service[Unit, OAuthAccessToken]
+  ):  ScmOps ~> ScmResult
 }
 
 object Scm {
@@ -61,7 +66,8 @@ object Scm {
       GetRepo(req) |> Free.liftF |> ScmOpsIO.liftF
     }
 
-  def getCommit[A](conf: A, res: CommitMeta)(implicit scm: Scm[A]): ScmOpsIO[model.Commit] = buildRequest(conf, res, None) flatMap { req =>
+  def getCommit[A](conf: A, res: CommitMeta)(implicit scm: Scm[A]): ScmOpsIO[model.Commit] =
+    buildRequest(conf, res, None) flatMap { req =>
       GetCommit(req) |> Free.liftF |> ScmOpsIO.liftF
     }
 

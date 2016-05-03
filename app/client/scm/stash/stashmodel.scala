@@ -1,11 +1,13 @@
 package client.scm.stash
 
-import org.http4s.Uri
+import client.oauth.OAuthAccessToken
+import org.http4s.{ Request, Response, Service, Uri }
 import org.joda.time.DateTime
 import argonaut._, Argonaut._
 import client.scm.Scm
 import Scm.{ScmUser, Token}
 import client.scm.scmmodel._
+
 
 import scalaz.\/
 import scalaz.syntax.either._
@@ -30,6 +32,9 @@ object stashmodel {
         case AllCommitsMeta(repo) => resourceUri(conf, repo).map(_ / "commits")
         case AllReposMeta(org) => resourceUri(conf, org).map(_ / "repos")
       }
+      def interpreter(httpclient: Service[Request, Response],
+        oauthClient: Service[Unit, OAuthAccessToken]
+      ) = client.scm.stash.interpreter.stashInterpreter(httpclient, oauthClient)
     }
   }
 

@@ -1,9 +1,11 @@
 package client.scm
 package github
 
+import client.oauth.OAuthAccessToken
 import client.scm.Scm
 import Scm.{ConfError, Token}
 import client.scm.scmmodel._
+import org.http4s.{ Request, Response, Service }
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import argonaut._
@@ -53,6 +55,9 @@ object githubmodel {
         case AllCommitsMeta(repo) => resourceUri(conf, repo).map(_ / "commits")
         case AllReposMeta(org) => resourceUri(conf, org).map(_ / "repos")
       }
+      def interpreter(httpclient: Service[Request, Response],
+        oauthclient: Service[Unit, OAuthAccessToken]
+      ) = client.scm.github.interpreter.githubInterpreter(httpclient, oauthclient)
     }
   }
 

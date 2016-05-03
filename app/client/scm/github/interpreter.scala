@@ -3,6 +3,7 @@ package github
 
 import argonaut.DecodeJson
 import client.RequestDispatcher
+import client.oauth.OAuthAccessToken
 import client.scm.scmmodel.PagedResult
 import client.scm.github.githubmodel._, GithubPagination.nextUriParser
 import client.scm.{Scm, ScmOps}
@@ -17,26 +18,26 @@ import scalaz.syntax.all._
 object interpreter {
   import ScmOps._
 
-  def githubInterpreter(client: Service[Request, Response]) = new (ScmOps ~> ScmResult) {
+  def githubInterpreter(client: Service[Request, Response], oauthClient: Service[Unit, OAuthAccessToken]) = new (ScmOps ~> ScmResult) {
 
     def apply[A](fa: ScmOps[A]) = fa match {
       case BuildRequest(conf, scm, meta, initOpt) =>
         val req = for {
           defaultUri <- scm.resourceUri(conf, meta)
-          uri <- initOpt.getOrElse(defaultUri).right
-          token <- scm.accessToken(conf)
+          uri        <- initOpt.getOrElse(defaultUri).right
+          token      <- scm.accessToken(conf)
         } yield Request(uri = uri.copy(
           query = uri.query.withQueryParam("access_token", token.token)))
         ScmResult.fromDisjunction(req)
       case CheckExist(request) =>
         val action = client >=> checkOkK
-        request.copy(method = Method.HEAD) |> action |> ScmResult.fromTask
+        request.copy(method = Method.HEAD) |> action     |> ScmResult.fromTask
       case GetCommit(request) =>
         val getCommit = client >=> readK[GithubCommit]
-        request.copy(method = Method.GET) |> getCommit |> ScmResult.apply |> (_.map(_.run))
+        request.copy(method = Method.GET)  |> getCommit  |> ScmResult.apply |> (_.map(_.run))
       case GetRepo(request) =>
         val getRepo = client >=> readK[GithubRepo]
-        request.copy(method = Method.GET) |> getRepo |> ScmResult.apply |> (_.map(_.run))
+        request.copy(method = Method.GET)  |> getRepo    |> ScmResult.apply |> (_.map(_.run))
       case GetCommitsPaged(request) =>
         val toPagedCommitsK = (readK[Vector[GithubCommit]] |@| readNextUriK){ (eCs, eUriOpt) =>
           for {
@@ -45,7 +46,7 @@ object interpreter {
           } yield PagedResult(commits.map(_.run), uriOpt)
         }
         val getCommits = client >=> toPagedCommitsK
-        request.copy(method = Method.GET) |> getCommits |> ScmResult.apply
+        request.copy(method = Method.GET)  |> getCommits |> ScmResult.apply
     }
   }
 
