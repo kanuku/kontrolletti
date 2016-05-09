@@ -25,6 +25,7 @@ trait UrlParser {
   val sshRgx = """(ssh://){1,1}"""
   val urlRegex = s"$protocolRgx$userRgx$hostnameRgx$portRgx$projectAntecedentRgx$projectRgx$repoAntecedentRgx$repoRgx$repoSucceederRgx".r
   val sshUrlRegex = s"$sshRgx$userRgx$hostnameRgx$portRgx$projectAntecedentRgx$projectRgx$repoAntecedentRgx$repoRgx$repoSucceederRgx".r
+  val gitUrlRegex = s"git:$userRgx$hostnameRgx$portRgx$projectAntecedentRgx$projectRgx$repoAntecedentRgx$repoRgx$repoSucceederRgx".r
 
   /**
    * Extracts the `host`, `project` and `repo` from a repository-url of a github or stash project
@@ -51,7 +52,9 @@ trait UrlParser {
 
     case link if (Option(link) == None || link.isEmpty()) =>
       Left("Repository-url should not be empty/null")
-
+    case gitUrlRegex(user, host, port, prjAntecedent, project, repoAntecedent, repo, succeeder) =>
+      logger.debug(s"Regular extracted ($host, $project, $repo)")
+      Right(transformer(PartionedURL("git", user, host + port, prjAntecedent, project, repoAntecedent, repo, succeeder)))
     case sshUrlRegex(protocol, user, host, port, prjAntecedent, project, repoAntecedent, repo, succeeder) =>
       logger.debug(s"SSH extract ($host, $project, $repo)")
       Right(transformer(PartionedURL(protocol, user, host, prjAntecedent, project, repoAntecedent, repo, succeeder)))
