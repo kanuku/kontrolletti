@@ -1,4 +1,3 @@
-
 package utility
 
 import org.scalatest.FunSuite
@@ -66,6 +65,10 @@ class UrlParserTest extends FunSuite {
   }
   test("test-18") {
     test("https://stash.com/scm/le/zalos-moenchengladbach-backend-openig.git/", "stash.com", "le", "zalos-moenchengladbach-backend-openig")
+  }
+
+  test("test-19") { // Issue -> https://github.com/zalando/kontrolletti/issues/185
+    test("git:git@github.com/zalando/kontrolletti.git", "github.com", "zalando", "kontrolletti")
   }
 
   def test(url: String, host: String, project: String, repo: String) = {
