@@ -66,7 +66,7 @@ maintainer in Docker := "fernando.benjamin@zalando.de"
 //daemonUser in Docker := "root"
 
 // Add this to let Jenkins overwrite your
-dockerRepository :=  Some("pierone.stups.zalan.do/cd")
+dockerRepository :=  Some("pierone.stups.zalan.do/ci")
 
 dockerBaseImage := "registry.opensource.zalan.do/stups/openjdk:8u66-b17-1-18"
 
