@@ -25,6 +25,11 @@ object Commit {
   def numberOfParents(c: Commit): Int = sizeOfOptionList(c.parentIds)
   def isValid(c: Commit): Boolean = numberOfTickets(c) > 0 || numberOfParents(c) > 1
 }
+
+object Repository {
+  def fromUHPR(url: String, host: String, project: String, repository: String) =
+    Repository(url, host, project, repository, enabled = false, lastSync = None, lastFailed = None, links = None)
+}
 case class Repository(url: String, host: String, project: String, repository: String, enabled: Boolean, lastSync: Option[DateTime], lastFailed: Option[DateTime], links: Option[List[Link]])
 case class Ticket(name: String, href: String, links: Option[List[Link]])
 
