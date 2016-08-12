@@ -74,8 +74,9 @@ class RepoWS @Inject() (searchService: Search, repoRepository: RepoRepository) e
             logger.info(s"Not found in DB, fallback to check in SCM for repo: $url")
             searchService.isRepo(host, project, repo) flatMap {
               case Right(true) =>
-                logger.info(s"Result: 200 repo found in SCM $url")
-                Future.successful(Repository.fromUHPR(url, host, project, repo))
+                val result = Repository.fromUHPR(url, host, project, repo)
+                logger.info(s"Result: 200 repo found in SCM ${Json.toJson(result)}")
+                Future.successful(Ok(Json.toJson(result)).as("application/x.zalando.repository+json"))
               case _           =>
                 logger.info(s"Result: 404 repo not found $url")
                 Future.successful(NotFound)
