@@ -15,6 +15,7 @@ import client.oauth.OAuth
 import configuration.OAuthConfiguration
 import dao.RepoRepository
 import model.KontrollettiToJsonParser.repositoryWriter
+import model.Repository
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule.fromPlayBinding
 import play.api.libs.json.Json
@@ -174,17 +175,38 @@ class RepoWSTest extends PlaySpec with KontrollettiOneAppPerTestWithOverrides wi
       verify(search, times(1)).parse(erraneousUrl)
     }
 
-    "Return 404 when it results in a None" in {
+    "Return 200 when repo not in DB but in SCM" in {
       val parsedResponse = Right((host, project, repoName))
       val repoResponse = Future.successful(None)
+      val isRepoResponse = Future.successful(Right(true))
       when(search.parse(defaultUrl)).thenReturn(parsedResponse)
       when(repoRepository.byParameters(host, project, repoName)).thenReturn(repoResponse)
+      when(search.isRepo(host, project, repoName)).thenReturn(isRepoResponse)
+
+      val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl").withHeaders(authorizationHeader)).get
+      status(result) mustEqual OK
+      contentType(result) mustEqual Some("application/x.zalando.repository+json")
+      contentAsString(result) mustBe (Json.stringify(Json.toJson(Repository.fromUHPR(defaultUrl, host, project, repoName))))
+
+      verify(search, times(1)).parse(defaultUrl)
+      verify(search, times(1)).isRepo(host, project, repoName)
+      verify(repoRepository, times(1)).byParameters(host, project, repoName)
+    }
+
+    "Return 404 when repo not in DB and SCM" in {
+      val parsedResponse = Right((host, project, repoName))
+      val repoResponse = Future.successful(None)
+      val isRepoResponse = Future.successful(Right(false))
+      when(search.parse(defaultUrl)).thenReturn(parsedResponse)
+      when(repoRepository.byParameters(host, project, repoName)).thenReturn(repoResponse)
+      when(search.isRepo(host, project, repoName)).thenReturn(isRepoResponse)
 
       val result = route(FakeRequest(GET, s"$reposRoute$encodedDefaultUrl").withHeaders(authorizationHeader)).get
       status(result) mustEqual NOT_FOUND
       contentAsString(result) mustBe empty
 
       verify(search, times(1)).parse(defaultUrl)
+      verify(search, times(1)).isRepo(host, project, repoName)
       verify(repoRepository, times(1)).byParameters(host, project, repoName)
     }
 
