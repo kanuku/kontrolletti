@@ -68,7 +68,7 @@ maintainer in Docker := "fernando.benjamin@zalando.de"
 // Add this to let Jenkins overwrite your
 dockerRepository :=  Some("pierone.stups.zalan.do/torch")
 
-dockerBaseImage := "registry.opensource.zalan.do/stups/openjdk:8-30"
+dockerBaseImage := "registry.opensource.zalan.do/stups/openjdk:8-39"
 
 dockerExposedPorts in Docker := Seq(9000, 9443)
 
